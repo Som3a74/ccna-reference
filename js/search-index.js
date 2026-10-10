@@ -416,6 +416,14 @@ const searchIndex = [
     tags: ["Exam", "PT ✔"]
   },
   {
+    title: "show interfaces description",
+    page: "00-ios-basics/initial-setup.html",
+    anchor: "verification",
+    keywords: ["show interfaces description", "وصف المنافذ", "description", "حالة المنافذ"],
+    mode: "Router#",
+    tags: ["Exam", "PT ✔"]
+  },
+  {
     title: "show interfaces status",
     page: "00-ios-basics/hardware-connectivity.html",
     anchor: "verification",

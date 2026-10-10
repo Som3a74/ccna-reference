@@ -257,7 +257,8 @@ WARNING: Authorized Access Only!
           <pre><code><span class="prompt">R1(config)# </span>interface g0/0
 <span class="prompt">R1(config-if)# </span>description Link to SW1-Core</code></pre>
         </div>
-        <p><strong>للتأكد:</strong> <code dir="ltr">show interfaces description</code></p>
+        <p><strong>للتأكد:</strong> <code dir="ltr">show interfaces description</code> (أو استخدم <code dir="ltr">show ip interface brief</code> للتحقق السريع من المنافذ).</p>
+        <p>💡 <strong>فائدة عملية:</strong> أمر <code dir="ltr">show ip interface brief</code> مش بيعرض خانة الـ Description نهائياً؛ عشان كده لو حبيت تتأكد من الوصف اللي كتبته وتشوف حالة المنفذ معاه في نفس الوقت، بنستبدله بأمر <code dir="ltr">show interfaces description</code> وهيطلعلك نتائج دقيقة وقوية.</p>
       </section>
     </section>
 
@@ -271,9 +272,19 @@ WARNING: Authorized Access Only!
         <pre><code><span class="prompt">R1# </span>show clock
 *14:35:12.125 UTC Sun Oct 25 2026</code></pre>
       </div>
+
+      <h3>2. <span dir="ltr">show ip interface brief</span></h3>
+      <p>الأمر الأشهر والأسرع لمعاينة حالة المنافذ (Status و Protocol) وعناوين الـ IP، لكن <strong>عيبه إنه مبيطلعش الـ Description</strong>:</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code><span class="prompt">R1# </span>show ip interface brief
+Interface              IP-Address      OK? Method Status                Protocol
+GigabitEthernet0/0     192.168.1.1     YES manual up                    up      
+GigabitEthernet0/1     unassigned      YES unset  administratively down down    </code></pre>
+      </div>
       
-      <h3>2. <span dir="ltr">show interfaces description</span></h3>
-      <p>بيعرض كل المنافذ والوصف المكتوب عليها وحالتها.</p>
+      <h3>3. <span dir="ltr">show interfaces description</span></h3>
+      <p>البديل المثالي والمكمل لـ <code dir="ltr">show ip int brief</code> لو محتاج تشوف الـ Description؛ بيعرض جدول منظم فيه حالة المنفذ (Status و Protocol) وجنبها الوصف المكتوب مباشرة عشان تعرف كل كابل رايح فين:</p>
       <div class="code" dir="ltr">
         <button class="copy">Copy</button>
         <pre><code><span class="prompt">R1# </span>show interfaces description
@@ -289,6 +300,7 @@ Gi0/1                          admin down     down     </code></pre>
         <li><strong>ليه الراوتر بيعلق لما أغلط في كتابة أمر؟</strong><br>لأن أمر <code dir="ltr">no ip domain-lookup</code> مش مكتوب. الراوتر بيفترض إنك كتبت اسم دومين وبيحاول يكلم الـ DNS. عشان تلغي التعليقة دي فوراً، اضغط <code dir="ltr">Ctrl + Shift + 6</code>.</li>
         <li><strong>ليه وإنت بتكتب أمر تلاقي رسالة نطت بوظت السطر؟</strong><br>لأنك مكتبتش <code dir="ltr">logging synchronous</code> جوة إعدادات الكونسول أو الـ VTY.</li>
         <li><strong>الـ Banner مش راضي يقفل ويحفظ الكلام؟</strong><br>لأنك مأنهيتش الرسالة بنفس الرمز (<span dir="ltr">delimiter</span>) اللي بدأتها بيه (مثال: لازم تكتب <code dir="ltr">#</code> في آخر سطر لو بدأت بـ <code dir="ltr">#</code>).</li>
+        <li><strong>كتبت description على المنفذ ومش ظاهر في show ip interface brief؟</strong><br>لأن أمر <code dir="ltr">show ip interface brief</code> مخصص لفحص الـ IP وحالة التشغيل فقط ولا يعرض خانة الوصف. البديل الأفضل والأسرع هنا هو أمر <code dir="ltr">show interfaces description</code> اللي هيجيبلك حالة المنفذ والوصف بتاعه جنباً إلى جنب.</li>
       </ul>
     </section>
 
@@ -342,13 +354,21 @@ Gi0/1                          admin down     down     </code></pre>
             <td><code dir="ltr">description &lt;text&gt;</code></td>
             <td>كتابة وصف لأي منفذ (Interface).</td>
           </tr>
+          <tr>
+            <td><code dir="ltr">show ip interface brief</code></td>
+            <td>عرض ملخص سريع لحالة المنافذ وعناوين IP (لا يعرض الـ Description).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show interfaces description</code></td>
+            <td>عرض حالة المنافذ (Status/Protocol) مع الوصف (Description) لكل منفذ.</td>
+          </tr>
         </tbody>
       </table>
     </section>
 
     <footer class="page-footer">
-      <a href="cli-modes.html" class="nav-btn">« السابق: أوضاع CLI</a>
       <a href="file-management.html" class="nav-btn">التالي: إدارة الملفات »</a>
+      <a href="cli-modes.html" class="nav-btn">« السابق: أوضاع CLI</a>
     </footer>
 
   </main>
