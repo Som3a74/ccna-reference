@@ -1,0 +1,39 @@
+{
+  "name": "CCNA Command Reference 200-301 | دليل أوامر سيسكو الشامل",
+  "short_name": "CCNA Reference",
+  "description": "مرجع وهندسة أوامر Cisco CCNA 200-301 الشامل مع شروحات عملية ولابات متكاملة باللغة العربية",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0a101d",
+  "theme_color": "#005a9c",
+  "icons": [
+    {
+      "src": "favicon-48x48.png",
+      "sizes": "48x48",
+      "type": "image/png"
+    },
+    {
+      "src": "favicon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

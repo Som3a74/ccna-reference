@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <radialGradient id="bgGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#152238" />
+      <stop offset="70%" stop-color="#0a101d" />
+      <stop offset="100%" stop-color="#05080f" />
+    </radialGradient>
+
+    <!-- Glowing Ring Gradient -->
+    <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="50%" stop-color="#4facfe" />
+      <stop offset="100%" stop-color="#0072ff" />
+    </linearGradient>
+
+    <!-- Neon Glow Filter -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <!-- Soft Shadow Filter -->
+    <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000" flood-opacity="0.6"/>
+    </filter>
+
+    <!-- Router Gradients -->
+    <linearGradient id="routerBody" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#0369a1" />
+    </linearGradient>
+    <linearGradient id="routerTop" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Dark Circle -->
+  <circle cx="256" cy="256" r="248" fill="url(#bgGradient)" />
+
+  <!-- Outer Glowing Neon Border -->
+  <circle cx="256" cy="256" r="236" fill="none" stroke="url(#ringGradient)" stroke-width="9" filter="url(#glow)" opacity="0.95" />
+  <circle cx="256" cy="256" r="226" fill="none" stroke="#00f2fe" stroke-width="1.5" opacity="0.4" />
+
+  <!-- Background Data Grid / Waves -->
+  <g opacity="0.15" stroke="#38bdf8" stroke-width="1.5">
+    <line x1="80" y1="256" x2="432" y2="256" />
+    <line x1="256" y1="80" x2="256" y2="432" />
+    <circle cx="256" cy="256" r="160" fill="none" stroke-dasharray="4,6" />
+  </g>
+
+  <!-- Cisco Golden Gate Bridge Motif -->
+  <g id="cisco-bridge" filter="url(#glow)">
+    <!-- Bridge Cables / Arches -->
+    <path d="M 120 270 Q 170 140 205 140 Q 235 140 256 220 Q 277 140 307 140 Q 342 140 392 270" 
+          fill="none" stroke="#38bdf8" stroke-width="6" stroke-linecap="round" />
+    
+    <!-- Secondary inner cable -->
+    <path d="M 135 270 Q 175 160 205 160 Q 235 160 256 230 Q 277 160 307 160 Q 337 160 377 270" 
+          fill="none" stroke="#00f2fe" stroke-width="3" opacity="0.6" stroke-linecap="round" />
+
+    <!-- Left Tower Verticals -->
+    <line x1="205" y1="135" x2="205" y2="270" stroke="#00f2fe" stroke-width="5" stroke-linecap="round" />
+    <line x1="175" y1="185" x2="175" y2="270" stroke="#38bdf8" stroke-width="2.5" opacity="0.7" />
+    <line x1="150" y1="225" x2="150" y2="270" stroke="#38bdf8" stroke-width="2.5" opacity="0.7" />
+
+    <!-- Right Tower Verticals -->
+    <line x1="307" y1="135" x2="307" y2="270" stroke="#00f2fe" stroke-width="5" stroke-linecap="round" />
+    <line x1="337" y1="185" x2="337" y2="270" stroke="#38bdf8" stroke-width="2.5" opacity="0.7" />
+    <line x1="362" y1="225" x2="362" y2="270" stroke="#38bdf8" stroke-width="2.5" opacity="0.7" />
+
+    <!-- Center Wave Arch -->
+    <path d="M 230 205 Q 256 185 282 205" fill="none" stroke="#00f2fe" stroke-width="3" opacity="0.8" />
+    <path d="M 238 190 Q 256 175 274 190" fill="none" stroke="#38bdf8" stroke-width="2.5" opacity="0.6" />
+  </g>
+
+  <!-- Cisco Router Disc (Centerpiece) -->
+  <g id="router-symbol" filter="url(#dropShadow)">
+    <!-- Base Cylinder Body -->
+    <path d="M 176 295 C 176 325 336 325 336 295 L 336 315 C 336 345 176 345 176 315 Z" 
+          fill="url(#routerBody)" stroke="#0284c7" stroke-width="2" />
+    
+    <!-- Outer Cylinder Highlight Rim -->
+    <path d="M 180 320 C 210 338 302 338 332 320" 
+          fill="none" stroke="#38bdf8" stroke-width="3" opacity="0.7" />
+
+    <!-- Top Ellipse Surface -->
+    <ellipse cx="256" cy="295" rx="80" ry="25" fill="url(#routerTop)" stroke="#e0f2fe" stroke-width="2" />
+
+    <!-- 4 Crossed Cisco Router Arrows on Top Surface -->
+    <g stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <!-- Outward Arrow Right -->
+      <line x1="256" y1="295" x2="295" y2="290" />
+      <polyline points="286,285 295,290 288,296" fill="#ffffff" />
+
+      <!-- Outward Arrow Left -->
+      <line x1="256" y1="295" x2="217" y2="300" />
+      <polyline points="226,305 217,300 224,294" fill="#ffffff" />
+
+      <!-- Inward Arrow Top-Right -->
+      <line x1="285" y1="283" x2="264" y2="292" />
+      <polyline points="274,290 264,292 268,285" fill="#ffffff" />
+
+      <!-- Inward Arrow Bottom-Left -->
+      <line x1="227" y1="307" x2="248" y2="298" />
+      <polyline points="238,300 248,298 244,305" fill="#ffffff" />
+    </g>
+  </g>
+
+  <!-- Data Flow / Transfer Arrows Left and Right -->
+  <g stroke="#00f2fe" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" filter="url(#glow)">
+    <!-- Left Signal Arrow -->
+    <line x1="130" y1="295" x2="165" y2="295" />
+    <polyline points="140,289 130,295 140,301" />
+
+    <!-- Right Signal Arrow -->
+    <line x1="347" y1="295" x2="382" y2="295" />
+    <polyline points="372,289 382,295 372,301" />
+  </g>
+
+  <!-- Typography: CCNA -->
+  <text x="256" y="415" 
+        font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Montserrat', sans-serif" 
+        font-size="60" 
+        font-weight="900" 
+        letter-spacing="5" 
+        fill="#ffffff" 
+        text-anchor="middle"
+        filter="url(#dropShadow)">CCNA</text>
+  
+  <!-- Subtle Sub-text -->
+  <text x="256" y="442" 
+        font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
+        font-size="16" 
+        font-weight="700" 
+        letter-spacing="8" 
+        fill="#38bdf8" 
+        text-anchor="middle" 
+        opacity="0.9">REFERENCE</text>
+</svg>

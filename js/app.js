@@ -58,7 +58,12 @@ function renderSidebarHeader() {
     headerWrap.className = 'sidebar-header';
     
     headerWrap.innerHTML = `
-      <h2><a href="${basePath}index.html">CCNA Reference</a></h2>
+      <h2>
+        <a href="${basePath}index.html" class="brand-link">
+          <img src="${basePath}favicon.svg" alt="CCNA Logo" class="brand-logo" width="28" height="28">
+          <span>CCNA Reference</span>
+        </a>
+      </h2>
       <button id="theme-toggle-btn" class="theme-toggle-btn" type="button" title="تبديل الوضع الليلي / النهاري"></button>
     `;
     

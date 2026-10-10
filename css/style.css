@@ -345,9 +345,26 @@ td .cmd-cell {
   font-size: 1.25rem;
 }
 
-.sidebar-header h2 a {
+.brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   text-decoration: none;
   color: inherit;
+}
+
+.brand-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  vertical-align: middle;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 4px rgba(0, 188, 235, 0.4));
+  transition: transform 0.25s ease;
+}
+
+.brand-link:hover .brand-logo {
+  transform: rotate(12deg) scale(1.08);
 }
 
 .theme-toggle-btn {
