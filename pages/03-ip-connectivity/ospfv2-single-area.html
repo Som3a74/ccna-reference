@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>بروتوكول OSPFv2 (Single Area) - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>بروتوكول OSPFv2 (منطقة واحدة - Single Area)</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>بروتوكول <span dir="ltr">OSPF</span> هو بروتوكول توجيه ديناميكي من نوع <span dir="ltr">Link-State</span>. بيستخدم خوارزمية <span dir="ltr">Dijkstra (SPF)</span> عشان يختار أسرع مسار للشبكات بناءً على التكلفة (<span dir="ltr">Cost</span>). النسخة التانية (<span dir="ltr">OSPFv2</span>) مخصصة لشبكات <span dir="ltr">IPv4</span>. في الـ <span dir="ltr">CCNA</span> بنركز على إعداد وتأمين منطقة واحدة وهي <span dir="ltr">Area 0</span> (الـ <span dir="ltr">Backbone</span>).</p>
+    </section>
+
+    <section id="quick-config">
+      <h2>إعداد سريع (انسخ والصق)</h2>
+      <p>لتشغيل OSPF وإعلان شبكتين على راوتر <span dir="ltr">R1</span>:</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>R1(config)# router ospf 1
+R1(config-router)# router-id 1.1.1.1
+R1(config-router)# network 10.0.12.0 0.0.0.3 area 0
+R1(config-router)# network 192.168.10.0 0.0.0.255 area 0
+R1(config-router)# passive-interface g0/1</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>الإعداد خطوة بخطوة</h2>
+
+      <!-- Command 1: router ospf -->
+      <section class="cmd" id="router-ospf" dir="rtl">
+        <h3><span dir="ltr">router ospf</span> <small dir="ltr">Global config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>router ospf &lt;process-id&gt;</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">&lt;process-id&gt;</code> = رقم الـ process محلي على الراوتر (من 1 إلى 65535). مش شرط يكون متطابق بين الرواتر عشان يشتغلوا مع بعض.</li>
+        </ul>
+        <p><strong>الشرح:</strong> بيفعّل بروتوكول OSPF ويدخلك على وضع الإعداد الخاص بيه.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1(config)# </span>router ospf 1
+<span class="prompt">R1(config-router)# </span></code></pre>
+        </div>
+        <p>شرح المثال بالعربي: بنشغل OSPF برقم 1.</p>
+        <p><strong>للتأكد:</strong> <code dir="ltr">show ip protocols</code></p>
+      </section>
+
+      <!-- Command 2: router-id -->
+      <section class="cmd" id="router-id" dir="rtl">
+        <h3><span dir="ltr">router-id</span> <small dir="ltr">Router config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-router)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>router-id &lt;ip-address&gt;</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">&lt;ip-address&gt;</code> = اسم أو رقم تعريفي للراوتر في شكل IP (مثلًا: <code dir="ltr">1.1.1.1</code>).</li>
+        </ul>
+        <p><strong>الشرح:</strong> بيحدد هوية الراوتر في شبكة OSPF. لو ما عملتوش، الراوتر بيختار أعلى IP للـ Loopback، ولو مفيش بيختار أعلى IP لـ Interface شغالة.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1(config-router)# </span>router-id 1.1.1.1</code></pre>
+        </div>
+        <p>شرح المثال بالعربي: بنحدد إن اسم الراوتر في OSPF هو 1.1.1.1.</p>
+        <p><strong>للتأكد:</strong> <code dir="ltr">show ip protocols</code></p>
+        <p class="note"><strong>انتبه:</strong> لو غيرت الـ router-id بعد ما OSPF اشتغل، هتحتاج تعمل <code dir="ltr">clear ip ospf process</code> عشان التغيير يتطبق.</p>
+      </section>
+
+      <!-- Command 3: network -->
+      <section class="cmd" id="network-ospf" dir="rtl">
+        <h3><span dir="ltr">network ... area</span> <small dir="ltr">Router config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-router)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>network &lt;ip-address&gt; &lt;wildcard-mask&gt; area &lt;area-id&gt;</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">&lt;ip-address&gt;</code> = عنوان الشبكة أو عنوان الـ Interface نفسها.</li>
+          <li><code dir="ltr">&lt;wildcard-mask&gt;</code> = الماسك العكسي اللي بيحدد أي جزء من الـ IP لازم يتطابق.</li>
+          <li><code dir="ltr">&lt;area-id&gt;</code> = رقم المنطقة (في الـ CCNA غالباً بتكون <code dir="ltr">0</code>).</li>
+        </ul>
+        <p><strong>الشرح:</strong> بيحدد أي Interfaces هتشتغل OSPF وتاخد أرقام الشبكات بتاعتها تبلغها لباقي الرواتر. تقدر تكتب عنوان الشبكة مع الماسك العكسي بتاعها، أو تكتب الـ IP بتاع الـ Interface نفسها وتستخدم ماسك أصفار.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1(config-router)# </span>network 10.0.12.0 0.0.0.3 area 0
+<span class="prompt">R1(config-router)# </span>network 192.168.10.1 0.0.0.0 area 0</code></pre>
+        </div>
+        <p>شرح المثال بالعربي: السطر 1 بيفعل OSPF على أي interface في شبكة 10.0.12.0/30. السطر 2 بيفعل OSPF على الـ interface اللي واخدة الـ IP بالظبط (192.168.10.1).</p>
+        <p><strong>للتأكد:</strong> <code dir="ltr">show ip ospf interface brief</code></p>
+      </section>
+
+      <!-- Command 4: passive-interface -->
+      <section class="cmd" id="passive-interface" dir="rtl">
+        <h3><span dir="ltr">passive-interface</span> <small dir="ltr">Router config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-router)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>passive-interface { &lt;interface&gt; | default }</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">&lt;interface&gt;</code> = اسم المنفذ (مثلًا: <code dir="ltr">g0/1</code>).</li>
+          <li><code dir="ltr">default</code> = يخلي كل المنافذ passive بشكل افتراضي.</li>
+        </ul>
+        <p><strong>الشرح:</strong> بيمنع الراوتر إنه يبعت رسايل OSPF Hello من الـ Interface دي، فبالتالي مفيش علاقة OSPF (Neighbor) هتتبني هنا، لكن في نفس الوقت شبكة الـ Interface دي هتفضل مُعلنة في OSPF. بنستخدمها عادةً مع الـ Interfaces اللي واصلة بالـ LAN (الـ Switches والأجهزة) عشان الأمان وتقليل الزحمة.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1(config-router)# </span>passive-interface g0/1</code></pre>
+        </div>
+        <p>شرح المثال بالعربي: بنمنع رسايل OSPF تخرج من g0/1.</p>
+        <p><strong>للتأكد:</strong> <code dir="ltr">show ip protocols</code> (بتظهر في قسم Passive Interfaces).</p>
+        <p class="note"><strong>انتبه:</strong> لو عملت <code dir="ltr">passive-interface</code> لمنفذ واصل براوتر تاني، العلاقة هتقع فوراً.</p>
+      </section>
+
+      <!-- Command 5: default-information originate -->
+      <section class="cmd" id="default-information-originate" dir="rtl">
+        <h3><span dir="ltr">default-information originate</span> <small dir="ltr">Router config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-router)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>default-information originate [always]</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">always</code> = (اختياري) يخلي الراوتر يبعت الـ Default Route حتى لو هو شخصياً معندوش واحد.</li>
+        </ul>
+        <p><strong>الشرح:</strong> بيخلي الراوتر يبلغ كل الرواتر التانية في OSPF بالـ Default Route بتاعه (يعني طريق الإنترنت). لازم يكون الراوتر ده متبرمج عليه Default Route أصلاً.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1(config)# </span>ip route 0.0.0.0 0.0.0.0 203.0.113.1
+<span class="prompt">R1(config)# </span>router ospf 1
+<span class="prompt">R1(config-router)# </span>default-information originate</code></pre>
+        </div>
+        <p>شرح المثال بالعربي: عملنا Default Route الأول، وبعدين دخلنا OSPF وقلنا له يوزعه للكل.</p>
+        <p><strong>للتأكد:</strong> باقي الرواتر هتشوف المسار ده في <code dir="ltr">show ip route ospf</code> بـ رمز <code dir="ltr">O*E2</code>.</p>
+      </section>
+
+      <!-- Command 6: auto-cost reference-bandwidth -->
+      <section class="cmd" id="auto-cost" dir="rtl">
+        <h3><span dir="ltr">auto-cost reference-bandwidth</span> <small dir="ltr">Router config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-router)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>auto-cost reference-bandwidth &lt;megabits&gt;</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">&lt;megabits&gt;</code> = السرعة المرجعية بالميجابت (مثلاً: <code dir="ltr">1000</code> لسرعة 1 جيجا، <code dir="ltr">10000</code> لسرعة 10 جيجا).</li>
+        </ul>
+        <p><strong>الشرح:</strong> OSPF بيحسب التكلفة (Cost) بقسمة القيمة المرجعية على سرعة اللينك. الافتراضي هو 100 ميجابت. فكده لو عندك لينك 1 جيجا ولينك 100 ميجا، OSPF هيشوفهم نفس التكلفة (Cost = 1). الأمر ده بيعدل القيمة عشان يقدر يفرق السرعات العالية.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1(config-router)# </span>auto-cost reference-bandwidth 1000</code></pre>
+        </div>
+        <p>شرح المثال بالعربي: بنغير القيمة عشان تكون 1 جيجابِت (1000 ميجا).</p>
+        <p class="note"><strong>انتبه:</strong> لازم تغير القيمة دي على <strong>كل الرواتر</strong> في الشبكة عشان الحسابات تطلع مظبوطة ومفيش لوب (Loop) يحصل.</p>
+      </section>
+
+      <!-- Command 7: ip ospf cost -->
+      <section class="cmd" id="ip-ospf-cost" dir="rtl">
+        <h3><span dir="ltr">ip ospf cost</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ip ospf cost &lt;value&gt;</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">&lt;value&gt;</code> = رقم التكلفة من 1 لـ 65535.</li>
+        </ul>
+        <p><strong>الشرح:</strong> بيخليك تفرض تكلفة معينة للـ Interface بشكل يدوي بدل ما OSPF يحسبها بناءً على السرعة (Bandwidth). مفيد جداً لهندسة مسارات الشبكة.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1(config)# </span>interface g0/0
+<span class="prompt">R1(config-if)# </span>ip ospf cost 50</code></pre>
+        </div>
+        <p>شرح المثال بالعربي: خلينا تكلفة مسار g0/0 تساوي 50.</p>
+        <p><strong>للتأكد:</strong> <code dir="ltr">show ip ospf interface g0/0</code></p>
+      </section>
+      
+      <!-- Command 8: timers -->
+      <section class="cmd" id="timers" dir="rtl">
+        <h3><span dir="ltr">ip ospf hello-interval / dead-interval</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ip ospf hello-interval &lt;seconds&gt;
+ip ospf dead-interval &lt;seconds&gt;</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">&lt;seconds&gt;</code> = الوقت بالثواني. الافتراضي للـ Hello هو 10 ثواني، وللـ Dead هو 40 ثانية.</li>
+        </ul>
+        <p><strong>الشرح:</strong> بيغير أوقات رسايل OSPF. الـ Hello هو كل كام ثانية هيبعت رسالة جاره. الـ Dead هو الوقت اللي هيصبره على جاره لو مبعتش Hello قبل ما يعتبره وقع من الشبكة.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1(config)# </span>interface g0/0
+<span class="prompt">R1(config-if)# </span>ip ospf hello-interval 5
+<span class="prompt">R1(config-if)# </span>ip ospf dead-interval 20</code></pre>
+        </div>
+        <p>شرح المثال بالعربي: سرّعنا التوقيتات للنص عشان نكتشف الأعطال أسرع.</p>
+        <p class="note"><strong>انتبه:</strong> عشان علاقة الجيرة (Adjacency) تقوم، لازم أوقات Hello و Dead تكون <strong>متطابقة</strong> بين الراوترين!</p>
+      </section>
+
+      <!-- Command 9: priority and DR/BDR -->
+      <section class="cmd" id="ip-ospf-priority" dir="rtl">
+        <h3><span dir="ltr">ip ospf priority</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ip ospf priority &lt;value&gt;</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">&lt;value&gt;</code> = من 0 إلى 255. (الافتراضي 1، و0 معناه إنه أبداً مش هيبقى DR أو BDR).</li>
+        </ul>
+        <p><strong>الشرح:</strong> بنستخدمه في شبكات Ethernet عشان نتحكم مين الراوتر اللي هيبقى هو الريس (DR). الراوتر اللي أولويته أعلى بيكسب.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1(config)# </span>interface g0/0
+<span class="prompt">R1(config-if)# </span>ip ospf priority 200</code></pre>
+        </div>
+        <p>شرح المثال بالعربي: عليّنا أولوية R1 على المنفذ ده لـ 200 عشان نضمن إنه يفوز في انتخابات الـ DR.</p>
+      </section>
+
+      <!-- Command 10: network point-to-point -->
+      <section class="cmd" id="point-to-point" dir="rtl">
+        <h3><span dir="ltr">ip ospf network point-to-point</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ip ospf network point-to-point</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> لو وصلنا راوترين بكابل Ethernet مباشر (ومفيش أي رواتر تانية معاهم)، OSPF بيفترض إن دي شبكة Broadcast وبيعمل انتخابات DR/BDR وبياخد وقت زيادة. الأمر ده بيقوله دي وصلة مباشرة ومفيش حد معانا، فبيلغي الانتخابات وبيسرع بناء العلاقة (Adjacency).</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1(config)# </span>interface g0/0
+<span class="prompt">R1(config-if)# </span>ip ospf network point-to-point</code></pre>
+        </div>
+        <p>شرح المثال بالعربي: ألغينا انتخابات DR/BDR على المنفذ ده.</p>
+      </section>
+      
+      <!-- Command 11: maximum-paths -->
+      <section class="cmd" id="maximum-paths" dir="rtl">
+        <h3><span dir="ltr">maximum-paths</span> <small dir="ltr">Router config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-router)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>maximum-paths &lt;number&gt;</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">&lt;number&gt;</code> = عدد المسارات المسموح بيها (الافتراضي عادة 4).</li>
+        </ul>
+        <p><strong>الشرح:</strong> لو فيه مسارين ليهم نفس التكلفة بالضبط للوصول لنفس الشبكة، OSPF هيستخدمهم هما الاتنين (Load Balancing). الأمر ده بيحدد الحد الأقصى للمسارات المتساوية اللي يقدر يستخدمها في نفس الوقت.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1(config-router)# </span>maximum-paths 2</code></pre>
+        </div>
+      </section>
+    </section>
+
+    <section id="verification">
+      <h2>أوامر التحقق</h2>
+
+      <h3>1. <span dir="ltr">show ip ospf neighbor</span></h3>
+      <p>أهم أمر عشان تتأكد إن الرواتر شافت بعضها وبقوا جيران.</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code><span class="prompt">R1# </span>show ip ospf neighbor
+
+Neighbor ID     Pri   State           Dead Time   Address         Interface
+2.2.2.2           1   FULL/BDR        00:00:36    10.0.12.2       GigabitEthernet0/0
+3.3.3.3           0   FULL/ -         00:00:32    10.0.13.3       GigabitEthernet0/1</code></pre>
+      </div>
+      <ul>
+        <li><strong>Neighbor ID:</strong> هو الـ Router-ID بتاع الجار.</li>
+        <li><strong>State:</strong> لو مكتوب FULL، معناه العلاقة اكتملت وممتازة. لو مكتوب 2WAY، دي طبيعية بين رواتر DROTHER.</li>
+        <li><strong>Dead Time:</strong> الوقت المتبقي قبل ما الجار يعتبر واقع لو مبعتش Hello.</li>
+      </ul>
+
+      <h3>2. <span dir="ltr">show ip ospf interface brief</span></h3>
+      <p>بيوريك OSPF شغال على أي منافذ بالظبط، والتكلفة بتاعتها وحالة DR/BDR.</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code><span class="prompt">R1# </span>show ip ospf interface brief
+Interface    PID   Area            IP Address/Mask    Cost  State Nbrs F/C
+Gi0/0        1     0               10.0.12.1/30       10    DR    1/1
+Gi0/1        1     0               10.0.13.1/30       10    P2P   1/1</code></pre>
+      </div>
+      
+      <h3>3. <span dir="ltr">show ip protocols</span></h3>
+      <p>بيأكد الـ Process ID، الـ Router ID، الشبكات اللي متعملها Network، والـ Passive Interfaces.</p>
+
+      <h3>4. <span dir="ltr">show ip route ospf</span></h3>
+      <p>بيعرض بس المسارات اللي اتعلمها عن طريق OSPF.</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code><span class="prompt">R1# </span>show ip route ospf
+O    192.168.20.0/24 [110/20] via 10.0.12.2, 00:05:12, GigabitEthernet0/0</code></pre>
+      </div>
+      <ul>
+        <li><strong>O:</strong> معناها مسار OSPF.</li>
+        <li><strong>[110/20]:</strong> الـ 110 هي الـ Administrative Distance للـ OSPF، والـ 20 هي الـ Cost الكلية للمسار ده.</li>
+      </ul>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فحص الأعطال</h2>
+      
+      <h3>الجار مبيظهرش؟ (Why won't my OSPF neighbor come up?)</h3>
+      <p>لو عملت <code dir="ltr">show ip ospf neighbor</code> وملقتش الجار، راجع القائمة دي بالترتيب:</p>
+      <ol>
+        <li>هل الـ Interfaces <strong>شغالة</strong> وفي نفس الـ Subnet؟ (اعمل Ping).</li>
+        <li>هل حطيت نفس رقم الـ <strong>Area</strong> في الناحيتين؟</li>
+        <li>هل أرقام الـ <strong>Timers</strong> (Hello/Dead) متطابقة في الناحيتين؟</li>
+        <li>هل الـ <strong>Router ID</strong> مختلف في كل راوتر؟ (لو متطابقين، مش هيشوفوا بعض).</li>
+        <li>هل عملت <strong>passive-interface</strong> بالغلط على المنفذ اللي واصل بالجار؟</li>
+        <li>هل فيه <strong>Authentication</strong> (باسوورد) مطلوبة ونسيتها أو كتبتها غلط؟</li>
+        <li>هل الـ <strong>MTU</strong> متطابق على الناحيتين؟ (لو مش متطابق، العلاقة هتعلق في مرحلة EXSTART).</li>
+        <li>هل الـ <strong>Network Type</strong> متطابق؟ (لو واحد Point-to-point والتاني Broadcast، مش هيشتغلوا صح).</li>
+      </ol>
+      
+      <h3>مراحل علاقة الجيرة (OSPF States)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">State</th>
+            <th>المعنى بالعربي</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">Down</code></td>
+            <td>مفيش أي Hello وصل من الجار ده.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">Init</code></td>
+            <td>الراوتر استلم Hello من الجار، بس لسة اسمه مش موجود فيها.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">2-Way</code></td>
+            <td>الاتصال شغال في الاتجاهين. هنا بتحصل انتخابات DR/BDR لو نوع الشبكة Broadcast.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ExStart</code></td>
+            <td>بيتفقوا مين الماستر ومين العبد (عشان تبادل البيانات) وبيتفقوا على الـ Sequence Number. لو وقف هنا، غالباً مشكلة MTU.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">Exchange</code></td>
+            <td>بيتبادلوا الفهرس بتاع قواعد البيانات (DBD).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">Loading</code></td>
+            <td>بيطلبوا التفاصيل الناقصة وبيبعتوها لبعض (LSR و LSU).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">Full</code></td>
+            <td>قواعد البيانات بقت متطابقة 100%. دي الحالة المثالية.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>قواعد انتخاب الـ DR / BDR</h3>
+      <p>على شبكات الـ Ethernet بس، OSPF بينتخب راوتر رئيسي (Designated Router - DR) وراوتر احتياطي (BDR). باقي الرواتر بتكون DROTHER.</p>
+      <ol>
+        <li>الراوتر صاحب أعلى أولوية <strong>Priority</strong> بيكسب الـ DR (الافتراضي 1).</li>
+        <li>لو الأولويات متساوية، بيبصوا على الـ <strong>Router ID</strong> (الأعلى بيكسب).</li>
+        <li>لو عملت الـ Priority = 0، الراوتر ده مستحيل يبقى DR ولا BDR أبداً.</li>
+      </ol>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li>الـ <strong>Wildcard Mask</strong> مش السابنت ماسك! الـ 255 بتبقى 0 والـ 0 بيبقى 255. (مثال: /24 بيبقى <code dir="ltr">0.0.0.255</code>).</li>
+        <li>لو استخدمت <code dir="ltr">network</code>، لازم تتأكد إن الـ IP بتاع الـ Interface بيقع جوة الـ Range اللي كتبته. أسهل طريقة في العملي إنك تكتب الـ IP بتاع الـ Interface بالظبط مع ماسك <code dir="ltr">0.0.0.0</code>.</li>
+        <li>تنسى إن انتخابات الـ DR مش بتتعاد (No preemption). لو الراوتر الرئيسي وقع والاحتياطي مسك مكانه، ورجع الرئيسي اشتغل تاني، الاحتياطي هيفضل هو الريس لحد ما تعمله ريستارت بـ <code dir="ltr">clear ip ospf process</code>.</li>
+        <li>لو كتبت <code dir="ltr">default-information originate</code> والراوتر أصلاً معلوش مسار <code dir="ltr">0.0.0.0 0.0.0.0</code>، الأمر مش هيعمل أي حاجة ومش هيعلن Default Route.</li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Command</th>
+            <th>الوظيفة (Purpose)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">router ospf &lt;id&gt;</code></td>
+            <td>تفعيل OSPF.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">router-id &lt;ip&gt;</code></td>
+            <td>تحديد اسم الراوتر في OSPF.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">network &lt;ip&gt; &lt;wildcard&gt; area 0</code></td>
+            <td>تحديد الـ Interfaces اللي هتشتغل.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">passive-interface &lt;int&gt;</code></td>
+            <td>منع إرسال رسايل OSPF على منفذ معين للعملاء.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">default-information originate</code></td>
+            <td>توزيع الـ Default Route للرواتر التانية.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">auto-cost reference-bandwidth 1000</code></td>
+            <td>ضبط التكلفة عشان تتناسب مع سرعات الجيجا واكتر.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show ip ospf neighbor</code></td>
+            <td>التأكد من الجيران وحالتهم (Full).</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="routing-fundamentals.html" class="nav-btn">« السابق: أساسيات التوجيه</a>
+      <a href="fhrp.html" class="nav-btn">التالي: بروتوكولات FHRP »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

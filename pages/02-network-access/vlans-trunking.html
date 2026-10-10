@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>شبكات VLAN والـ Trunking - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>شبكات VLAN ومسارات الـ Trunking</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>تقنية الـ <span dir="ltr">VLAN</span> بتسمحلك تقسم السويتش الواحد كأنه أكتر من سويتش منفصلين، عشان تعزل الأقسام عن بعضها وتقلل الزحمة (Broadcast). الـ <span dir="ltr">Trunk</span> هو الكابل اللي بيربط بين السويتشات وبيقدر يشيل كل الـ VLANs مع بعض باستخدام تاج (Tag) بروتوكول <code dir="ltr">802.1Q</code>.</p>
+    </section>
+
+    <section id="quick-config">
+      <h2>إعداد سريع (انسخ والصق)</h2>
+      
+      <h3>1. إنشاء VLAN وتخصيص منفذ أجهزة (Access Port)</h3>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>vlan 10
+ name IT-Dept
+ exit
+interface g0/1
+ switchport mode access
+ switchport access vlan 10
+ no shutdown</code></pre>
+      </div>
+
+      <h3>2. إعداد منفذ ربط بين السويتشات (Trunk Port)</h3>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>interface g0/2
+ switchport mode trunk
+ switchport nonegotiate
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 10,20,99
+ no shutdown</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>الإعداد خطوة بخطوة</h2>
+
+      <!-- Create VLAN -->
+      <section class="cmd" id="create-vlan" dir="rtl">
+        <h3><span dir="ltr">vlan / name</span> <small dir="ltr">Global config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Switch(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>vlan &lt;vlan-id&gt;
+ name &lt;vlan-name&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بينشئ شبكة تخيلية جديدة ويديها اسم (عشان التنظيم). الأرقام المتاحة للاستخدام العادي من 2 لـ 1001.</p>
+      </section>
+
+      <!-- Access Port -->
+      <section class="cmd" id="switchport-access" dir="rtl">
+        <h3><span dir="ltr">switchport mode access</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Switch(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>switchport mode access
+switchport access vlan &lt;vlan-id&gt;
+switchport voice vlan &lt;vlan-id&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيجبر المنفذ إنه يتوصل بجهاز نهائي (زي كمبيوتر أو طابعة) وميتفاوضش لعمل Trunk. أمر الـ <code dir="ltr">voice</code> بيستخدم لو موصل تليفون سيسكو (IP Phone)، وده بيخلي المنفذ يشيل VLAN الداتا للكمبيوتر و VLAN للصوت في نفس الوقت.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">SW1(config-if)# </span>switchport mode access
+<span class="prompt">SW1(config-if)# </span>switchport access vlan 10
+<span class="prompt">SW1(config-if)# </span>switchport voice vlan 50</code></pre>
+        </div>
+      </section>
+
+      <!-- Trunk Port -->
+      <section class="cmd" id="switchport-trunk" dir="rtl">
+        <h3><span dir="ltr">switchport mode trunk</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Switch(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>switchport trunk encapsulation dot1q
+switchport mode trunk
+switchport nonegotiate</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيجبر المنفذ إنه يشتغل كـ Trunk ويشيل كل الشبكات. في السويتشات القديمة (زي 3560) لازم تكتب أمر الـ <code dir="ltr">encapsulation dot1q</code> الأول لأنها بتدعم بروتوكول ISL القديم، لكن السويتشات الحديثة مبتدعمش غير <code dir="ltr">dot1q</code> فمش بتحتاج الأمر ده. أمر <code dir="ltr">nonegotiate</code> بيقفل رسائل الـ DTP عشان الحماية.</p>
+      </section>
+
+      <!-- Trunk Allowed / Native -->
+      <section class="cmd" id="trunk-allowed-native" dir="rtl">
+        <h3><span dir="ltr">trunk allowed / native</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Switch(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>switchport trunk allowed vlan { &lt;list&gt; | all | none | add &lt;list&gt; | remove &lt;list&gt; }
+switchport trunk native vlan &lt;vlan-id&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> أمر <code dir="ltr">allowed</code> بيحدد إيه هي الـ VLANs المسموح تعدي في الكابل ده لزيادة الأمان. أمر <code dir="ltr">native</code> بيغير شبكة الـ Native (الافتراضية VLAN 1) لشبكة تانية للحماية من هجمات الـ VLAN Hopping، والداتا بتاعت الـ Native بتتبعت من غير Tag.</p>
+        <p class="note"><strong>تحذير خطير:</strong> لو الكابل عليه VLAN 10 و 20، وعايز تضيف VLAN 30، إياك تكتب <code dir="ltr">switchport trunk allowed vlan 30</code> بس! ده هيمسح 10 و 20 ويوقع الشبكة. لازم تستخدم كلمة <code dir="ltr">add 30</code>.</p>
+      </section>
+
+      <!-- DTP Modes -->
+      <section class="cmd" id="dtp-modes" dir="rtl">
+        <h3><span dir="ltr">DTP (Dynamic Trunking)</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Switch(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>switchport mode dynamic { auto | desirable }</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بروتوكول DTP بيتفاوض أوتوماتيك عشان يحول الكابل لـ Trunk.</p>
+        <ul>
+          <li><code dir="ltr">desirable</code>: السويتش هو اللي بيبدأ يطلب من الطرف التاني إنه يقلب Trunk.</li>
+          <li><code dir="ltr">auto</code>: السويتش سلبي، بيستنى الطرف التاني يطلب الأول. لو الطرفين <code dir="ltr">auto</code>، المنفذ هيفضل Access ومش هيبقى Trunk أبدًا (فخ امتحان مشهور).</li>
+        </ul>
+      </section>
+
+      <!-- Router on a Stick -->
+      <section class="cmd" id="router-on-a-stick" dir="rtl">
+        <h3><span dir="ltr">Router on a Stick (Inter-VLAN)</span> <small dir="ltr">Router config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>interface &lt;type&gt;&lt;number&gt;.&lt;sub-id&gt;
+ encapsulation dot1Q &lt;vlan-id&gt; [native]
+ ip address &lt;ip-address&gt; &lt;subnet-mask&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> عشان الـ VLANs تكلم بعضها محتاجين راوتر. بنوصل السويتش (بمنفذ Trunk) براوتر، وفي الراوتر بنقسم المنفذ الفيزيائي لمنافذ وهمية (Sub-interfaces) كل واحد بيمثل Default Gateway لـ VLAN.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1(config)# </span>interface g0/0
+<span class="prompt">R1(config-if)# </span>no shutdown   <span class="comment">!--- لازم تفتح المنفذ الفيزيائي الأول</span>
+<span class="prompt">R1(config-if)# </span>interface g0/0.10
+<span class="prompt">R1(config-subif)# </span>encapsulation dot1Q 10
+<span class="prompt">R1(config-subif)# </span>ip address 192.168.10.1 255.255.255.0</code></pre>
+        </div>
+      </section>
+
+    </section>
+
+    <section id="verification">
+      <h2>أوامر التحقق</h2>
+
+      <h3>1. <span dir="ltr">show vlan brief</span></h3>
+      <p>أهم أمر عشان تتأكد إن الـ VLAN اتكريتت وإيه المنافذ (Access) اللي منتمية ليها. الأمر ده <strong>مش بيعرض منافذ الـ Trunk</strong>، منافذ الـ Trunk بتختفي من الجدول ده تماماً!</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code><span class="prompt">SW1# </span>show vlan brief
+VLAN Name                             Status    Ports
+---- -------------------------------- --------- -------------------------------
+1    default                          active    Fa0/2, Fa0/3, Fa0/4...
+10   IT-Dept                          active    Fa0/1
+20   HR-Dept                          active    </code></pre>
+      </div>
+      
+      <h3>2. <span dir="ltr">show interfaces trunk</span></h3>
+      <p>بيعرض كل منافذ الـ Trunk اللي على السويتش والـ VLANs المسموح ليها تعدي.</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code><span class="prompt">SW1# </span>show interfaces trunk
+Port        Mode             Encapsulation  Status        Native vlan
+Gig0/1      on               802.1q         trunking      99
+
+Port        Vlans allowed on trunk
+Gig0/1      10,20,99</code></pre>
+      </div>
+
+      <h3>3. <span dir="ltr">show interfaces &lt;int&gt; switchport</span></h3>
+      <p>أمر قوي بيجيب كل تفاصيل منفذ معين، شغال Access ولا Trunk؟ والـ Native بتاعته كام؟ والـ DTP مقفول ولا لأ.</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code><span class="prompt">SW1# </span>show interfaces g0/1 switchport
+Name: Gig0/1
+Switchport: Enabled
+Administrative Mode: trunk
+Operational Mode: trunk
+Administrative Trunking Encapsulation: dot1q
+Negotiation of Trunking: Off
+Access Mode VLAN: 1 (default)
+Trunking Native Mode VLAN: 99 (Management)</code></pre>
+      </div>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فحص الأعطال (Troubleshooting)</h2>
+      
+      <h3>مشكلة Native VLAN Mismatch</h3>
+      <p>لو غيرت الـ Native VLAN لـ 99 على سويتش ونسيت تغيرها على السويتش اللي قدامه، بروتوكول الـ CDP هيطلّع رسالة خطأ مزعجة بتظهر كل دقيقة على الشاشة: <code dir="ltr">%CDP-4-NATIVE_VLAN_MISMATCH: Native VLAN mismatch discovered on GigabitEthernet0/1 (99), with SW2 GigabitEthernet0/1 (1)</code>. الحل إنك توحدهم.</p>
+
+      <h3>الـ Router on a Stick مش شغال</h3>
+      <p>أتأكد إنك عملت <code dir="ltr">no shutdown</code> للمنفذ المادي (Physical Interface) بتاع الراوتر زي <code dir="ltr">g0/0</code> مش بس الـ Sub-interface، لأن الـ Sub-interface بيفضل مقفول طول ما المنفذ المادي مقفول.</p>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li><strong>أمر الـ Add:</strong> افتكر دايماً فخ <code dir="ltr">switchport trunk allowed vlan ADD</code>. من غير كلمة add هتمسح كل اللي كان مسموح بيه.</li>
+        <li><strong>اختفاء الـ Trunk:</strong> منافذ الـ Trunk مش بتظهر في أمر <code dir="ltr">show vlan brief</code>، لو ملقتش المنفذ، غالباً هو شغال Trunk.</li>
+        <li><strong>تلقائية الـ VLAN:</strong> لو كتبت <code dir="ltr">switchport access vlan 10</code> والشبكة دي مكنتش موجودة أصلاً، السويتش هيكريتها لوحده ويقولك <code dir="ltr">Access VLAN does not exist. Creating vlan 10</code> (بس الأفضل دايماً تنشئها وتسميها بإيدك).</li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Command</th>
+            <th>الوظيفة (Purpose)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">switchport mode access</code></td>
+            <td>إجبار المنفذ للعمل للاتصال بجهاز عادي (كمبيوتر).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">switchport mode trunk</code></td>
+            <td>إجبار المنفذ للعمل كوصلة بين السويتشات.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">switchport mode dynamic desirable</code></td>
+            <td>المنفذ يحاول بفاعلية أن يصبح Trunk.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">switchport mode dynamic auto</code></td>
+            <td>المنفذ ينتظر الطرف الآخر ليصبح Trunk (افتراضي لبعض الأجهزة).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">switchport nonegotiate</code></td>
+            <td>إيقاف رسائل التفاوض DTP (يُستخدم مع mode trunk/access الثابت).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show vlan brief</code></td>
+            <td>عرض شبكات الـ VLAN والمنافذ الـ Access التابعة لها.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show interfaces trunk</code></td>
+            <td>عرض منافذ الـ Trunk والـ Native VLAN الخاصة بكل منها.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="../01-network-fundamentals/ipv6-addressing.html" class="nav-btn">« السابق: عناوين IPv6</a>
+      <a href="cdp-lldp.html" class="nav-btn">التالي: بروتوكولات CDP و LLDP »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

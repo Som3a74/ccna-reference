@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AAA & Device Hardening - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>نظام AAA وتقوية الأجهزة (AAA & Hardening)</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>في شبكات المؤسسات الكبرى، من المستحيل إدارة حسابات وكلمات مرور المهندسين محلياً على كل راوتر وسويتش على حدة. نظام <strong>AAA (Authentication, Authorization, Accounting)</strong> يوفر إدارة أمنية مركزية متكاملة:</p>
+      <ul>
+        <li><strong>أركان الـ AAA الثلاثة:</strong>
+          <ul>
+            <li><strong>المصادقة (Authentication - من أنت؟):</strong> التحقق من هوية المستخدم وكلمة مروره عبر خادم مركزي مثل Cisco ISE.</li>
+            <li><strong>التفويض (Authorization - ماذا يحق لك أن تفعل؟):</strong> تحديد الصلاحيات ومستوى الوصول (Privilege Level) والأوامر المسموح للمهندس بتنفيذها على الـ CLI.</li>
+            <li><strong>المحاسبة والتدقيق (Accounting - ماذا فعلت؟):</strong> تسجيل وتوثيق كل أمر كتبه المستخدم ووقت بداية ونهاية جلسته لضمان الرقابة والمساءلة.</li>
+          </ul>
+        </li>
+        <li><strong>مقارنة TACACS+ مقابل RADIUS (سؤال مضمون في الامتحان):</strong>
+          <ul>
+            <li><strong>TACACS+ (سيسكو):</strong> يعتمد على <strong>TCP Port 49</strong>. يفصل تماماً بين الـ Authentication والـ Authorization والـ Accounting. <strong>يشفر محتوى الحزمة بالكامل (Full Payload Encryption)</strong>. مخصص لإدارة الأجهزة (Device Administration).</li>
+            <li><strong>RADIUS (معيار مفتوح):</strong> يعتمد على <strong>UDP Ports 1812/1813</strong>. يدمج المصادقة والتفويض معاً. <strong>يشفر كلمة المرور فقط</strong> وباقي الحزمة نص صريح. مخصص للتحكم في وصول المستخدمين للشبكة (Network Access مثل 802.1X و VPN).</li>
+          </ul>
+        </li>
+        <li><strong>قائمة الطرق (Method List) والاحتياط المحلي (Fallback):</strong> نحدد فيها السيرفر المركزي أولاً، ثم كلمة <code dir="ltr">local</code> احتياطياً لتمكين الدخول إذا انقطع الاتصال بالسيرفر المركزي.</li>
+      </ul>
+    </section>
+
+    <section id="quick-config">
+      <h2>إعداد سريع (انسخ والصق)</h2>
+      <p>تفعيل نموذج AAA الحديث وربط الراوتر بخادم TACACS+ مع توفير حساب محلي للطوارئ:</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>! 1. إنشاء حساب محلي للطوارئ في حال سقوط السيرفر
+username admin_rescue privilege 15 secret RescuePass#2026
+
+! 2. تفعيل نموذج الـ AAA الحديث
+aaa new-model
+
+! 3. تعريف خادم الـ TACACS+ (أو Cisco ISE)
+tacacs server ISE-SERVER
+ address ipv4 192.168.1.100
+ key TacacsKeySecret123!
+
+! 4. إضافة السيرفر لمجموعة
+aaa group server tacacs+ TACACS-GRP
+ server name ISE-SERVER
+
+! 5. تطبيق قوائم الطرق مع Fallback للحساب المحلي
+aaa authentication login default group TACACS-GRP local
+aaa authorization exec default group TACACS-GRP local
+aaa accounting exec default start-stop group TACACS-GRP
+aaa accounting commands 15 default start-stop group TACACS-GRP
+
+! 6. تأمين خطوط الاتصال بـ SSHv2 فقط
+line vty 0 4
+ transport input ssh
+ login authentication default</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>الإعداد خطوة بخطوة</h2>
+
+      <!-- ================= aaa new-model ================= -->
+      <section class="cmd" id="aaa-new-model" dir="rtl">
+        <h3><span dir="ltr">aaa new-model</span> <small dir="ltr">Enable AAA Framework</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>aaa new-model</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> الخطوة الأولى الإلزامية لتفعيل بنية الـ AAA على أجهزة سيسكو. بدون كتابة هذا الأمر، لن تظهر أي من أوامر الـ AAA الأخرى في الـ CLI.</p>
+      </section>
+
+      <!-- ================= TACACS+ / RADIUS Server Definition ================= -->
+      <section class="cmd" id="tacacs-radius-server" dir="rtl">
+        <h3><span dir="ltr">tacacs / radius server</span> <small dir="ltr">Server Definition</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>! تعريف خادم TACACS+ (نظام IOS الحديث):
+tacacs server &lt;server-name&gt;
+ address ipv4 &lt;ip-address&gt;
+ key &lt;shared-secret&gt;
+
+! تعريف خادم RADIUS:
+radius server &lt;server-name&gt;
+ address ipv4 &lt;ip-address&gt;
+ key &lt;shared-secret&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> تحديد عنوان IP خادم الـ AAA المركزي (مثل Cisco Identity Services Engine - ISE) ومفتاح التشفير المشترك (Shared Secret) المستخدم لحماية الاتصال بين الراوتر والخادم.</p>
+      </section>
+
+      <!-- ================= AAA Server Group ================= -->
+      <section class="cmd" id="aaa-group-server" dir="rtl">
+        <h3><span dir="ltr">aaa group server</span> <small dir="ltr">Server Grouping</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>aaa group server tacacs+ &lt;group-name&gt;
+ server name &lt;server-name-1&gt;
+ server name &lt;server-name-2&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> تجميع أكثر من خادم TACACS+ أو RADIUS داخل مجموعة واحدة لتحقيق الوفرة العالية (High Availability / Redundancy)، بحيث إذا لم يستجب السيرفر الأول يجرب الراوتر السيرفر الثاني تلقائياً.</p>
+      </section>
+
+      <!-- ================= Authentication Method List ================= -->
+      <section class="cmd" id="aaa-authentication-login" dir="rtl">
+        <h3><span dir="ltr">aaa authentication login</span> <small dir="ltr">Login Method List</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>aaa authentication login {default | &lt;list-name&gt;} method1 [method2] [method3]</code></pre>
+        </div>
+        <p><strong>أمثلة شائعة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>! التحقق عبر TACACS+ أولاً، وإذا كان السيرفر ساقطاً نرجع للحساب المحلي:
+aaa authentication login default group TACACS-GRP local
+
+! التحقق عبر قاعدة بيانات الراوتر المحلية فقط:
+aaa authentication login default local</code></pre>
+        </div>
+        <p><strong>قاعدة الـ Fallback الهامة:</strong> الراوتر يرجع للطريقة الثانية (<code dir="ltr">local</code>) <strong>فقط إذا كان السيرفر الأول غير متاح أو لا يستجيب (Unreachable / Timeout)</strong>. أما إذا رد السيرفر بالرفض (Credentials Incorrect)، فسيتم رفض المستخدم فوراً ولن يجرب الطريقة الثانية!</p>
+      </section>
+
+      <!-- ================= Authorization Method List ================= -->
+      <section class="cmd" id="aaa-authorization-exec" dir="rtl">
+        <h3><span dir="ltr">aaa authorization exec & commands</span> <small dir="ltr">Command Permissions</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>! تفويض صلاحيات بدء جلسة الـ EXEC ومستوى الصلاحية
+aaa authorization exec default group &lt;group-name&gt; local
+
+! تفويض كل أمر يكتبه المهندس في وضع الـ Enable (Privilege 15)
+aaa authorization commands 15 default group &lt;group-name&gt; local</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> عندما يكتب المهندس أي أمر (مثل <code dir="ltr">reload</code>)، يسأل الراوتر سيرفر TACACS+: "هل مسموح لهذا المستخدم بتنفيذ هذا الأمر؟" فإذا رفض السيرفر، يمنع الراوتر تنفيذ الأمر على الفور.</p>
+      </section>
+
+      <!-- ================= Accounting Method List ================= -->
+      <section class="cmd" id="aaa-accounting" dir="rtl">
+        <h3><span dir="ltr">aaa accounting</span> <small dir="ltr">Action Auditing</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>! تسجيل بدء ونهاية الجلسات
+aaa accounting exec default start-stop group &lt;group-name&gt;
+
+! تسجيل كل أمر يكتبه المهندس
+aaa accounting commands 15 default start-stop group &lt;group-name&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> إرسال سجلات تدقيق تفصيلية لسيرفر الـ AAA المركزي تشمل: اسم المستخدم، الـ IP الذي اتصل منه، وقت تسجيل الدخول والخروج، وكل أمر تم تنفيذه بالدقيقة والثانية.</p>
+      </section>
+
+      <!-- ================= SSHv2 Device Hardening ================= -->
+      <section class="cmd" id="ssh-hardening" dir="rtl">
+        <h3><span dir="ltr">crypto key generate rsa</span> <small dir="ltr">SSHv2 Secure Remote Access</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>! 1. تحديد اسم الجهاز واسم النطاق (إجباري قبل توليد المفاتيح)
+hostname R1
+ip domain-name mycorp.local
+
+! 2. توليد مفاتيح تشفير RSA بحجم 2048 بت
+crypto key generate rsa modulus 2048
+
+! 3. إجبار الجهاز على استخدام SSH الإصدار الثاني فقط
+ip ssh version 2
+ip ssh time-out 60
+ip ssh authentication-retries 3
+
+! 4. إغلاق الـ Telnet تماماً وحصر الدخول على الـ SSH
+line vty 0 4
+ transport input ssh</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بروتوكول Telnet ينقل كلمات المرور بنص صريح (Plaintext) غير مشفر. معايير سيسكو تشترط حظر Telnet وتفعيل SSHv2 بمفتاح تشفير 2048 بت.</p>
+      </section>
+
+    </section>
+
+    <section id="verification">
+      <h2>أوامر التحقق والمراقبة</h2>
+
+      <section class="cmd" id="show-aaa-servers" dir="rtl">
+        <h3><span dir="ltr">show aaa servers</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> يعرض حالة خوادم الـ TACACS+ والـ RADIUS، وعدد الطلبات المرسلة والمستلمة، وحالة السيرفر (Alive أم Dead).</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>show aaa servers
+TACACS+ Servers:
+    ISE-SERVER: id 1, priority 1, host 192.168.1.100, authen-port 49, author-port 49, acct-port 49
+    Status: UP, messages sent 152, messages received 152, timeouts 0</code></pre>
+        </div>
+      </section>
+
+      <section class="cmd" id="show-ip-ssh" dir="rtl">
+        <h3><span dir="ltr">show ip ssh</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> فحص إصدار الـ SSH والتأكد من أنه الإصدار الثاني (Version 2.0) ومراجعة إعدادات المهلة والمحاولات.</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>show ip ssh
+SSH Enabled - version 2.0
+Authentication timeout: 60 secs; Authentication retries: 3</code></pre>
+        </div>
+      </section>
+
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فحص الأعطال (Troubleshooting)</h2>
+      <ul>
+        <li><strong>المهندسون لا يستطيعون الدخول بعد تفعيل الـ AAA (Lockout):</strong>
+          <ol>
+            <li>أخطر خطأ يقع فيه المهندسون! تأكد <strong>دائماً</strong> من إنشاء حساب محلي للطوارئ (<code dir="ltr">username ... privilege 15 secret ...</code>) <strong>قبل</strong> تفعيل <code dir="ltr">aaa new-model</code>.</li>
+            <li>تأكد من إضافة كلمة <code dir="ltr">local</code> كطريقة احتياطية ثانية في الـ Method List.</li>
+            <li>إذا تم قفل الجهاز، يمكنك الدخول حصرياً عبر الـ Console الفيزيائي إذا لم تكن الـ Console مرتبطة بالقائمة الافتراضية.</li>
+          </ol>
+        </li>
+        <li><strong>السيرفر لا يستجيب وتأخير طويل عند محاولة الدخول:</strong>
+          <ol>
+            <li>افحص وصول البينج لسيرفر الـ AAA.</li>
+            <li>تأكد من فتح منفذ <strong>TCP 49</strong> للـ TACACS+، أو منافذ <strong>UDP 1812/1813</strong> للـ RADIUS في الجدران النارية والـ ACLs.</li>
+            <li>تأكد من تطابق الـ <strong>Shared Secret</strong> بدقة شديدة بين الراوتر والسيرفر؛ فعدم تطابقها يؤدي لرفض التوثيق بصمت.</li>
+          </ol>
+        </li>
+        <li><strong>فشل توليد مفاتيح RSA للـ SSH:</strong>
+          <ol>
+            <li>أمر <code dir="ltr">crypto key generate rsa</code> يفشل إذا لم يكن الجهاز يحمل اسماً خاصاً غير الاسم الافتراضي (<code dir="ltr">hostname</code>) أو إذا لم يكن هناك نطاق محدد عبر <code dir="ltr">ip domain-name</code>.</li>
+          </ol>
+        </li>
+      </ul>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li><strong>جدول المقارنة الحاسم للامتحان: TACACS+ مقابل RADIUS:</strong>
+          <table style="margin-top: 10px;">
+            <thead>
+              <tr>
+                <th>المعيار</th>
+                <th dir="ltr">TACACS+</th>
+                <th dir="ltr">RADIUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>الملكية (Standard)</strong></td>
+                <td>سيسكو (Cisco Proprietary)</td>
+                <td>معيار عالمي مفتوح (IETF RFC 2865)</td>
+              </tr>
+              <tr>
+                <td><strong>بروتوكول النقل والمنافذ</strong></td>
+                <td><strong dir="ltr">TCP Port 49</strong></td>
+                <td><strong dir="ltr">UDP Ports 1812 & 1813</strong> (أو قديم 1645/1646)</td>
+              </tr>
+              <tr>
+                <td><strong>التشفير (Encryption)</strong></td>
+                <td><strong dir="ltr">يشفر الحزمة بالكامل</strong> (Full Packet Body)</td>
+                <td><strong dir="ltr">يشفر كلمة المرور فقط</strong> (Password Only)</td>
+              </tr>
+              <tr>
+                <td><strong>الفصل بين الوظائف</strong></td>
+                <td>يفصل تماماً بين Authentication و Authorization و Accounting</td>
+                <td>يدمج Authentication و Authorization معاً</td>
+              </tr>
+              <tr>
+                <td><strong>الاستخدام النموذجي</strong></td>
+                <td>إدارة الراوترات والسويتشات والـ CLI</td>
+                <td>التحكم في وصول المستخدمين (802.1X و VPN)</td>
+              </tr>
+            </tbody>
+          </table>
+        </li>
+        <li><strong>فخ الـ Local Fallback:</strong>
+          <p>كلمة <code dir="ltr">local</code> في نهاية قائمة الطرق لا تفحص الحساب المحلي إلا إذا كان السيرفر <strong>غائباً تماماً (No Response)</strong>. إذا أدخل المستخدم كلمة سر خاطئة، يرفضه السيرفر وينتهي الفحص فوراً!</p>
+        </li>
+        <li><strong>مستويات الصلاحيات (Privilege Levels):</strong>
+          <ul>
+            <li><code dir="ltr">Privilege 1:</code> وضع المستخدم العادي (User EXEC Mode - الرمز <code dir="ltr">&gt;</code>).</li>
+            <li><code dir="ltr">Privilege 15:</code> وضع المسؤول الكامل (Privileged EXEC Mode - الرمز <code dir="ltr">#</code>) بصلاحيات تحكم تامة.</li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Command</th>
+            <th dir="ltr">Mode</th>
+            <th>الوظيفة (Purpose)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">aaa new-model</code></td>
+            <td dir="ltr">Global config</td>
+            <td>تفعيل إطار عمل الـ AAA الحديث على الجهاز.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">tacacs server &lt;name&gt;</code></td>
+            <td dir="ltr">Global config</td>
+            <td>تعريف خادم TACACS+ وتحديد عنوان الـ IP والمفتاح المشترك.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">radius server &lt;name&gt;</code></td>
+            <td dir="ltr">Global config</td>
+            <td>تعريف خادم RADIUS وتحديد عنوان الـ IP والمفتاح المشترك.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">aaa authentication login default ...</code></td>
+            <td dir="ltr">Global config</td>
+            <td>تحديد طرق التحقق من تسجيل الدخول مع خيار الاحتياط المحلي.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">aaa authorization exec default ...</code></td>
+            <td dir="ltr">Global config</td>
+            <td>تفويض صلاحيات الدخول لمستوى الـ EXEC عبر السيرفر.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">aaa accounting commands 15 ...</code></td>
+            <td dir="ltr">Global config</td>
+            <td>تسجيل وتدقيق كل أمر يتم تنفيذه في المستوى 15.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">crypto key generate rsa modulus 2048</code></td>
+            <td dir="ltr">Global config</td>
+            <td>توليد مفاتيح تشفير RSA بطول 2048 بت لبروتوكول SSH.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show aaa servers</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>عرض حالة خوادم الـ AAA وإحصائيات الحزم المستلمة والمرسلة.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="layer2-security.html" class="nav-btn">« السابق: حماية الطبقة الثانية (L2 Security)</a>
+      <a href="vpn-wireless-sec.html" class="nav-btn">التالي: شبكات VPN وحماية اللاسلكي »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configuration Management (Ansible/Puppet/Chef) - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>أدوات إدارة الإعدادات (Ansible, Puppet, Chef)</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>في شبكات المؤسسات الضخمة التي تحتوي على مئات الراوترات والسويتشات، يؤدي إدخال الإعدادات يدوياً إلى أخطاء بشرية وتفاوت في الإعدادات (Configuration Drift). أدوات <strong>Configuration Management</strong> تسمح بتعريف الحالة المطلوبة للشبكة كأكواد برمجية (Infrastructure as Code - IaC) وتطبيقها ومراقبتها تلقائياً وبشكل متكرر:</p>
+      <ul>
+        <li><strong>خاصية الـ Idempotency (خاصية التكرار الآمن):</strong>
+          <p>هي الميزة الأهم في أدوات الأتمتة؛ وتعني أن تشغيل كود الأتمتة مرة واحدة أو 100 مرة على نفس الجهاز <strong>سينتج دائماً نفس الحالة النهائية المضبوطة تماماً</strong> بدون إحداث أي تغييرات جانبية غير مقصودة وبدون تكرار الأوامر المطبقة بالفعل.</p>
+        </li>
+        <li><strong>المقارنة الكلاسيكية لأدوات الأتمتة الثلاث للامتحان:</strong>
+          <ul>
+            <li><strong>Ansible:</strong> لا يحتاج لتثبيت أي برامج عميلة على الراوترات (<strong>Agentless</strong>)، يعتمد على بروتوكول <strong>SSH</strong> العادي، يعمل بنموذج الدفع (<strong>Push Model</strong>)، ويستخدم صيغة <strong>YAML</strong> في كتابة الـ Playbooks. (هو الأداة الأكثر استخداماً وشعبية في شبكات سيسكو).</li>
+            <li><strong>Puppet:</strong> يعتمد على برنامج عميل (<strong>Agent-based</strong>)، يعمل بنموذج السحب (<strong>Pull Model</strong>) عبر HTTPS، ويستخدم لغة خاصة مبنية على روبي تسمى <strong>Puppet DSL</strong> في كتابة الـ Manifests (<code dir="ltr">.pp</code>).</li>
+            <li><strong>Chef:</strong> يعتمد على برنامج عميل (<strong>Agent-based</strong>)، يعمل بنموذج السحب (<strong>Pull Model</strong>) عبر HTTPS، ويستخدم لغة <strong>Pure Ruby</strong> في كتابة الـ Cookbooks والـ Recipes (<code dir="ltr">.rb</code>).</li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <section id="quick-config">
+      <h2>نموذج عملي لـ Ansible Playbook (انسخ وقارن)</h2>
+      <p>مثال واقعي لملف جرد الأجهزة (Inventory) وملف Playbook مكتوب بصيغة YAML لإعداد الـ VLANs على سويتشات سيسكو تلقائياً:</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>! 1. ملف جرد الأجهزة المستهدفة (hosts.ini)
+[switches]
+switch1 ansible_host=192.168.1.11
+switch2 ansible_host=192.168.1.12
+
+[switches:vars]
+ansible_network_os=cisco.ios.ios
+ansible_user=netops
+ansible_ssh_pass=CiscoSecurePass#2026
+ansible_connection=network_cli
+
+! 2. ملف الـ Playbook لتطبيق إعدادات الـ VLAN (configure_vlans.yml)
+---
+- name: Configure Corporate VLANs on Cisco Switches
+  hosts: switches
+  gather_facts: false
+
+  tasks:
+    - name: Ensure VLAN 10 and 20 are created and named
+      cisco.ios.ios_vlans:
+        config:
+          - vlan_id: 10
+            name: SALES_DEPT
+            state: active
+          - vlan_id: 20
+            name: IT_OPERATIONS
+            state: active
+        state: merged</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>مقارنة الأدوات الثلاث ومصطلحاتها خطوة بخطوة</h2>
+
+      <!-- ================= Ansible ================= -->
+      <section class="cmd" id="ansible-overview" dir="rtl">
+        <h3><span dir="ltr">Ansible Architecture & Terms</span> <small dir="ltr">Agentless & Push Model</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam Core</span>
+          <span class="badge theory">Red Hat Ansible</span>
+        </p>
+        <p><strong>بنية ومصطلحات Ansible للامتحان:</strong></p>
+        <ul>
+          <li><strong>Control Node:</strong> جهاز لينكس مثبت عليه Ansible، وهو الجهاز الوحيد الذي يُكتب عليه الكود وتُنفذ منه الأوامر (لا يدعم نظام Windows كـ Control Node أصلي).</li>
+          <li><strong>Managed Nodes:</strong> أجهزة الشبكة التي نتحكم فيها (مثل راوترات وسويتشات سيسكو). <strong>لا تتطلب تثبيت أي سوفتوير خاص (Agentless)</strong>؛ يكفي تفعيل SSH ووجود حساب مستخدم بصلاحيات Privilege 15.</li>
+          <li><strong>Inventory:</strong> ملف نصي (بصيغة INI أو YAML) يحتوي على قائمة بأسماء وأيبيهات الأجهزة ومجموعاتها وبيانات تسجيل الدخول.</li>
+          <li><strong>Playbook:</strong> ملف مكتوب بصيغة <strong>YAML</strong> يحتوي على المسرحية البرمجية (Plays) والمهام المطلوب تنفيذها (Tasks).</li>
+          <li><strong>Modules:</strong> موديولات سيسكو المبرمجة بالبايثون التي تؤدي العمل الفعلي على الراوتر، مثل:
+            <ul>
+              <li><code dir="ltr">cisco.ios.ios_command:</code> لتنفيذ أوامر الاستعلام (مثل <code dir="ltr">show version</code>).</li>
+              <li><code dir="ltr">cisco.ios.ios_config:</code> لإرسال أسطر إعدادات وتعديل الـ Running-Config.</li>
+            </ul>
+          </li>
+          <li><strong>Push Model:</strong> جهاز الـ Control Node هو الذي يبدأ الاتصال ويدفع (Pushes) الأوامر فوراً للأجهزة دون انتظار.</li>
+        </ul>
+      </section>
+
+      <!-- ================= Puppet ================= -->
+      <section class="cmd" id="puppet-overview" dir="rtl">
+        <h3><span dir="ltr">Puppet Architecture & Terms</span> <small dir="ltr">Agent-based & Pull Model</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam Core</span>
+          <span class="badge theory">Puppet</span>
+        </p>
+        <p><strong>بنية ومصطلحات Puppet للامتحان:</strong></p>
+        <ul>
+          <li><strong>Puppet Master (Server):</strong> الخادم المركزي الذي يحتوي على الكود ومواصفات الحالة المستهدفة للشبكة.</li>
+          <li><strong>Puppet Agent:</strong> برنامج يتم تثبيته على الأجهزة المُدارة (بالنسبة لسويتشات سيسكو Nexus/Catalyst يتم تشغيل Puppet Agent داخل حاوية Guest Shell أو عبر Puppet Device Proxy).</li>
+          <li><strong>Pull Model:</strong> يقوم العميل (Agent) بطلب الإعدادات وسحبها (Pulls) من السيرفر بشكل دوري (افتراضياً <strong>كل 30 دقيقة</strong>).</li>
+          <li><strong>Manifests:</strong> الملفات التي تحتوي على تعريف الحالة المرغوبة وتنتهي بامتداد <strong><code dir="ltr">.pp</code></strong>.</li>
+          <li><strong>اللغة:</strong> مكتوبة بلغة <strong>Puppet DSL (Domain-Specific Language)</strong> المشابهة للغة روبي.</li>
+          <li><strong>Facter:</strong> أداة مدمجة تجمع معلومات ومواصفات الجهاز (Facts كالـ MAC والـ IP وسعة الذاكرة) وترسلها للماستر.</li>
+          <li><strong>بروتوكول النقل:</strong> تعتمد على تشفير <strong>HTTPS عبر منفذ TCP 8140</strong>.</li>
+        </ul>
+      </section>
+
+      <!-- ================= Chef ================= -->
+      <section class="cmd" id="chef-overview" dir="rtl">
+        <h3><span dir="ltr">Chef Architecture & Terms</span> <small dir="ltr">Cookbooks, Recipes & Ruby</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam Core</span>
+          <span class="badge theory">Progress Chef</span>
+        </p>
+        <p><strong>بنية ومصطلحات Chef للامتحان (مصطلحات مستوحاة من الطهي والمطابخ):</strong></p>
+        <ul>
+          <li><strong>Chef Workstation:</strong> حاسوب المهندس الذي يكتب ويطور عليه الأكواد ويختبرها قبل رفعها للسيرفر.</li>
+          <li><strong>Chef Server:</strong> الخادم المركزي الذي يخزن الوصفات البرمجية والسياسات.</li>
+          <li><strong>Chef Node / Client:</strong> الأجهزة المُدارة التي يعمل عليها برنامج <code dir="ltr">chef-client</code>.</li>
+          <li><strong>Recipes (الوصفات):</strong> الملفات الأساسية المكتوبة بلغة <strong>Pure Ruby</strong> وتنتهي بامتداد <strong><code dir="ltr">.rb</code></strong>، وتحدد الموارد المطلوب تهيئتها.</li>
+          <li><strong>Cookbooks (كتب الطهي):</strong> مجموعة منظمة تضم عدة Recipes وملفات ومكتبات معاً.</li>
+          <li><strong>Ohai:</strong> أداة مدمجة تجمع مواصفات ومعلومات الجهاز (Facts) وترسلها للـ Chef Server.</li>
+          <li><strong>Pull Model:</strong> الجهاز يتصل بالخادم دورياً ويسحب (Pulls) التحديثات عبر <strong>HTTPS منفذ 443 أو 10002</strong>.</li>
+        </ul>
+      </section>
+
+      <!-- ================= SaltStack ================= -->
+      <section class="cmd" id="saltstack-overview" dir="rtl">
+        <h3><span dir="ltr">SaltStack (Salt)</span> <small dir="ltr">Master & Minions</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam</span>
+          <span class="badge theory">SaltStack</span>
+        </p>
+        <p><strong>نظرة سريعة على SaltStack:</strong></p>
+        <ul>
+          <li><strong>Salt Master:</strong> السيرفر المركزي للتحكم.</li>
+          <li><strong>Salt Minions:</strong> البرامج العميلة المثبتة على الأجهزة (ويدعم أيضاً وضع Salt-SSH بدون عميل).</li>
+          <li><strong>بروتوكول الاتصال:</strong> يعتمد على مكتبة <strong>ZeroMQ</strong> فائقة السرعة على منافذ <strong>TCP 4505 & 4506</strong>.</li>
+          <li><strong>Model:</strong> يدعم كلا النموذجين: <strong>Push</strong> و <strong>Pull</strong>.</li>
+          <li><strong>الصيغة:</strong> ملفات <strong>State Files (.sls)</strong> مكتوبة بصيغة <strong>YAML</strong>.</li>
+        </ul>
+      </section>
+
+      <!-- ================= Terraform ================= -->
+      <section class="cmd" id="terraform-overview" dir="rtl">
+        <h3><span dir="ltr">Terraform (IaC Framework)</span> <small dir="ltr">Declarative Infrastructure as Code</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam Core (v1.1)</span>
+          <span class="badge theory">HashiCorp Terraform</span>
+        </p>
+        <p><strong>بنية ومفاهيم Terraform للامتحان:</strong></p>
+        <ul>
+          <li><strong>Infrastructure as Code (IaC):</strong> أداة رائدة لبناء وإدارة البنية التحتية السحابية والشبكية كأكواد برمجية معلنة (Declarative).</li>
+          <li><strong>اللغة المستخدمة:</strong> لغة <strong>HCL (HashiCorp Configuration Language)</strong> بملفات تنتهي بـ <code dir="ltr">.tf</code>.</li>
+          <li><strong>ملف الحالة (State File - <code dir="ltr">terraform.tfstate</code>):</strong> الملف الذي يسجل فيه Terraform الحالة الفعلية لكل الموارد المنشأة للمقارنة ومنع التكرار (Idempotency).</li>
+          <li><strong>مراحل التشغيل الأربعة:</strong>
+            <ul>
+              <li><code dir="ltr">terraform init:</code> تجهيز بيئة العمل وتحميل الـ Providers (مثل موفر Cisco IOS XE أو AWS).</li>
+              <li><code dir="ltr">terraform plan:</code> فحص الكود ومقارنته بملف الحالة وعرض التغييرات المزمع تنفيذها بدون تطبيقها فعلياً.</li>
+              <li><code dir="ltr">terraform apply:</code> تنفيذ الأوامر وبناء الموارد فعلياً على الأجهزة والسحابة.</li>
+              <li><code dir="ltr">terraform destroy:</code> حذف كل الموارد التي تم إنشاؤها عبر الكود بضغطة واحدة.</li>
+            </ul>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ================= Git Version Control ================= -->
+      <section class="cmd" id="git-version-control" dir="rtl">
+        <h3><span dir="ltr">Git Version Control Basics</span> <small dir="ltr">DevOps for NetOps</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam Core (v1.1)</span>
+          <span class="badge theory">Version Control</span>
+        </p>
+        <p><strong>أهم أوامر Git الأساسية لمهندس الشبكات:</strong></p>
+        <ul>
+          <li><code dir="ltr">git init:</code> إنشاء مستودع Git محلي جديد لتتبع ملفات الإعدادات والـ Playbooks.</li>
+          <li><code dir="ltr">git clone &lt;url&gt;:</code> نسخ مستودع كامل من منصة سحابية (مثل GitHub أو GitLab) لجهازك المحلي.</li>
+          <li><code dir="ltr">git status:</code> فحص حالة الملفات ومعرفة ما تم تعديله أو إضافته.</li>
+          <li><code dir="ltr">git add &lt;file&gt;:</code> نقل التعديلات لمرحلة التجهيز (Staging Area).</li>
+          <li><code dir="ltr">git commit -m "message":</code> تسجيل نقطة حفظ للتعديلات مع رسالة توضيحية.</li>
+          <li><code dir="ltr">git push:</code> رفع التعديلات المحفوظة من جهازك المحلي للمستودع السحابي البعيد (Remote Repository).</li>
+          <li><code dir="ltr">git pull:</code> سحب أحدث التعديلات التي قام بها زملاؤك في الفريق ودمجها محلياً.</li>
+          <li><code dir="ltr">git branch &lt;branch-name&gt;:</code> إنشاء فرع مستقل لتجربة إعدادات شبكة جديدة دون التأثير على الفرع الرئيسي (main).</li>
+        </ul>
+      </section>
+
+    </section>
+
+    <section id="verification">
+      <h2>مقارنة شاملة لأدوات الأتمتة للامتحان (حفظ إجباري)</h2>
+      <table style="margin-top: 10px;">
+        <thead>
+          <tr>
+            <th>المعيار</th>
+            <th dir="ltr">Ansible</th>
+            <th dir="ltr">Puppet</th>
+            <th dir="ltr">Chef</th>
+            <th dir="ltr">SaltStack</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>العميل (Agent)</strong></td>
+            <td><strong style="color:#007bff;" dir="ltr">Agentless (بدون عميل)</strong></td>
+            <td>Agent-based</td>
+            <td>Agent-based</td>
+            <td>Agent & Agentless</td>
+          </tr>
+          <tr>
+            <td><strong>نموذج التشغيل</strong></td>
+            <td><strong dir="ltr">Push Model (دفع)</strong></td>
+            <td><strong dir="ltr">Pull Model (سحب)</strong></td>
+            <td><strong dir="ltr">Pull Model (سحب)</strong></td>
+            <td>Push & Pull</td>
+          </tr>
+          <tr>
+            <td><strong>بروتوكول النقل</strong></td>
+            <td><strong dir="ltr">SSH / NETCONF</strong></td>
+            <td><strong dir="ltr">HTTPS (TCP 8140)</strong></td>
+            <td><strong dir="ltr">HTTPS (TCP 443/10002)</strong></td>
+            <td>ZeroMQ (4505/4506)</td>
+          </tr>
+          <tr>
+            <td><strong>صيغة الملفات</strong></td>
+            <td><strong dir="ltr">Playbooks (.yml)</strong></td>
+            <td><strong dir="ltr">Manifests (.pp)</strong></td>
+            <td><strong dir="ltr">Cookbooks / Recipes (.rb)</strong></td>
+            <td>State files (.sls)</td>
+          </tr>
+          <tr>
+            <td><strong>لغة البرمجة</strong></td>
+            <td><strong dir="ltr">YAML</strong> (بايثون تحت الغطاء)</td>
+            <td><strong dir="ltr">Puppet DSL</strong> (روبي)</td>
+            <td><strong dir="ltr">Ruby</strong></td>
+            <td>YAML & Python</td>
+          </tr>
+          <tr>
+            <td><strong>أداة جمع المعلومات</strong></td>
+            <td>Setup Module</td>
+            <td>Facter</td>
+            <td>Ohai</td>
+            <td>Grains</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فحص الأعطال (Troubleshooting)</h2>
+      <ul>
+        <li><strong>أوامر الـ Ansible تفشل بالاتصال بالراوتر (SSH Failure):</strong>
+          <ol>
+            <li>تأكد من إمكانية الوصول إلى بورت <strong>TCP 22</strong> من جهاز الـ Control Node للراوتر.</li>
+            <li>تأكد من صحة بيانات الدخول في ملف الـ Inventory، وأن حساب المستخدم يمتلك صلاحيات <code dir="ltr">privilege 15</code>.</li>
+            <li>تأكد من ضبط خيار <code dir="ltr">ansible_connection=network_cli</code> و <code dir="ltr">ansible_network_os=cisco.ios.ios</code> في إعدادات المتغيرات.</li>
+          </ol>
+        </li>
+        <li><strong>فشل عملاء Puppet أو Chef في سحب التحديثات (Pull Failed):</strong>
+          <ol>
+            <li>تأكد من فتح منافذ الـ HTTPS (TCP 8140 للـ Puppet و TCP 443 للـ Chef).</li>
+            <li>تأكد من دقة مزامنة الوقت عبر <strong>NTP</strong>؛ لأن الشهادات الرقمية (SSL Certificates) تفشل فوراً إذا كان توقيت العميل مختلفاً عن توقيت السيرفر!</li>
+          </ol>
+        </li>
+      </ul>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li><strong>فخ Push مقابل Pull:</strong>
+          <p>تذكر دائماً: <strong>Ansible هو الأداة الوحيدة المشهورة التي تدفع الأوامر (Push) ولا تتطلب برنامج عميل (Agentless)</strong>. بينما Puppet و Chef كلاهما يسحب التحديثات (Pull) وكلاهما يتطلب عميلاً (Agent-based).</p>
+        </li>
+        <li><strong>الربط بين أسماء الملفات والأدوات:</strong>
+          <ul>
+            <li>لو شفت في السؤال كلمة <code dir="ltr">Playbook</code> أو <code dir="ltr">Inventory</code> &larr; الإجابة <strong>Ansible</strong>.</li>
+            <li>لو شفت في السؤال كلمة <code dir="ltr">Manifest</code> أو <code dir="ltr">Facter</code> &larr; الإجابة <strong>Puppet</strong>.</li>
+            <li>لو شفت في السؤال كلمة <code dir="ltr">Cookbook</code> أو <code dir="ltr">Recipe</code> أو <code dir="ltr">Ohai</code> &larr; الإجابة <strong>Chef</strong>.</li>
+          </ul>
+        </li>
+        <li><strong>مفهوم الـ Idempotence في الأتمتة:</strong>
+          <p>إذا كانت الأداة Idempotent ونفذت Playbook ينشئ VLAN 10، وكانت VLAN 10 موجودة بالفعل على السويتش، فإن الأداة <strong>لن تفعل أي شيء ولن تعيد كتابة الأمر</strong>، بل ستسجل أن الحالة <code dir="ltr">OK / Unchanged</code> فقط.</p>
+        </li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Tool</th>
+            <th>العميل (Agent)</th>
+            <th>النموذج (Model)</th>
+            <th>اللغة والملفات</th>
+            <th>الاستخدام الرئيسي</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td dir="ltr"><strong>Ansible</strong></td>
+            <td>Agentless</td>
+            <td>Push</td>
+            <td>YAML (Playbooks)</td>
+            <td>الأكثر استخداماً في أتمتة شبكات سيسكو.</td>
+          </tr>
+          <tr>
+            <td dir="ltr"><strong>Puppet</strong></td>
+            <td>Agent-based</td>
+            <td>Pull</td>
+            <td>Puppet DSL (Manifests .pp)</td>
+            <td>إدارة الخوادم ومحطات العمل وأجهزة السحابة.</td>
+          </tr>
+          <tr>
+            <td dir="ltr"><strong>Chef</strong></td>
+            <td>Agent-based</td>
+            <td>Pull</td>
+            <td>Ruby (Cookbooks / Recipes .rb)</td>
+            <td>أتمتة البنية التحتية البرمجية للمطورين.</td>
+          </tr>
+          <tr>
+            <td dir="ltr"><strong>SaltStack</strong></td>
+            <td>Agent & Agentless</td>
+            <td>Push / Pull</td>
+            <td>YAML / Python (.sls)</td>
+            <td>الأتمتة السريعة عبر ZeroMQ.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="data-formats.html" class="nav-btn">« السابق: صيغ البيانات وواجهات REST APIs</a>
+      <a href="../07-troubleshooting/methodology-playbooks.html" class="nav-btn">التالي: أدلة فحص الأعطال (Troubleshooting) »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

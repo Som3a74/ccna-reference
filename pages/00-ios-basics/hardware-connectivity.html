@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>فحص الأجهزة والاتصال (Hardware & Connectivity) - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>فحص الأجهزة، الاتصال، والمنافذ</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>الصفحة دي بتجمع الأوامر الخاصة بالتعامل مع الهاردوير (CPU، مروحة، حرارة)، وأدوات اختبار الشبكة زي الـ Ping والـ Traceroute، بالإضافة لأوامر إدارة المنافذ (Interfaces) الفيزيائية ومراقبة حالتها واكتشاف أخطاء الكابلات.</p>
+    </section>
+
+    <section id="quick-config">
+      <h2>إعداد سريع (انسخ والصق)</h2>
+      <p>عشان تشغل مجموعة منافذ وتظبط سرعتهم وتلغي قفلهم:</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>interface range g0/1 - 4
+ speed 1000
+ duplex full
+ mdix auto
+ no shutdown</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>الإعداد خطوة بخطوة</h2>
+
+      <!-- Hardware monitoring -->
+      <h3>1. فحص الهاردوير والموارد</h3>
+      
+      <section class="cmd" id="show-inventory" dir="rtl">
+        <h3><span dir="ltr">show inventory</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>show inventory</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيعرض كل القطع المادية المتركبة في الجهاز زي الموديولات والـ SFP، وأهم حاجة بيجيب الأرقام المسلسلة (<span dir="ltr">Serial Numbers</span>) بتاعتها، واللي بتحتاجها جداً لو بتفتح تذكرة صيانة مع سيسكو (TAC).</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>show inventory
+NAME: "Chassis", DESCR: "Cisco 2901 Integrated Services Router"
+PID: CISCO2901/K9        , VID: V01, SN: FTX15248XYZ</code></pre>
+        </div>
+      </section>
+
+      <section class="cmd" id="show-env" dir="rtl">
+        <h3><span dir="ltr">show environment</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT Partial</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>show environment [all | temperature]</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيعرض حالة الباور سبلاي، المراوح، ودرجات الحرارة. أمر مهم جداً لو السويتش في مكان حر ومحتاج تطمن إنه مبيسيحش.</p>
+      </section>
+
+      <section class="cmd" id="show-cpu-mem" dir="rtl">
+        <h3><span dir="ltr">show processes cpu / memory</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>show processes cpu [sorted]
+show memory</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيوريك استهلاك المعالج (الـ CPU) والرامات. <code dir="ltr">sorted</code> بيجيبلك أكتر العمليات سحباً للمعالج في الأول. لو لقيت المعالج 99%، ده بيفسر ليه الشبكة واقعة أو بطيئة.</p>
+      </section>
+
+      <section class="cmd" id="show-tech" dir="rtl">
+        <h3><span dir="ltr">show tech-support</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✖</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>show tech-support</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيعمل تفريغ لآلاف السطور من كل أوامر الفحص الممكنة ورا بعض. ده الأمر اللي بيطلبه منك مهندس الدعم الفني بتاع سيسكو عشان يحلل المشكلة. بياخد دقايق عشان يخلص وممكن يتقل الجهاز شوية.</p>
+      </section>
+
+      <!-- Connectivity Tools -->
+      <h3 style="margin-top: 3rem;">2. أدوات الاتصال والتتبع (Connectivity Tools)</h3>
+
+      <section class="cmd" id="ping" dir="rtl">
+        <h3><span dir="ltr">ping (Basic & Extended)</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ping &lt;ip-address&gt;
+ping</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">&lt;ip-address&gt;</code> = عنوان الـ IP اللي عايز تختبر الوصول ليه.</li>
+        </ul>
+        <p><strong>الشرح:</strong> الـ Ping العادي بيبعت 5 رسايل حجمهم 100 بايت وبيخرجوا من أقرب منفذ للوجهة. لو كتبت <code dir="ltr">ping</code> وضغطت <span dir="ltr">Enter</span> من غير أرقام، هتدخل في الـ <strong>Extended Ping</strong>، وده بيسألك سلسلة أسئلة تقدر تغير منها حجم الرسالة وعددها، <strong>وأهم حاجة</strong> إنك تغير الـ Source IP عشان تختبر الوصول كأنك شبكة تانية.</p>
+        <p><strong>مثال للـ Extended Ping:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1# </span>ping
+Protocol [ip]: 
+Target IP address: 192.168.20.1
+Repeat count [5]: 100
+Datagram size [100]: 
+Timeout in seconds [2]: 
+Extended commands [n]: y
+Source address or interface: 10.0.12.1
+Type of service [0]: </code></pre>
+        </div>
+      </section>
+
+      <section class="cmd" id="traceroute" dir="rtl">
+        <h3><span dir="ltr">traceroute</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>traceroute &lt;ip-address&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيتتبع المسار اللي بتمشي فيه الداتا لحد الوجهة، وبيطبع كل راوتر (<span dir="ltr">Hop</span>) بيعدي عليه. مفيد جداً عشان تعرف الداتا بتقف عند مين بالظبط.</p>
+        <p class="note"><strong>انتبه:</strong> في أجهزة سيسكو بيكتب <code dir="ltr">traceroute</code>، لكن في أجهزة الويندوز الأمر بيكون <code dir="ltr">tracert</code>.</p>
+      </section>
+
+      <section class="cmd" id="telnet-ssh" dir="rtl">
+        <h3><span dir="ltr">telnet / ssh</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>telnet &lt;ip-address&gt;
+ssh -l &lt;username&gt; &lt;ip-address&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> عشان تدخل على جهاز تاني من جوة الراوتر بتاعك.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1# </span>ssh -l admin 192.168.10.2</code></pre>
+        </div>
+      </section>
+
+      <section class="cmd" id="terminal-monitor" dir="rtl">
+        <h3><span dir="ltr">terminal monitor</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>terminal monitor</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> افتراضياً، رسايل النظام والـ Debug بتطبع على شاشة الكونسول بس. لو إنت داخل عن طريق SSH أو Telnet (يعني VTY)، مش هتشوف أي رسايل بتطلع. الأمر ده بيخلي الراوتر يبعت الرسايل دي لجلستك الحالية.</p>
+      </section>
+
+      <section class="cmd" id="debug" dir="rtl">
+        <h3><span dir="ltr">debug</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>debug &lt;protocol&gt;
+undebug all</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيشغل مراقبة حية لحظية لبروتوكول معين (مثلاً <code dir="ltr">debug ip ospf hello</code>)، وبيطبعلك كل رسالة بتتبعت أو تستقبل في وقتها. أداة خرافية لاكتشاف الأعطال العميقة.</p>
+        <p class="note"><strong>انتبه:</strong> إياك تكتب <code dir="ltr">debug all</code> على راوتر في شغل حقيقي! ده هيطبع كل فتفوتة بتحصل على الجهاز، المعالج هيوصل 100% والجهاز هيقف عن العمل. عشان توقف أي debug شغال، اكتب <code dir="ltr">undebug all</code> (أو <code dir="ltr">un all</code>) فوراً.</p>
+      </section>
+
+      <!-- Interface Configuration -->
+      <h3 style="margin-top: 3rem;">3. إدارة المنافذ (Interfaces)</h3>
+
+      <section class="cmd" id="interface-config" dir="rtl">
+        <h3><span dir="ltr">interface / range</span> <small dir="ltr">Global config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>interface &lt;type&gt;&lt;number&gt;
+interface range &lt;type&gt;&lt;number&gt; - &lt;number&gt;</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">&lt;type&gt;</code> = نوع المنفذ (FastEthernet, GigabitEthernet, Serial).</li>
+          <li><code dir="ltr">&lt;number&gt;</code> = رقم المنفذ (مثلًا: <code dir="ltr">0/1</code>). وفي حالة הـ range بنحط مسافة قبل وبعد علامة الطرح (مثلًا: <code dir="ltr">g0/1 - 4</code>).</li>
+        </ul>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">SW1(config)# </span>interface range f0/1 - 24
+<span class="prompt">SW1(config-if-range)# </span>shutdown</code></pre>
+        </div>
+      </section>
+
+      <section class="cmd" id="shutdown" dir="rtl">
+        <h3><span dir="ltr">shutdown / no shutdown</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>shutdown
+no shutdown</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> أمر <code dir="ltr">shutdown</code> بيقفل المنفذ إدارياً (بتظهر حالته <code dir="ltr">administratively down</code>). أمر <code dir="ltr">no shutdown</code> بيشغله. الرواتر بتيجي وكل منافذها مقفولة، السويتشات بتيجي ومنافذها مفتوحة.</p>
+      </section>
+
+      <section class="cmd" id="speed-duplex" dir="rtl">
+        <h3><span dir="ltr">speed / duplex / mdix auto</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>speed { 10 | 100 | 1000 | auto }
+duplex { half | full | auto }
+mdix auto</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> افتراضياً كل المنافذ معمولة <code dir="ltr">auto</code> وبتتفاوض مع الجهاز اللي قدامها. أمر <code dir="ltr">mdix auto</code> بيخلي المنفذ يعدل نفسه لو ركبت كابل غلط (Straight مكان Crossover أو العكس)، الخاصية دي شغالة تلقائي في السويتشات الحديثة.</p>
+      </section>
+
+      <section class="cmd" id="errdisable-recovery" dir="rtl">
+        <h3><span dir="ltr">errdisable recovery</span> <small dir="ltr">Global config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>errdisable recovery cause { all | psecure-violation | bpduguard | ... }
+errdisable recovery interval &lt;seconds&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> لو بورت اتقفل بسبب مشكلة حماية (الـ state بقت <code dir="ltr">err-disabled</code>)، الطريقة اليدوية عشان ترجعه هي إنك تعمله <code dir="ltr">shutdown</code> وبعدين <code dir="ltr">no shutdown</code>. الأوامر دي بتخلي السويتش يعمله ريستارت لوحده بعد فترة معينة (الافتراضي 300 ثانية).</p>
+      </section>
+
+    </section>
+
+    <section id="verification">
+      <h2>أوامر التحقق</h2>
+
+      <h3>1. <span dir="ltr">show ip interface brief</span></h3>
+      <p>الأمر الذهبي! بيجيبلك لستة بكل المنافذ، الـ IP بتاعها، وحالتها (مفتوحة ولا مقفولة ولا الكابل مقطوع).</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code><span class="prompt">R1# </span>show ip interface brief
+Interface              IP-Address      OK? Method Status                Protocol
+GigabitEthernet0/0     192.168.10.1    YES manual up                    up
+GigabitEthernet0/1     unassigned      YES unset  administratively down down</code></pre>
+      </div>
+      
+      <h3>2. <span dir="ltr">show interfaces status</span></h3>
+      <p>أمر خاص بالسويتشات، بيوريك حالة المنفذ، الـ VLAN اللي هو فيها، السرعة، والـ Duplex في جدول شيك جداً.</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code><span class="prompt">SW1# </span>show interfaces status
+Port      Name               Status       Vlan       Duplex  Speed Type
+Fa0/1                        connected    10         a-full  a-100 10/100BaseTX
+Fa0/2                        err-disabled 1          auto    auto  10/100BaseTX</code></pre>
+      </div>
+
+      <h3>3. <span dir="ltr">show interfaces</span></h3>
+      <p>أمر طويل جداً بس بنحتاجه عشان نقرا أخطاء الكابلات والتشويش:</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code><span class="prompt">R1# </span>show interfaces g0/0
+GigabitEthernet0/0 is up, line protocol is up
+  Hardware is CN Gigabit Ethernet, address is 0011.2233.4455 (bia 0011.2233.4455)
+  MTU 1500 bytes, BW 1000000 Kbit/sec, DLY 10 usec, 
+     reliability 255/255, txload 1/255, rxload 1/255
+  ...
+  0 runts, 0 giants, 0 throttles
+  0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored
+  0 collisions, 0 late collisions, 0 deferred</code></pre>
+      </div>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فحص الأعطال ومؤشرات الأخطاء</h2>
+      
+      <h3>أشكال نتائج الـ Ping</h3>
+      <ul>
+        <li><code dir="ltr">!</code> : نجاح. الرد وصل.</li>
+        <li><code dir="ltr">.</code> : فشل (Timeout). مفيش رد.</li>
+        <li><code dir="ltr">U</code> : الجهاز أو المسار غير موجود (Unreachable). غالباً مشكلة في الـ Routing.</li>
+      </ul>
+      
+      <h3>قراءة عدادات الأخطاء (Counters Errors)</h3>
+      <ul>
+        <li><strong>Runts:</strong> فريم أصغر من 64 بايت (غالباً مشكلة تصادم Collisions).</li>
+        <li><strong>Giants:</strong> فريم أكبر من 1518 بايت (غالباً مشكلة في إعدادات كارت الشبكة أو الـ VLAN tag).</li>
+        <li><strong>CRC:</strong> الداتا وصلت متكسرة أو متشوشة. بنسبة 90% كابل بايظ أو تشويش مغناطيسي (EMI).</li>
+        <li><strong>Late Collisions:</strong> تصادم حصل متأخر، ده معناه إن الكابل أطول من المسموح بيه (أكتر من 100 متر)، أو فيه Duplex Mismatch (طرف Half وطرف Full).</li>
+      </ul>
+      
+      <h3>مشكلة الـ Duplex Mismatch</h3>
+      <p>لو وصلت جهازين، واحد معمول <code dir="ltr">full duplex</code> والتاني معمول <code dir="ltr">half duplex</code>، الاتصال هيشتغل والـ Ping هيرد، بس لما الداتا تكتر الشبكة هتقع وهتلاقي رسايل زي <code dir="ltr">%CDP-4-DUPLEX_MISMATCH</code> بتظهر باستمرار.</p>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li>تنسى تكتب <code dir="ltr">terminal monitor</code> وإنت داخل SSH وتقعد تكتب <code dir="ltr">debug</code> وتستنى رسايل تطلع ومفيش حاجة تطلع.</li>
+        <li>في السويتشات، لو حطيت سرعة المنفذ <code dir="ltr">speed 100</code> مثلاً بدل <code dir="ltr">auto</code>، السويتش بيقفل خاصية التخاطب التلقائي (Auto-negotiation)، وده ممكن يعطل الـ Duplex ويخليه ينزل לـ Half غصب عنه لو الطرف التاني لسة Auto.</li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Command</th>
+            <th>الوظيفة (Purpose)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">show inventory</code></td>
+            <td>عرض القطع والسيريال نمبر.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ping</code> / <code dir="ltr">traceroute</code></td>
+            <td>فحص الوصول وتتبع المسار.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">terminal monitor</code></td>
+            <td>إظهار رسائل الـ syslog والـ debug على شاشة الـ SSH.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">debug &lt;protocol&gt;</code></td>
+            <td>مراقبة حية لحظية للبروتوكول.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show ip interface brief</code></td>
+            <td>خلاصة حالة المنافذ والـ IP.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show interfaces status</code></td>
+            <td>عرض الـ Duplex والسرعة والـ VLAN (للسويتشات).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">errdisable recovery cause ...</code></td>
+            <td>إعادة تشغيل المنافذ المعطلة أمنياً بشكل تلقائي.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="file-management.html" class="nav-btn">« السابق: إدارة الملفات</a>
+      <a href="../01-network-fundamentals/network-fundamentals.html" class="nav-btn">التالي: مفاهيم الشبكات »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>بروتوكولات الاكتشاف CDP و LLDP - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>بروتوكولات استكشاف الأجهزة المجاورة (CDP & LLDP)</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>بروتوكولات الـ Discovery بتشتغل في الطبقة التانية (Layer 2) وبتسمح للأجهزة إنها تتعرف على الأجهزة المتوصلة بيها مباشرة (الـ Neighbors). بروتوكول <span dir="ltr">CDP (Cisco Discovery Protocol)</span> خاص بسيسكو وشغال افتراضياً، أما <span dir="ltr">LLDP (Link Layer Discovery Protocol)</span> فهو معيار عالمي بيشتغل على كل الأجهزة بس مقفول افتراضياً على سيسكو.</p>
+    </section>
+
+    <section id="quick-config">
+      <h2>إعداد سريع (انسخ والصق)</h2>
+      <p>لو عايز تشغل LLDP في الشبكة كلها، وتقفل الـ CDP على البورت اللي واصل بالإنترنت (للحماية):</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>lldp run
+interface g0/0
+ no cdp enable
+ no lldp transmit</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>الإعداد خطوة بخطوة</h2>
+
+      <!-- CDP Global -->
+      <section class="cmd" id="cdp-run" dir="rtl">
+        <h3><span dir="ltr">cdp run</span> <small dir="ltr">Global config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>cdp run
+no cdp run</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> أمر <code dir="ltr">cdp run</code> بيشغل البروتوكول على الجهاز كله. هو بيكون شغال بشكل افتراضي على أجهزة سيسكو. أمر <code dir="ltr">no cdp run</code> بيوقفه تماماً.</p>
+      </section>
+
+      <!-- CDP Interface -->
+      <section class="cmd" id="cdp-enable" dir="rtl">
+        <h3><span dir="ltr">cdp enable</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>cdp enable
+no cdp enable</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيتحكم في تشغيل الـ CDP على بورت معين. من قواعد الحماية إنك تعمل <code dir="ltr">no cdp enable</code> على أي بورت واصل بجهاز مستخدم (PC) أو واصل بالإنترنت (ISP) عشان متكشفش تفاصيل شبكتك للمتطفلين.</p>
+      </section>
+
+      <!-- LLDP Global -->
+      <section class="cmd" id="lldp-run" dir="rtl">
+        <h3><span dir="ltr">lldp run</span> <small dir="ltr">Global config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>lldp run
+no lldp run</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيشغل بروتوكول الـ LLDP على مستوى الجهاز. في أجهزة سيسكو، البروتوكول ده بيكون <strong>مقفول</strong> افتراضياً ولازم تشغله بالأمر ده لو عندك أجهزة في الشبكة مش من سيسكو (زي HP أو Juniper).</p>
+      </section>
+
+      <!-- LLDP Interface -->
+      <section class="cmd" id="lldp-transmit-receive" dir="rtl">
+        <h3><span dir="ltr">lldp transmit / receive</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>lldp transmit
+lldp receive
+no lldp transmit
+no lldp receive</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> على عكس الـ CDP اللي ليه أمر واحد للبورت، الـ LLDP بيديك تحكم أكبر؛ تقدر تخلي البورت يبعت رسايل بس، أو يستقبل بس، أو الاتنين.</p>
+      </section>
+
+    </section>
+
+    <section id="verification">
+      <h2>أوامر التحقق</h2>
+
+      <h3>1. <span dir="ltr">show cdp neighbors</span></h3>
+      <p>من أشهر وأهم أوامر سيسكو على الإطلاق. بيوريك الأجهزة اللي واصلة بيك مباشرة (سيسكو بس). ونفس الفكرة لأمر <code dir="ltr">show lldp neighbors</code>.</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code><span class="prompt">R1# </span>show cdp neighbors
+Capability Codes: R - Router, T - Trans Bridge, B - Source Route Bridge
+                  S - Switch, H - Host, I - IGMP, r - Repeater, P - Phone
+
+Device ID        Local Intrfce     Holdtme    Capability  Platform  Port ID
+SW1              Gig 0/0           120             S I    WS-C2960  Gig 0/1
+R2               Gig 0/1           150           R        C1900     Gig 0/0</code></pre>
+      </div>
+      <p><strong>إزاي تقرا الجدول ده (مهم جداً للامتحان):</strong></p>
+      <ul>
+        <li><code dir="ltr">Device ID</code>: اسم الجهاز اللي قدامك (الجار).</li>
+        <li><code dir="ltr">Local Intrfce</code>: البورت <strong>بتاعك إنت</strong> اللي واصل بيه الكابل (عندي أنا).</li>
+        <li><code dir="ltr">Port ID</code>: البورت <strong>بتاع الجار</strong> اللي الكابل داخل فيه (عنده هو).</li>
+        <li>في المثال اللي فوق: البورت <code dir="ltr">Gig 0/0</code> بتاعي أنا واصل بالبورت <code dir="ltr">Gig 0/1</code> بتاع السويتش SW1.</li>
+      </ul>
+      
+      <h3>2. <span dir="ltr">show cdp neighbors detail</span></h3>
+      <p>بيجيب تفاصيل خطيرة عن الجار، أهمها الـ IP Address بتاعه (لأن الأمر العادي مبيظهرش الـ IP)، ونسخة الـ IOS اللي شغالة عليه.</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code><span class="prompt">R1# </span>show cdp neighbors detail
+-------------------------
+Device ID: SW1
+Entry address(es):
+  IP address: 192.168.1.10
+Platform: cisco WS-C2960-24TT-L,  Capabilities: Switch IGMP
+Interface: GigabitEthernet0/0,  Port ID (outgoing port): GigabitEthernet0/1
+Holdtime : 134 sec
+Version :
+Cisco IOS Software, C2960 Software (C2960-LANBASEK9-M), Version 15.0(2)SE...</code></pre>
+      </div>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فحص الأعطال (Troubleshooting)</h2>
+      
+      <h3>جهاز جار مش ظاهر</h3>
+      <p>لو جهاز واصل بيك ومش ظاهر في الـ <code dir="ltr">show cdp neighbors</code>، الأسباب ممكن تكون:</p>
+      <ul>
+        <li>الجهاز التاني مش سيسكو (ساعتها لازم تستخدم LLDP).</li>
+        <li>الـ CDP مقفول على البورت (معمول له <code dir="ltr">no cdp enable</code>) أو مقفول على الجهاز كله.</li>
+        <li>البورت المادي نفسه مقفول (<code dir="ltr">down/down</code>). بروتوكولات الاكتشاف محتاجة Layer 2 شغال عشان تبعت رسايلها.</li>
+      </ul>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li><strong>run مقابل enable:</strong> افتكر دايماً إن <code dir="ltr">cdp run</code> بيشتغل في الـ Global، لكن <code dir="ltr">cdp enable</code> بيشتغل جوه الـ Interface. دي من أشهر لخبطات الامتحان.</li>
+        <li><strong>الافتراضي:</strong> الـ CDP شغال افتراضياً، الـ LLDP مقفول افتراضياً.</li>
+        <li><strong>Local vs Port ID:</strong> في أمر الجيران، <code dir="ltr">Local Int</code> هو بورتك إنت، و <code dir="ltr">Port ID</code> هو بورت الجار. الامتحان بيجيبلك صورة للجدول ويسألك ترسم الكابل واصل منين لفين.</li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Command</th>
+            <th>البروتوكول</th>
+            <th>الوظيفة (Purpose)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">cdp run / no cdp run</code></td>
+            <td>CDP (Global)</td>
+            <td>تشغيل أو إيقاف CDP على الجهاز بالكامل.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">cdp enable / no cdp enable</code></td>
+            <td>CDP (Interface)</td>
+            <td>تشغيل أو إيقاف CDP على منفذ محدد.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">lldp run / no lldp run</code></td>
+            <td>LLDP (Global)</td>
+            <td>تشغيل أو إيقاف LLDP على الجهاز بالكامل.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">lldp transmit</code> / <code dir="ltr">receive</code></td>
+            <td>LLDP (Interface)</td>
+            <td>السماح بإرسال/استقبال رسائل LLDP على المنفذ.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show cdp neighbors</code></td>
+            <td>CDP</td>
+            <td>عرض الأجهزة المجاورة (الأسماء والمنافذ).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show cdp neighbors detail</code></td>
+            <td>CDP</td>
+            <td>عرض تفاصيل الأجهزة المجاورة (بما فيها الـ IP).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show lldp neighbors</code></td>
+            <td>LLDP</td>
+            <td>عرض الأجهزة المجاورة باستخدام المعيار العالمي.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="vlans-trunking.html" class="nav-btn">« السابق: شبكات VLAN</a>
+      <a href="stp.html" class="nav-btn">التالي: بروتوكول الشجرة الممتدة (STP) »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

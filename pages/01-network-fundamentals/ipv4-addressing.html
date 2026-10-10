@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>عناوين IPv4 (IPv4 Addressing) - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>عناوين IPv4 وإعدادات المنافذ</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>عشان الراوتر يقدر يوجه البيانات (Routing)، لازم كل منفذ (Interface) ياخد عنوان <span dir="ltr">IPv4</span> مميز ويكون في شبكة مختلفة عن المنفذ التاني. الصفحة دي بتركز على إزاي تدي الـ IP للمنفذ سواء بشكل يدوي (Static) أو تخليه يسحب IP لوحده (DHCP Client).</p>
+      <p class="note"><strong>ملاحظة:</strong> إعدادات الراوتر كـ DHCP Server نفسه (عشان يوزع هو IPs) موجودة في قسم الـ IP Services.</p>
+    </section>
+
+    <section id="quick-config">
+      <h2>إعداد سريع (انسخ والصق)</h2>
+      <p>الطريقة المعتادة لإعطاء IP لمنفذ وتفعيله:</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>interface g0/0
+ ip address 192.168.1.1 255.255.255.0
+ no shutdown</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>الإعداد خطوة بخطوة</h2>
+
+      <!-- Command 1: ip address static -->
+      <section class="cmd" id="ip-address" dir="rtl">
+        <h3><span dir="ltr">ip address</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ip address &lt;ip-address&gt; &lt;subnet-mask&gt;</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">&lt;ip-address&gt;</code> = عنوان الـ IP المخصص للمنفذ.</li>
+          <li><code dir="ltr">&lt;subnet-mask&gt;</code> = قناع الشبكة بالشكل العادي المكون من 4 أرقام (زي <code dir="ltr">255.255.255.0</code>)، مينفعش نكتبه بطريقة الـ Prefix (زي <code dir="ltr">/24</code>) هنا في أنظمة IOS التقليدية.</li>
+        </ul>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1(config)# </span>interface g0/0
+<span class="prompt">R1(config-if)# </span>ip address 10.1.1.254 255.255.255.0
+<span class="prompt">R1(config-if)# </span>no shutdown</code></pre>
+        </div>
+      </section>
+
+      <!-- Command 2: ip address dhcp -->
+      <section class="cmd" id="ip-address-dhcp" dir="rtl">
+        <h3><span dir="ltr">ip address dhcp</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ip address dhcp</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيخلي المنفذ يتصرف كأنه كمبيوتر عادي ويبعت طلب DHCP عشان يسحب IP بشكل أوتوماتيكي من السيرفر. بنستخدمه غالباً في المنفذ اللي واصل بالإنترنت (ISP).</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1(config)# </span>interface g0/1
+<span class="prompt">R1(config-if)# </span>ip address dhcp
+<span class="prompt">R1(config-if)# </span>no shutdown</code></pre>
+        </div>
+      </section>
+
+      <!-- Command 3: secondary ip -->
+      <section class="cmd" id="ip-address-secondary" dir="rtl">
+        <h3><span dir="ltr">secondary ip address</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ip address &lt;ip-address&gt; &lt;subnet-mask&gt; secondary</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> الطبيعي إن كل منفذ ليه شبكة واحدة. لو كتبت أمر <code dir="ltr">ip address</code> مرتين ورا بعض، الأمر التاني بيمسح الأولاني. لو عايز المنفذ يبقى جزء من شبكتين مختلفتين في نفس الوقت (مثلاً وقت نقل الشبكات)، لازم تحط كلمة <code dir="ltr">secondary</code> في آخر الأمر التاني.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1(config-if)# </span>ip address 192.168.1.1 255.255.255.0
+<span class="prompt">R1(config-if)# </span>ip address 10.0.0.1 255.255.255.0 secondary</code></pre>
+        </div>
+      </section>
+
+    </section>
+
+    <section id="verification">
+      <h2>أوامر التحقق</h2>
+
+      <h3>1. <span dir="ltr">show ip interface brief</span></h3>
+      <p>أهم أمر للتأكد إن الـ IP اتحط والمنفذ شغال، وبيوريك كمان الـ IP ده اتكتب يدوي (manual) ولا اتسحب أوتوماتيك (dhcp).</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code><span class="prompt">R1# </span>show ip interface brief
+Interface              IP-Address      OK? Method Status                Protocol
+GigabitEthernet0/0     10.1.1.254      YES manual up                    up
+GigabitEthernet0/1     192.168.5.10    YES dhcp   up                    up</code></pre>
+      </div>
+      
+      <h3>2. <span dir="ltr">show protocols</span></h3>
+      <p>أمر سريع بيعرضلك كل المنافذ الشغالة ومعاها الـ IP والـ Subnet Mask بتاعها (بصيغة الـ Prefix زي <code dir="ltr">/24</code>)، وده ميزة مش موجودة في الأمر اللي فات.</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code><span class="prompt">R1# </span>show protocols
+Global values:
+  Internet Protocol routing is enabled
+GigabitEthernet0/0 is up, line protocol is up
+  Internet address is 10.1.1.254/24
+GigabitEthernet0/1 is up, line protocol is up
+  Internet address is 192.168.5.10/24</code></pre>
+      </div>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فحص الأعطال (Troubleshooting)</h2>
+      
+      <h3>رسالة Overlaps</h3>
+      <p>لو حاولت تدي لمنفذ عنوان <code dir="ltr">10.0.0.2 255.0.0.0</code> وكان فيه منفذ تاني أصلاً واخد <code dir="ltr">10.1.1.1 255.0.0.0</code>، الراوتر هيرفض ويطلعلك خطأ: <code dir="ltr">% 10.0.0.0 overlaps with GigabitEthernet0/0</code>. الراوتر مش بيسمح إن منفذين يكونوا في نفس الشبكة.</p>
+      
+      <h3>حالة Status up / Protocol down</h3>
+      <p>لو الـ Status <code dir="ltr">up</code> معناه الكابل راكب وسليم كهربائياً (Layer 1 سليم). بس لو الـ Protocol <code dir="ltr">down</code> ده معناه فيه مشكلة في الطبقة التانية (Layer 2). الأسباب المعتادة:</p>
+      <ul>
+        <li>نوع التغليف (Encapsulation) مختلف بين الطرفين (مثلاً واحد HDLC والتاني PPP على كابل سيريال).</li>
+        <li>مفيش نبضة وقت (Clock rate) مبعوتة على كابل السيريال القديم.</li>
+        <li>الـ Switch اللي إنت واصل عليه قافل المنفذ لأسباب أمنية (Port Security).</li>
+      </ul>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li><strong>عنوان الشبكة أو البرودكاست:</strong> لو حاولت تدي الراوتر أول IP في الشبكة (Network Address زي <code dir="ltr">192.168.1.0</code>) أو آخر IP (Broadcast زي <code dir="ltr">192.168.1.255</code>)، الراوتر هيطلعلك رسالة <code dir="ltr">Bad mask</code> ومش هيقبل الأمر. المنفذ لازم ياخد IP متاح للأجهزة (Host IP).</li>
+        <li><strong>نسيان التفعيل:</strong> كتابة أمر <code dir="ltr">ip address</code> لوحده مش كفاية، المنفذ بيفضل مقفول لحد ما تكتب <code dir="ltr">no shutdown</code>.</li>
+        <li><strong>إلغاء الـ IP:</strong> لو عايز تمسح الـ IP من منفذ، ادخل جواه واكتب <code dir="ltr">no ip address</code>.</li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Command</th>
+            <th>الوظيفة (Purpose)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">ip address &lt;ip&gt; &lt;mask&gt;</code></td>
+            <td>إعطاء المنفذ عنوان ثابت (Static).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ip address dhcp</code></td>
+            <td>جعل المنفذ يسحب عنوان تلقائياً.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ip address &lt;ip&gt; &lt;mask&gt; secondary</code></td>
+            <td>إضافة عنوان ثاني لنفس المنفذ (نادر).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">no ip address</code></td>
+            <td>حذف العنوان من المنفذ.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show ip interface brief</code></td>
+            <td>التحقق من العناوين وحالة المنافذ.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show protocols</code></td>
+            <td>التحقق من العناوين وقناع الشبكة (Subnet Mask).</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="network-fundamentals.html" class="nav-btn">« السابق: مفاهيم الشبكات</a>
+      <a href="ipv6-addressing.html" class="nav-btn">التالي: عناوين IPv6 »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

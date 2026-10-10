@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مفاهيم الشبكات (Network Fundamentals) - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>مفاهيم الشبكات وأدوات الأساسيات</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>معظم المفاهيم الأساسية في الـ CCNA (زي OSI Model، TCP/UDP، وتكوين الـ IP) هي مفاهيم نظرية ملهاش أوامر إعداد (Config). لكن فيه أوامر مهمة جداً بنستخدمها عشان نتأكد إن الأجهزة شايفة بعض في الطبقة التانية (<span dir="ltr">Layer 2 - MAC</span>) والطبقة التالتة (<span dir="ltr">Layer 3 - ARP</span>)، بالإضافة لأوامر فحص الشبكة من على أجهزة الكمبيوتر (Windows).</p>
+    </section>
+
+    <section id="quick-config">
+      <h2>إعداد سريع (انسخ والصق)</h2>
+      <p>الأوامر دي أوامر فحص (<span dir="ltr">show</span>) مش إعدادات. عشان كده مفيش إعداد سريع هنا، بس أهم أمر لمهندس الشبكات هو فحص جدول الـ MAC في السويتش:</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>show mac address-table</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>الأوامر خطوة بخطوة</h2>
+
+      <!-- L2: MAC Address Table -->
+      <h3>1. جداول الطبقة الثانية (Layer 2 - Switch)</h3>
+      
+      <section class="cmd" id="mac-address-table" dir="rtl">
+        <h3><span dir="ltr">show mac address-table</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Switch#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>show mac address-table [dynamic | interfaces &lt;int&gt; | vlan &lt;id&gt;]
+clear mac address-table dynamic</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيعرض جدول العناوين الفيزيائية (MAC) اللي السويتش اتعلمها. السويتش بيبني الجدول ده عن طريق قراءة الـ Source MAC بتاع أي رسالة بتدخله. لو عايز تفضي الجدول عشان تخليه يتعلم من أول وجديد (لو نقلت كابلات مثلاً)، بتستخدم أمر <code dir="ltr">clear</code>.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">SW1# </span>show mac address-table dynamic
+          Mac Address Table
+-------------------------------------------
+
+Vlan    Mac Address       Type        Ports
+----    -----------       --------    -----
+   1    0011.2233.4455    DYNAMIC     Fa0/1
+  10    00aa.bbcc.dd11    DYNAMIC     Fa0/2
+Total Mac Addresses for this criterion: 2</code></pre>
+        </div>
+      </section>
+
+      <!-- L3: ARP Table (Cisco) -->
+      <h3>2. جداول الطبقة الثالثة والربط (Layer 3 - ARP)</h3>
+      
+      <section class="cmd" id="show-arp" dir="rtl">
+        <h3><span dir="ltr">show arp</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>show arp
+clear arp-cache</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بروتوكول ARP وظيفته يربط بين الـ IP والـ MAC. الراوتر أو جهاز الكمبيوتر بيستخدمه عشان يعرف الـ MAC بتاع الجهاز اللي عايز يكلمه في نفس الشبكة. أمر <code dir="ltr">show arp</code> بيعرض الجدول ده على الراوتر.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1# </span>show arp
+Protocol  Address          Age (min)  Hardware Addr   Type   Interface
+Internet  192.168.1.1             -   0000.0c07.ac01  ARPA   GigabitEthernet0/0
+Internet  192.168.1.100          12   00aa.bbcc.dd11  ARPA   GigabitEthernet0/0</code></pre>
+        </div>
+      </section>
+
+      <!-- PC Commands: arp -a -->
+      <h3>3. أوامر الفحص من أجهزة الكمبيوتر (Windows CMD)</h3>
+      
+      <section class="cmd" id="arp-a" dir="rtl">
+        <h3><span dir="ltr">arp -a</span> <small dir="ltr">Windows CMD</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">C:\></span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>arp -a
+arp -d *</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> أمر <code dir="ltr">arp -a</code> بيعرض جدول الـ ARP الخاص بجهاز الويندوز نفسه. وأمر <code dir="ltr">arp -d *</code> بيمسح الجدول ده بالكامل، وده مفيد لو كان الجهاز مخزن MAC غلط بعد ما إنت غيرت كارت الشبكة بتاع الراوتر مثلاً والكمبيوتر لسة بيحاول يكلم الـ MAC القديم.</p>
+      </section>
+
+      <!-- PC Commands: ipconfig -->
+      <section class="cmd" id="ipconfig" dir="rtl">
+        <h3><span dir="ltr">ipconfig</span> <small dir="ltr">Windows CMD</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">C:\></span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ipconfig
+ipconfig /all
+ipconfig /release
+ipconfig /renew</code></pre>
+        </div>
+        <p><strong>الشرح:</strong></p>
+        <ul>
+          <li><code dir="ltr">ipconfig</code>: بيعرض الـ IP، الـ Subnet Mask، والـ Default Gateway.</li>
+          <li><code dir="ltr">ipconfig /all</code>: بيجيب تفاصيل أكتر زي الـ MAC address بتاع الكمبيوتر (اسمه <span dir="ltr">Physical Address</span>) والـ DNS.</li>
+          <li><code dir="ltr">ipconfig /release</code> ثم <code dir="ltr">ipconfig /renew</code>: بيمسح الـ IP اللي الكمبيوتر واخده من الـ DHCP ويطلب واحد جديد. مهم جداً وقت فحص مشاكل الـ IP.</li>
+        </ul>
+      </section>
+
+      <!-- PC Commands: nslookup -->
+      <section class="cmd" id="nslookup" dir="rtl">
+        <h3><span dir="ltr">nslookup</span> <small dir="ltr">Windows CMD</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">C:\></span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>nslookup &lt;domain-name&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيسأل الـ DNS سيرفر عشان يحول اسم موقع (زي google.com) لـ IP address. لو الأمر رجع خطأ، يبقى الكمبيوتر مش قادر يوصل للـ DNS أو إعداداته غلط.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">C:\> </span>nslookup cisco.com
+Server:  UnKnown
+Address:  8.8.8.8
+
+Non-authoritative answer:
+Name:    cisco.com
+Addresses:  2001:420:1101:1::a
+          72.163.4.185</code></pre>
+        </div>
+      </section>
+
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فحص الأعطال (Troubleshooting)</h2>
+      
+      <h3>مشكلة MAC Flapping</h3>
+      <p>لو لاحظت رسالة في السويتش بتقول <code dir="ltr">%SW_MATM-4-MACFLAP_NOTIF: Host 0011.2233.4455 in vlan 1 is flapping between port Fa0/1 and port Fa0/2</code>، ده معناه إن السويتش بيشوف نفس الـ MAC مرة جاي من بورت 1 ومرة جاي من بورت 2. <strong>السبب الرئيسي:</strong> وجود Loop في الشبكة (مفيش Spanning Tree شغال)، أو فيه جهازين واخدين نفس الـ MAC بالغلط.</p>
+      
+      <h3>مشكلة ARP Spoofing / IP Conflict</h3>
+      <p>لو جهازين في الشبكة أخدوا نفس الـ IP، جدول الـ ARP هيبدأ يتلخبط بين اتنين MAC Addresses لنفس الـ IP، وده بيوقع الاتصال. بتقدر تكتشف ده لو عملت <code dir="ltr">arp -a</code> كذا مرة ولقيت الـ MAC بتاع الراوتر بيتغير كل شوية، ده معناه إن فيه جهاز تاني (أو هاكر) بينتحل شخصية الراوتر.</p>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li><strong>أمر ARP:</strong> في الراوتر بنكتب <code dir="ltr">show arp</code>، لكن في شاشة الويندوز بنكتب <code dir="ltr">arp -a</code>. الامتحان بيلعب على اللخبطة دي كتير.</li>
+        <li><strong>مكان الجدول:</strong> جدول الـ MAC موجود <strong>فقط</strong> في السويتشات (L2)، وجدول الـ ARP موجود في أي جهاز بيفهم IPs زي الراوتر والكمبيوتر والـ Layer 3 Switch. السويتش العادي (Layer 2) ملوش دعوة بجدول الـ ARP بتاع الترافيك العادي.</li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Command</th>
+            <th>الجهاز</th>
+            <th>الوظيفة (Purpose)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">show mac address-table</code></td>
+            <td>Switch</td>
+            <td>عرض العناوين الفيزيائية والبورتات المتصلة بها.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show arp</code></td>
+            <td>Router</td>
+            <td>عرض جدول الربط بين الـ IP والـ MAC.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">arp -a</code></td>
+            <td>Windows PC</td>
+            <td>عرض جدول الربط (ARP) الخاص بالكمبيوتر.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ipconfig /all</code></td>
+            <td>Windows PC</td>
+            <td>عرض كل تفاصيل كارت الشبكة والـ MAC والـ DNS.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">nslookup</code></td>
+            <td>Windows PC</td>
+            <td>اختبار قدرة الجهاز على تحويل الأسماء إلى IPs.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="../00-ios-basics/hardware-connectivity.html" class="nav-btn">« السابق: فحص الأجهزة</a>
+      <a href="ipv4-addressing.html" class="nav-btn">التالي: عناوين IPv4 »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

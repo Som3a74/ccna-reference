@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VPN & Wireless Security - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>شبكات VPN وحماية اللاسلكي (VPN & Wireless Security)</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>يختتم قسم الحماية بموضوعين جوهريين في منهج CCNA 200-301: تأمين الاتصال عبر شبكات الإنترنت العامة باستخدام <strong>VPN (Virtual Private Network)</strong>، وتأمين وصول الهواء في الشبكات اللاسلكية <strong>Wireless Security</strong>:</p>
+      <ul>
+        <li><strong>أنواع شبكات الـ VPN الرئيسية:</strong>
+          <ul>
+            <li><strong>Site-to-Site VPN:</strong> ربط فرعين ثابتين للشركة (مثل المقر الرئيسي Headquarters وفرع Branch) عبر نفق آمن فوق الإنترنت. الراوترات تعمل كـ VPN Gateways والأجهزة الداخلية لا تشعر بوجود التشفير.</li>
+            <li><strong>Remote Access VPN:</strong> ربط الموظفين المتنقلين من منازلهم بشبكة الشركة، إما عبر برنامج عميل مثل <strong>Cisco AnyConnect / Secure Client</strong> (يعتمد على SSL/TLS أو IPsec)، أو بدون برنامج (Clientless SSL VPN) عبر متصفح الويب.</li>
+          </ul>
+        </li>
+        <li><strong>حزمة بروتوكولات IPsec (IP Security):</strong>
+          <ul>
+            <li><strong>بروتوكول ESP (IP Protocol 50):</strong> يوفر التشفير الكامل للبيانات والمصادقة والتكاملية (هو الأساسي والأكثر استخداماً).</li>
+            <li><strong>بروتوكول AH (IP Protocol 51):</strong> يوفر المصادقة والتكاملية فقط <strong>بدون أي تشفير للبيانات</strong>!</li>
+            <li><strong>وضع النفق (Tunnel Mode):</strong> يشفر حزمة الـ IP الأصلية بالكامل ويضيف ترويسة IP جديدة (الافتراضي لشبكات Site-to-Site).</li>
+            <li><strong>وضع النقل (Transport Mode):</strong> يشفر الـ Payload فقط ويحتفظ بترويسة الـ IP الأصلية (يستخدم بين جهازين مباشرة أو مع أنفاق GRE).</li>
+            <li><strong>تبادل المفاتيح (IKE - UDP 500 / 4500):</strong> مفاوضات المرحلة الأولى (IKE Phase 1) والمرحلة الثانية (IKE Phase 2 / IPsec SA).</li>
+          </ul>
+        </li>
+        <li><strong>معايير حماية اللاسلكي (Wireless Security):</strong>
+          <ul>
+            <li><strong>WPA:</strong> اعتمد على تشفير TKIP و RC4 (قديم وضعيف وملغي).</li>
+            <li><strong>WPA2:</strong> يعتمد على معيار التشفير القوي <strong>AES-CCMP</strong>. هو المعيار الأكثر انتشاراً حالياً.</li>
+            <li><strong>WPA3:</strong> أحدث معيار أمني؛ استبدل كلمة السر المشتركة (PSK) بتقنية <strong>SAE (Simultaneous Authentication of Equals)</strong> المحمية من هجمات التخمين دون اتصال (Offline Dictionary Attacks)، وفرض تشفير إطارات الإدارة (Protected Management Frames - PMF).</li>
+            <li><strong>الفرق بين Personal و Enterprise:</strong>
+              <ul>
+                <li><strong>Personal (PSK / SAE):</strong> كلمة مرور مشتركة واحدة يعرفها جميع المستخدمين.</li>
+                <li><strong>Enterprise (802.1X / EAP):</strong> تسجيل دخول فردي لكل مستخدم بحسابه الخاص عبر خادم RADIUS مركزي.</li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <section id="quick-config">
+      <h2>إعداد سريع (انسخ والصق)</h2>
+      <p>نموذج إعداد نفق GRE مشفر بـ IPsec (Site-to-Site) وإعداد شبكة WLAN آمنة على الـ WLC:</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>! 1. إعداد نفق GRE Tunnel لنقل ترافيك التوجيه
+interface Tunnel0
+ ip address 10.10.10.1 255.255.255.252
+ tunnel source GigabitEthernet0/1
+ tunnel destination 203.0.113.2
+
+! 2. إعداد سياسة IKE Phase 1 (ISAKMP Policy)
+crypto isakmp policy 10
+ encr aes 256
+ hash sha256
+ authentication pre-share
+ group 14
+ lifetime 86400
+crypto isakmp key CiscoVpnSecret#2026 address 203.0.113.2
+
+! 3. إعداد IKE Phase 2 (IPsec Transform-Set) وتأمين النفق
+crypto ipsec transform-set ESP-AES-SHA esp-aes 256 esp-sha256-hmac
+ mode transport
+crypto ipsec profile IPSEC-TUNNEL-PROFILE
+ set transform-set ESP-AES-SHA
+interface Tunnel0
+ tunnel protection ipsec profile IPSEC-TUNNEL-PROFILE</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>الإعداد خطوة بخطوة</h2>
+
+      <!-- ================= GRE Tunnel ================= -->
+      <section class="cmd" id="gre-tunnel-config" dir="rtl">
+        <h3><span dir="ltr">interface Tunnel</span> <small dir="ltr">GRE Tunnel Setup</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)# & (config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>interface Tunnel &lt;0-2147483647&gt;
+ ip address &lt;tunnel-ip&gt; &lt;subnet-mask&gt;
+ tunnel source {&lt;interface-name&gt; | &lt;source-ip&gt;}
+ tunnel destination &lt;remote-public-ip&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بروتوكول GRE (Generic Routing Encapsulation - IP Protocol 47) ينشئ نفقاً افتراضياً فوق الإنترنت يسمح بتمرير حزم الـ Multicast وبروتوكولات التوجيه الديناميكي (مثل OSPF). لكن عيبه القاتل أنه <strong>غير مشفر تماماً</strong>، لذلك ندمجه دائماً مع IPsec.</p>
+      </section>
+
+      <!-- ================= IKE Phase 1 ================= -->
+      <section class="cmd" id="ike-phase-1" dir="rtl">
+        <h3><span dir="ltr">crypto isakmp policy & key</span> <small dir="ltr">IKE Phase 1 (ISAKMP SA)</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)# & (config-isakmp)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>crypto isakmp policy &lt;1-10000&gt;
+ encr {aes [128|192|256] | 3des}
+ hash {sha | sha256 | md5}
+ authentication pre-share
+ group {2 | 5 | 14 | 19}
+ lifetime &lt;seconds&gt;
+
+crypto isakmp key &lt;shared-secret&gt; address &lt;peer-ip&gt;</code></pre>
+        </div>
+        <p><strong>خماسية مفاوضات المرحلة الأولى (HAGLE):</strong></p>
+        <ul>
+          <li><strong>H - Hash:</strong> دالة التجزئة لسلامة الرسائل (SHA-256).</li>
+          <li><strong>A - Authentication:</strong> طريقة التحقق بين الراوترين (Pre-Shared Key).</li>
+          <li><strong>G - Group:</strong> مجموعة تبادل مفاتيح Diffie-Hellman (DH Group 14 أو 19).</li>
+          <li><strong>L - Lifetime:</strong> مدة صلاحية نفق المرحلة الأولى قبل إعادة التفاوض (افتراضياً 86400 ثانية).</li>
+          <li><strong>E - Encryption:</strong> خوارزمية التشفير (AES-256).</li>
+        </ul>
+      </section>
+
+      <!-- ================= IKE Phase 2 ================= -->
+      <section class="cmd" id="ike-phase-2" dir="rtl">
+        <h3><span dir="ltr">crypto ipsec transform-set</span> <small dir="ltr">IKE Phase 2 (IPsec SA)</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>crypto ipsec transform-set &lt;transform-name&gt; &lt;transform-1&gt; [&lt;transform-2&gt;]
+ mode {tunnel | transport}</code></pre>
+        </div>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>crypto ipsec transform-set MY-SET esp-aes 256 esp-sha256-hmac
+ mode tunnel</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> تحديد بروتوكولات وخوارزميات التشفير الفعلية لحزم البيانات عبر نفق الـ IPsec (غالباً نستخدم تشفير ESP مع خوارزمية AES وتجزئة SHA-HMAC).</p>
+      </section>
+
+      <!-- ================= WLC Wireless GUI Configuration ================= -->
+      <section class="cmd" id="wlc-wlan-security" dir="rtl">
+        <h3><span dir="ltr">WLC GUI: WLAN Configuration</span> <small dir="ltr">CCNA Blueprint 5.10</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">WLC Web GUI</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>خطوات إنشاء شبكة لاسلكية آمنة في واجهة WLC:</strong></p>
+        <ol>
+          <li><strong>Create WLAN:</strong> الدخول إلى تبويب <code dir="ltr">WLANs</code> &larr; اختيار <code dir="ltr">Create New</code> &larr; تحديد الـ <strong>Profile Name</strong> والـ <strong>SSID</strong> (اسم الشبكة المعلن للجمهور) &larr; ثم الضغط على <code dir="ltr">Apply</code>.</li>
+          <li><strong>General Tab:</strong> تفعيل الشبكة باختيار مربع <code dir="ltr">Status: Enabled</code> &larr; وتحديد الواجهة (Interface / Interface Group) لربط الشبكة بالـ VLAN المناسبة.</li>
+          <li><strong>Security Tab &larr; Layer 2:</strong>
+            <ul>
+              <li>اختيار <code dir="ltr">Layer 2 Security: WPA+WPA2</code> (أو WPA2/WPA3).</li>
+              <li>اختيار نوع التشفير: تفعيل <code dir="ltr">WPA2 Policy</code> وتحديد <code dir="ltr">WPA2 Encryption: AES</code>.</li>
+              <li>اختيار إدارة المفاتيح (Auth Key Mgmt): تفعيل <code dir="ltr">PSK</code> وتحديد نوع التنسيق <code dir="ltr">ASCII</code> وكتابة كلمة المرور (Pre-Shared Key).</li>
+            </ul>
+          </li>
+          <li><strong>Advanced Tab:</strong> تفعيل خيارات الـ FlexConnect أو الـ Client Band Select حسب الحاجة.</li>
+          <li><strong>Apply:</strong> الضغط على <code dir="ltr">Apply</code> في الزاوية العلوية لتشغيل الشبكة ونشرها فوراً عبر أجهزة الـ Lightweight APs.</li>
+        </ol>
+      </section>
+
+    </section>
+
+    <section id="verification">
+      <h2>أوامر التحقق والمراقبة</h2>
+
+      <section class="cmd" id="show-crypto-isakmp-sa" dir="rtl">
+        <h3><span dir="ltr">show crypto isakmp sa</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> أهم أمر للتأكد من قيام نفق المرحلة الأولى (IKE Phase 1) بنجاح.</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>show crypto isakmp sa
+IPv4 Crypto ISAKMP SA
+dst             src             state          conn-id status
+203.0.113.2     198.51.100.1    QM_IDLE           1001 ACTIVE</code></pre>
+        </div>
+        <p><em>الحالة الذهبية للامتحان:</em> الحالة <code dir="ltr">QM_IDLE</code> تعني أن المرحلة الأولى اكتملت بنجاح والنفق في حالة نشطة وسليمة (Active)!</p>
+      </section>
+
+      <section class="cmd" id="show-crypto-ipsec-sa" dir="rtl">
+        <h3><span dir="ltr">show crypto ipsec sa</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> فحص نفق المرحلة الثانية، ومراقبة عدد الحزم المشفرة (Encapsulated) والمفكوك تشفيرها (Decapsulated).</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>show crypto ipsec sa
+interface: Tunnel0
+    Crypto map tag: IPSEC-TUNNEL-PROFILE
+    #pkts encaps: 1450, #pkts encrypt: 1450, #pkts digest: 1450
+    #pkts decaps: 1450, #pkts decrypt: 1450, #pkts verify: 1450
+    #send errors 0, #recv errors 0</code></pre>
+        </div>
+      </section>
+
+      <section class="cmd" id="show-interfaces-tunnel" dir="rtl">
+        <h3><span dir="ltr">show interfaces Tunnel</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> فحص حالة واجهة النفق المنطقية (Up/Up) والتأكد من عنوان الـ Source والـ Destination.</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>show interfaces Tunnel0
+Tunnel0 is up, line protocol is up 
+  Internet address is 10.10.10.1/30
+  Tunnel source 198.51.100.1, destination 203.0.113.2
+  Tunnel protocol/transport GRE/IP</code></pre>
+        </div>
+      </section>
+
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فحص الأعطال (Troubleshooting)</h2>
+      <ul>
+        <li><strong>نفق الـ ISAKMP لا يكتمل (حالة MM_NO_STATE أو AG_NO_STATE):</strong>
+          <ol>
+            <li>تأكد من وصول البينج بين عناوين الـ IP العامة للراوترين (Peer Reachability).</li>
+            <li>تأكد من فتح منافذ <strong>UDP Port 500</strong> و <strong>UDP Port 4500 (NAT-Traversal)</strong> في الجدران النارية الفاصلة بين الموقعين.</li>
+            <li>تأكد من تطابق الـ <strong>Pre-Shared Key</strong> تماماً؛ فاختلاف حرف واحد يمنع المصافحة.</li>
+            <li>تأكد من تطابق إعدادات الـ ISAKMP Policy الخمسة (Encryption, Hash, Auth, DH Group, Lifetime) بين الطرفين.</li>
+          </ol>
+        </li>
+        <li><strong>المرحلة الأولى تعمل ولكن لا يتم تشفير أي حزم (#pkts encrypt: 0):</strong>
+          <ol>
+            <li>في الـ Site-to-Site الكلاسيكي، افحص قائمة الـ Crypto ACL (Interesting Traffic)؛ يجب أن تكون معكوسة (Mirror Image) تماماً بين الراوترين!</li>
+            <li>تأكد من تطابق الـ Transform-Set في المرحلة الثانية.</li>
+          </ol>
+        </li>
+        <li><strong>المستخدمون لا يستطيعون الاتصال بشبكة الـ WLAN الجديدة:</strong>
+          <ol>
+            <li>تأكد من تفعيل خانة <code dir="ltr">Status: Enabled</code> في تبويب General للـ WLAN على الـ WLC.</li>
+            <li>تأكد من ربط الـ WLAN بالـ Interface الصحيحة التي تقدم خدمة DHCP للمستخدمين.</li>
+            <li>تأكد من مطابقة نوع التشفير وكلمة المرور الـ PSK.</li>
+          </ol>
+        </li>
+      </ul>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li><strong>الفرق بين AH و ESP في IPsec:</strong>
+          <p>سؤال متكرر جداً: <strong>AH لا يوفر أي تشفير (No Encryption)</strong> إطلاقاً ويستخدم بروتوكول رقم 51. بينما <strong>ESP يوفر التشفير الكامل</strong> ويستخدم بروتوكول رقم 50.</p>
+        </li>
+        <li><strong>الفرق بين WPA2 و WPA3 للامتحان:</strong>
+          <ul>
+            <li><strong>WPA2-Personal:</strong> يعتمد على <strong>PSK (Pre-Shared Key)</strong> وعرضة لهجمات التخمين دون اتصال (Offline Dictionary Attacks).</li>
+            <li><strong>WPA3-Personal:</strong> يعتمد على <strong>SAE (Simultaneous Authentication of Equals)</strong> عبر مصافحة Dragonfly Handshake، وهو محمي تماماً من هجمات التخمين ويوفر سرية مستقبلية (Forward Secrecy).</li>
+          </ul>
+        </li>
+        <li><strong>منافذ بروتوكولات الـ VPN في الفايروول:</strong>
+          <ul>
+            <li>IKE / ISAKMP: <strong>UDP Port 500</strong></li>
+            <li>NAT-Traversal (NAT-T): <strong>UDP Port 4500</strong></li>
+            <li>IPsec ESP: <strong>IP Protocol 50</strong> (ليس بورت بل رقم بروتوكول في طبقة IP)</li>
+            <li>IPsec AH: <strong>IP Protocol 51</strong></li>
+            <li>GRE: <strong>IP Protocol 47</strong></li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Command</th>
+            <th dir="ltr">Mode</th>
+            <th>الوظيفة (Purpose)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">interface Tunnel &lt;id&gt;</code></td>
+            <td dir="ltr">Global config</td>
+            <td>إنشاء واجهة نفق افتراضية منطقية (مثل GRE أو IPsec).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">tunnel source &lt;int/ip&gt;</code></td>
+            <td dir="ltr">Interface config (tunnel)</td>
+            <td>تحديد المنفذ الفيزيائي أو الـ IP المصدر للنفق.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">tunnel destination &lt;ip&gt;</code></td>
+            <td dir="ltr">Interface config (tunnel)</td>
+            <td>تحديد عنوان الـ IP العام للطرف البعيد من النفق.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">crypto isakmp policy &lt;n&gt;</code></td>
+            <td dir="ltr">Global config</td>
+            <td>تعريف سياسة التفاوض للمرحلة الأولى IKE Phase 1 (التشفير، التجزئة، DH).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">crypto isakmp key &lt;k&gt; address &lt;ip&gt;</code></td>
+            <td dir="ltr">Global config</td>
+            <td>تحديد كلمة السر المشتركة (Pre-Shared Key) للطرف البعيد.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">crypto ipsec transform-set &lt;name&gt; ...</code></td>
+            <td dir="ltr">Global config</td>
+            <td>تحديد بروتوكولات وخوارزميات تشفير المرحلة الثانية IPsec Phase 2.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show crypto isakmp sa</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>فحص نفق المرحلة الأولى والتأكد من الوصول لحالة QM_IDLE.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show crypto ipsec sa</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>عرض إحصائيات الحزم المشفرة والمفكوكة في المرحلة الثانية.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="aaa-hardening.html" class="nav-btn">« السابق: نظام AAA وتقوية الأجهزة</a>
+      <a href="../06-automation/automation-concepts.html" class="nav-btn">التالي: مفاهيم الأتمتة (Automation Concepts) »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

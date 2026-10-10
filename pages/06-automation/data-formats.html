@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Formats & REST APIs - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>صيغ البيانات وواجهات REST APIs (Data Formats)</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>عند التعامل مع البرمجة وأتمتة الشبكات، تتواصل البرامج وسكربتات Python مع أجهزة الشبكة والمتحكمات عبر واجهات برمجية <strong>APIs</strong> تتبادل البيانات بصيغ نصية مهيكلة بدلاً من المخرجات النصية غير المنظمة لشاشات الـ CLI:</p>
+      <ul>
+        <li><strong>صيغ تسلسل البيانات (Serialization Formats):</strong>
+          <ul>
+            <li><strong>JSON (JavaScript Object Notation):</strong> الصيغة الأكثر انتشاراً في واجهات REST APIs والمتحكمات. تعتمد على أزواج المفاتيح والقيم، وتستخدم الأقواس المعقوفة <code dir="ltr">{ }</code> للكائنات (Objects) والأقواس المربعة <code dir="ltr">[ ]</code> للمصفوفات (Arrays).</li>
+            <li><strong>XML (Extensible Markup Language):</strong> تعتمد على الوسوم المفتوحة والمغلقة <code dir="ltr">&lt;tag&gt;...&lt;/tag&gt;</code> وتستخدم بكثرة في بروتوكول NETCONF.</li>
+            <li><strong>YAML (YAML Ain't Markup Language):</strong> الصيغة الأسهل قراءة للبشر، تعتمد على المسافات البادئة (Indentation) بدون أقواس، وتستخدم بكثرة في ملفات Ansible Playbooks.</li>
+          </ul>
+        </li>
+        <li><strong>واجهات برمجة REST APIs:</strong>
+          <ul>
+            <li>تعتمد على بروتوكول <strong>HTTP / HTTPS</strong> وتتميز بأنها غير محتفظة بالحالة (Stateless) وقابلة للتخزين المؤقت (Cacheable).</li>
+            <li>تربط عمليات إدارة البيانات (CRUD) بأفعال بروتوكول الـ HTTP:
+              <ul>
+                <li><strong>Create (إنشاء):</strong> يقابل فعل <strong dir="ltr">POST</strong>.</li>
+                <li><strong>Read (قراءة واستعلام):</strong> يقابل فعل <strong dir="ltr">GET</strong>.</li>
+                <li><strong>Update (تعديل كامل):</strong> يقابل فعل <strong dir="ltr">PUT</strong> (أو <strong dir="ltr">PATCH</strong> للتعديل الجزئي).</li>
+                <li><strong>Delete (حذف):</strong> يقابل فعل <strong dir="ltr">DELETE</strong>.</li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <section id="quick-config">
+      <h2>أمثلة سريعة (انسخ وقارن)</h2>
+      <p>مقارنة لنفس بيانات راوتر شبكة بالصيغ الثلاث JSON و XML و YAML، مع مثال طلب استعلام عبر cURL:</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>! 1. نفس البيانات بصيغة JSON
+{
+  "hostname": "R1-CORE",
+  "loopback_ip": "10.0.0.1",
+  "interfaces": ["GigabitEthernet0/0", "GigabitEthernet0/1"],
+  "enabled": true
+}
+
+! 2. نفس البيانات بصيغة YAML (ملاحظة: المسافات البادئة إجبارية ويحظر استخدام Tab!)
+hostname: R1-CORE
+loopback_ip: 10.0.0.1
+interfaces:
+  - GigabitEthernet0/0
+  - GigabitEthernet0/1
+enabled: true
+
+! 3. نفس البيانات بصيغة XML
+&lt;device&gt;
+  &lt;hostname&gt;R1-CORE&lt;/hostname&gt;
+  &lt;loopback_ip&gt;10.0.0.1&lt;/loopback_ip&gt;
+  &lt;interfaces&gt;
+    &lt;interface&gt;GigabitEthernet0/0&lt;/interface&gt;
+    &lt;interface&gt;GigabitEthernet0/1&lt;/interface&gt;
+  &lt;/interfaces&gt;
+  &lt;enabled&gt;true&lt;/enabled&gt;
+&lt;/device&gt;
+
+! 4. استعلام REST API باستخدام cURL للحصول على بيانات راوتر عبر RESTCONF
+curl -k -u "netops:CiscoPass123!" \
+  -H "Accept: application/yang-data+json" \
+  https://192.168.1.1/restconf/data/ietf-interfaces:interfaces</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>قواعد وتفاصيل الصيغ خطوة بخطوة</h2>
+
+      <!-- ================= JSON Deep Dive ================= -->
+      <section class="cmd" id="json-syntax-rules" dir="rtl">
+        <h3><span dir="ltr">JSON Rules & Syntax</span> <small dir="ltr">CCNA Blueprint 6.7</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam Core</span>
+          <span class="badge theory">JSON Syntax</span>
+        </p>
+        <p><strong>قواعد قراءة وتفسير كود الـ JSON للامتحان:</strong></p>
+        <ul>
+          <li><strong>الأقواس المعقوفة <code dir="ltr">{ }</code>:</strong> تمثل كائناً (Object أو Dictionary) يحتوي على أزواج من المفاتيح والقيم.</li>
+          <li><strong>الأقواس المربعة <code dir="ltr">[ ]</code>:</strong> تمثل مصفوفة أو قائمة مرتبة (Array أو List) تحتوي على عناصر مفصولة بفواصل.</li>
+          <li><strong>المفاتيح (Keys):</strong> يجب <strong>دائماً وأبداً</strong> أن تكون محاطة بعلامات تنصيص مزدوجة <code dir="ltr">"key"</code>. لا يُقبل استخدام علامات التنصيص المفردة <code dir="ltr">'key'</code> في JSON القياسي!</li>
+          <li><strong>أنواع البيانات المسموح بها في القيم (Values):</strong>
+            <ul>
+              <li><strong>String (نص):</strong> محاط بعلامات تنصيص مزدوجة مثل <code dir="ltr">"GigabitEthernet0/1"</code>.</li>
+              <li><strong>Number (رقم):</strong> رقم مجرد بدون علامات تنصيص مثل <code dir="ltr">1500</code> أو <code dir="ltr">3.14</code>.</li>
+              <li><strong>Boolean (قيمة منطقية):</strong> إما <code dir="ltr">true</code> أو <code dir="ltr">false</code> بأحرف صغيرة.</li>
+              <li><strong>Null (فارغ):</strong> القيمة <code dir="ltr">null</code> بأحرف صغيرة.</li>
+              <li><strong>Array أو Object:</strong> يمكن تضمين مصفوفة أو كائن داخل كائن آخر (Nested Structures).</li>
+            </ul>
+          </li>
+          <li><strong>الفواصل:</strong> تفصل بين العناصر بفواصل عادية <code dir="ltr">,</code> ولكن <strong>يحظر وضع فاصلة بعد آخر عنصر في القائمة أو الكائن (Trailing Comma)</strong> لأنها تسبب خطأ في المعالجة.</li>
+        </ul>
+      </section>
+
+      <!-- ================= YAML Rules ================= -->
+      <section class="cmd" id="yaml-syntax-rules" dir="rtl">
+        <h3><span dir="ltr">YAML Rules & Syntax</span> <small dir="ltr">Ansible & Automation</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam Core</span>
+          <span class="badge theory">YAML Syntax</span>
+        </p>
+        <p><strong>قواعد كتابة وقراءة ملفات YAML:</strong></p>
+        <ul>
+          <li>يبدأ المستند اختيارياً بثلاث شرطات <code dir="ltr">---</code> وينهى اختيارياً بثلاث نقاط <code dir="ltr">...</code>.</li>
+          <li><strong>المسافات البادئة (Indentation):</strong> هي التي تحدد الهرمية والتبعية. يجب استخدام مسافات عادية (Spaces) <strong>ويحظر تماماً استخدام زر الـ Tab</strong>!</li>
+          <li><strong>القوائم (Lists):</strong> يبدأ كل عنصر في القائمة بشرطة متبوعة بمسافة <code dir="ltr">- </code>.</li>
+          <li><strong>أزواج المفاتيح والقيم:</strong> مفصولة بنقطتين متبوعتين بمسافة إلزامية <code dir="ltr">key: value</code>.</li>
+          <li>لا يشترط وضع علامات تنصيص حول النصوص إلا إذا كانت تحتوي على رموز خاصة أو فراغات.</li>
+        </ul>
+      </section>
+
+      <!-- ================= REST API Concepts ================= -->
+      <section class="cmd" id="rest-api-architecture" dir="rtl">
+        <h3><span dir="ltr">REST API Concepts & CRUD</span> <small dir="ltr">CCNA Blueprint 6.5</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam Core</span>
+          <span class="badge theory">REST Architecture</span>
+        </p>
+        <p><strong>بنية عنوان الـ REST API (URI Components):</strong></p>
+        <div class="code" dir="ltr">
+          <pre><code>https://sandboxdnac.cisco.com:443/dna/intent/api/v1/network-device?managementIpAddress=10.1.1.1
+\___/   \___________________/ \__/ \____________________________/ \____________________________/
+  |               |            |                 |                              |
+Protocol       Hostname       Port             Path                      Query Parameters</code></pre>
+        </div>
+        <p><strong>ربط عمليات الـ CRUD بأفعال الـ HTTP والـ Idempotency:</strong></p>
+        <ul>
+          <li><strong dir="ltr">GET (Read):</strong> استرجاع البيانات فقط. يعتبر <strong>Safe</strong> (لا يغير شيئاً على الخادم) ويعتبر <strong>Idempotent</strong> (تكرار الطلب 100 مرة يعطي نفس النتيجة بدون أضرار).</li>
+          <li><strong dir="ltr">POST (Create):</strong> إنشاء مورد جديد على الخادم. ليس Idempotent (تكرار الطلب سينشئ موارد مكررة).</li>
+          <li><strong dir="ltr">PUT (Replace/Update):</strong> استبدال المورد بالكامل. يعتبر Idempotent (تكرار إرسال نفس الملف المستبدل لن يغير النتيجة).</li>
+          <li><strong dir="ltr">PATCH (Partial Update):</strong> تعديل جزئي على حقل معين في المورد.</li>
+          <li><strong dir="ltr">DELETE (Delete):</strong> حذف المورد. يعتبر Idempotent (حذف المورد مرة كحذفه عدة مرات).</li>
+        </ul>
+      </section>
+
+      <!-- ================= HTTP Status Codes ================= -->
+      <section class="cmd" id="http-status-codes" dir="rtl">
+        <h3><span dir="ltr">HTTP Response Status Codes</span> <small dir="ltr">REST API Responses</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam Core</span>
+          <span class="badge theory">HTTP Codes</span>
+        </p>
+        <p><strong>فئات وأشهر رموز الاستجابة للامتحان:</strong></p>
+        <ul>
+          <li><strong dir="ltr">2xx Success (النجاح):</strong>
+            <ul>
+              <li><code dir="ltr">200 OK:</code> تم تنفيذ الطلب بنجاح وتم إرجاع البيانات المطلوبة.</li>
+              <li><code dir="ltr">201 Created:</code> تم إنشاء المورد الجديد بنجاح (غالباً رد على طلب POST).</li>
+              <li><code dir="ltr">204 No Content:</code> تم تنفيذ العملية بنجاح ولكن لا توجد بيانات لإرجاعها (غالباً رد على طلب DELETE).</li>
+            </ul>
+          </li>
+          <li><strong dir="ltr">3xx Redirection (إعادة التوجيه):</strong>
+            <ul>
+              <li><code dir="ltr">301 Moved Permanently:</code> تم نقل الرابط بشكل دائم لمكان جديد.</li>
+            </ul>
+          </li>
+          <li><strong dir="ltr">4xx Client Errors (أخطاء من طرف العميل):</strong>
+            <ul>
+              <li><code dir="ltr">400 Bad Request:</code> صياغة الطلب خاطئة (مثلاً كود JSON غير صالح أو به خطأ كتابي).</li>
+              <li><code dir="ltr">401 Unauthorized:</code> خطأ في تسجيل الدخول (اسم مستخدم أو توكن أو كلمة سر خاطئة أو مفقودة).</li>
+              <li><code dir="ltr">403 Forbidden:</code> المستخدم موثق وله حساب، ولكن ليس لديه الصلاحيات الكافية للوصول لهذا المورد.</li>
+              <li><code dir="ltr">404 Not Found:</code> الرابط أو المورد المستهدف غير موجود على الخادم.</li>
+              <li><code dir="ltr">405 Method Not Allowed:</code> الفعل غير مدعوم على هذا الرابط (مثلاً إرسال POST على رابط يدعم GET فقط).</li>
+            </ul>
+          </li>
+          <li><strong dir="ltr">5xx Server Errors (أخطاء من طرف الخادم):</strong>
+            <ul>
+              <li><code dir="ltr">500 Internal Server Error:</code> تعطل في كود أو تطبيق الخادم.</li>
+              <li><code dir="ltr">503 Service Unavailable:</code> الخادم محمل بأكثر من طاقته أو تحت الصيانة المؤقتة.</li>
+            </ul>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ================= Python Automation Snippet ================= -->
+      <section class="cmd" id="python-rest-example" dir="rtl">
+        <h3><span dir="ltr">Python Script: REST API Interaction</span> <small dir="ltr">Practical Automation</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam Code</span>
+          <span class="badge pt">Script</span>
+        </p>
+        <p><strong>كود بايثون نموذجي باستخدام مكتبة requests لاستدعاء REST API وفك تشفير JSON:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>import requests
+import json
+
+# عنوان الـ API وبيانات التحقق
+url = "https://sandboxdnac.cisco.com/dna/intent/api/v1/network-device"
+headers = {
+    "Accept": "application/json",
+    "X-Auth-Token": "YOUR_BEARER_TOKEN_HERE"
+}
+
+# إرسال طلب GET
+response = requests.get(url, headers=headers, verify=False)
+
+# فحص كود الاستجابة
+if response.status_code == 200:
+    devices = response.json()  # تحويل نص الـ JSON إلى كائن Python
+    for device in devices["response"]:
+        print(f"Device: {device['hostname']} | IP: {device['managementIpAddress']}")
+else:
+    print(f"Request failed with status code: {response.status_code}")</code></pre>
+        </div>
+      </section>
+
+    </section>
+
+    <section id="verification">
+      <h2>التحقق ومقارنة الصيغ</h2>
+      <table style="margin-top: 10px;">
+        <thead>
+          <tr>
+            <th>المعيار</th>
+            <th dir="ltr">JSON</th>
+            <th dir="ltr">XML</th>
+            <th dir="ltr">YAML</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>سهولة القراءة للبشر</strong></td>
+            <td>متوسطة إلى جيدة</td>
+            <td>صعبة ومزدحمة بالوسوم</td>
+            <td><strong>الأفضل والأسهل على الإطلاق</strong></td>
+          </tr>
+          <tr>
+            <td><strong>الرموز الأساسية</strong></td>
+            <td><code dir="ltr">{ }</code> و <code dir="ltr">[ ]</code> وفواصل</td>
+            <td><code dir="ltr">&lt;tag&gt;...&lt;/tag&gt;</code></td>
+            <td>مسافات بادئة و <code dir="ltr">-</code> للقوائم</td>
+          </tr>
+          <tr>
+            <td><strong>دعم التعليقات (Comments)</strong></td>
+            <td><span style="color:#d9534f;">لا يدعم التعليقات!</span></td>
+            <td>يدعم (<code dir="ltr">&lt;!-- --&gt;</code>)</td>
+            <td>يدعم (<code dir="ltr">#</code>)</td>
+          </tr>
+          <tr>
+            <td><strong>الاستخدام الشائع</strong></td>
+            <td>REST APIs, Cisco Controllers</td>
+            <td>NETCONF, SOAP</td>
+            <td>Ansible Playbooks, Docker, K8s</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فحص الأعطال (Troubleshooting)</h2>
+      <ul>
+        <li><strong>ظهور خطأ 400 Bad Request أثناء إرسال بيانات JSON:</strong>
+          <ol>
+            <li>تأكد من عدم وجود فواصل زائدة بعد آخر عنصر في الكائن أو المصفوفة (Trailing Comma).</li>
+            <li>تأكد من استخدام علامات تنصيص مزدوجة <code dir="ltr">"key"</code> وليس مفردة.</li>
+            <li>تأكد من أن الكلمات المنطقية مكتوبة بأحرف صغيرة (<code dir="ltr">true</code> وليس <code dir="ltr">True</code>).</li>
+          </ol>
+        </li>
+        <li><strong>ملف الـ Ansible Playbook يفشل في العمل (YAML Syntax Error):</strong>
+          <ol>
+            <li>افحص المسافات البادئة؛ تأكد من عدم استخدام زر الـ Tab إطلاقاً واستبدله بمسافتين عاديتين.</li>
+            <li>تأكد من وجود مسافة بعد النقطتين <code dir="ltr">key: value</code> ومسافة بعد الشرطة <code dir="ltr">- item</code>.</li>
+          </ol>
+        </li>
+        <li><strong>ظهور خطأ 401 Unauthorized في طلبات الـ API:</strong>
+          <ol>
+            <li>تأكد من أن الـ Bearer Token لم تنتهِ صلاحيته (Expired Token)؛ فخوادم مثل Cisco DNA Center تتطلب تجديد التوكن كل فترة (ساعة غالباً).</li>
+            <li>تأكد من إرسال التوكن في الـ Header الصحيح: <code dir="ltr">Authorization: Bearer &lt;token&gt;</code> أو <code dir="ltr">X-Auth-Token</code>.</li>
+          </ol>
+        </li>
+      </ul>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li><strong>فخ الـ Idempotence في أفعال HTTP:</strong>
+          <p>الفعل <strong dir="ltr">Idempotent</strong> يعني أنك إذا كررته عدة مرات بنفس المدخلات فإن حالة النظام تظل كما هي بدون تغيير إضافي. الأفعال الـ Idempotent هي: <strong>GET, PUT, DELETE, HEAD</strong>. بينما الفعل <strong dir="ltr">POST</strong> <strong>ليس</strong> Idempotent لأنه سينشئ عنصراً جديداً في كل مرة ينفذ فيها!</p>
+        </li>
+        <li><strong>الفرق بين 401 و 403:</strong>
+          <ul>
+            <li><strong>401 Unauthorized:</strong> "أنت غير معروف لي" (مشكلة في إثبات الهوية أو كلمة المرور).</li>
+            <li><strong>403 Forbidden:</strong> "أنا أعرفك، ولكن ليس مصرحاً لك بدخول هذه الغرفة" (مشكلة في الصلاحيات Authorization).</li>
+          </ul>
+        </li>
+        <li><strong>JSON لا يدعم التعليقات:</strong>
+          <p>سؤال امتحاني مخادع: محاولة وضع تعليقات مثل <code dir="ltr">// comment</code> أو <code dir="ltr"># comment</code> داخل ملف JSON تجعل الملف غير صالح برمجياً (Invalid JSON)!</p>
+        </li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Term / Method</th>
+            <th dir="ltr">Category</th>
+            <th>الوظيفة (Purpose)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">JSON</code></td>
+            <td>Data Format</td>
+            <td>صيغة خفيفة تعتمد على المفاتيح والقيم <code dir="ltr">{}</code> و <code dir="ltr">[]</code> مفضلة لواجهات الـ REST.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">YAML</code></td>
+            <td>Data Format</td>
+            <td>صيغة نصية تعتمد على المسافات البادئة والشرطات، مستخدمة في الـ Ansible.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">XML</code></td>
+            <td>Data Format</td>
+            <td>صيغة تعتمد على الوسوم المفتوحة والمغلقة، مستخدمة في الـ NETCONF.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">GET</code></td>
+            <td>HTTP Verb</td>
+            <td>قراءة واستعلام البيانات (Read) - آمن و Idempotent.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">POST</code></td>
+            <td>HTTP Verb</td>
+            <td>إنشاء مورد جديد على الخادم (Create) - غير Idempotent.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">PUT</code></td>
+            <td>HTTP Verb</td>
+            <td>استبدال المورد بالكامل (Update/Replace) - Idempotent.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">DELETE</code></td>
+            <td>HTTP Verb</td>
+            <td>حذف مورد من الخادم (Delete) - Idempotent.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">200 OK</code></td>
+            <td>HTTP Status</td>
+            <td>تم تنفيذ الطلب بنجاح وإرجاع البيانات.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">201 Created</code></td>
+            <td>HTTP Status</td>
+            <td>تم إنشاء مورد جديد بنجاح ردّاً على طلب POST.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">401 Unauthorized</code></td>
+            <td>HTTP Status</td>
+            <td>فشل التحقق من الهوية بسبب بيانات دخول مفقودة أو خاطئة.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="automation-concepts.html" class="nav-btn">« السابق: مفاهيم الأتمتة وشبكات SDN</a>
+      <a href="config-management.html" class="nav-btn">التالي: أدوات إدارة الإعدادات (Ansible/Puppet/Chef) »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Automation Concepts & SDN - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>مفاهيم الأتمتة وشبكات SDN (Automation Concepts)</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>تعتبر الأتمتة والشبكات المعتمدة على البرمجيات <strong>SDN (Software-Defined Networking)</strong> التحول الأكبر في تاريخ هندسة الشبكات. نقلت هذه التقنيات طريقة إدارة الشبكات من التكوين اليدوي جهازاً بجهاز (Box-by-Box CLI) إلى الإدارة المركزية والبرمجة التلقائية عبر المتحكمات البرمجية (Controllers):</p>
+      <ul>
+        <li><strong>مستويات الشبكة الثلاثة (Planes of Networking):</strong>
+          <ul>
+            <li><strong>Data Plane (Forwarding Plane):</strong> مسؤول عن تمرير الحزم ومعالجة الإطارات بسرعة عتادية فائقة عبر رقائق الـ ASICs وجداول الـ TCAM (مثل توجيه الـ IP، وتبديل الماك، وفحص الـ ACL).</li>
+            <li><strong>Control Plane:</strong> مسؤول عن اتخاذ قرارات التوجيه والتنقل وبناء الجداول الرياضية (مثل بروتوكولات OSPF, EIGRP, BGP, STP, ARP). في الشبكات التقليدية يعمل على كل راوتر بشكل مستقل (Distributed)، بينما في شبكات الـ SDN يتم سحبه وتركيزه داخل المتحكم المركزي (Centralized Controller).</li>
+            <li><strong>Management Plane:</strong> مسؤول عن إدارة وبرمجة الجهاز من قِبل المهندس (مثل SSH, Telnet, SNMP, Syslog, Web GUI).</li>
+          </ul>
+        </li>
+        <li><strong>واجهات البرمجة (Northbound vs Southbound APIs):</strong>
+          <ul>
+            <li><strong>Southbound APIs (SBIs):</strong> تربط المتحكم المركزي بأجهزة الشبكة في الأسفل (Data Plane). أشهرها: NETCONF, RESTCONF, OpenFlow, OpFlex.</li>
+            <li><strong>Northbound APIs (NBIs):</strong> تربط المتحكم المركزي بالتطبيقات وبرامج إدارة الأعمال في الأعلى، وتعتمد غالباً على بروتوكول <strong>REST APIs</strong> وتبادل بيانات <strong>JSON</strong>.</li>
+          </ul>
+        </li>
+        <li><strong>مفاهيم الـ Fabric والـ Overlay والـ Underlay:</strong>
+          <ul>
+            <li><strong>Underlay:</strong> البنية الفيزيائية التحتية من كابلات وراوترات وسويتشات تعمل ببروتوكول توجيه (مثل IS-IS أو OSPF) لتأمين الاتصال بين جميع العقد (IP Reachability).</li>
+            <li><strong>Overlay:</strong> شبكة منطقية افتراضية تُبنى فوق الـ Underlay باستخدام تقنيات الأنفاق (مثل VXLAN) لعزل ترافيك المستخدمين دون الحاجة لتغيير إعدادات الأجهزة الفيزيائية.</li>
+            <li><strong>Fabric:</strong> المنظومة الكاملة التي تجمع الـ Underlay والـ Overlay والمتحكم المركزي لتعمل ككيان سحابي واحد.</li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <section id="quick-config">
+      <h2>إعداد سريع (انسخ والصق)</h2>
+      <p>تفعيل واجهات الإدارة البرمجية الحديثة NETCONF و RESTCONF على راوترات وسويتشات سيسكو لدعم الأتمتة و YANG Data Models:</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>! 1. تفعيل واجهة NETCONF البرمجية (تعتمد على SSH منفذ 830)
+netconf-yang
+
+! 2. تفعيل واجهة RESTCONF البرمجية (تعتمد على HTTPS منفذ 443)
+restconf
+
+! 3. تفعيل الاتصال المشفر بـ SSHv2 لخدمة NETCONF
+ip domain-name enterprise.local
+crypto key generate rsa modulus 2048
+username netops privilege 15 secret CiscoNetDevOps#2026
+
+! 4. التحقق من عمل عمليات الأتمتة البرمجية
+do show netconf-yang sessions
+do show platform software yang-management process</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>المفاهيم والحلول المعمارية خطوة بخطوة</h2>
+
+      <!-- ================= Planes of Networking ================= -->
+      <section class="cmd" id="networking-planes" dir="rtl">
+        <h3><span dir="ltr">Network Planes Architecture</span> <small dir="ltr">Data vs Control vs Management</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam Core</span>
+          <span class="badge theory">Theory</span>
+        </p>
+        <p><strong>مقارنة وظائف المستويات الثلاثة:</strong></p>
+        <ul>
+          <li><strong>Data Plane:</strong> ينفذ التعليمات فوراً. وظائفه:
+            <ul>
+              <li>تعديل ترويسات الحزم (Header re-writing مثل إنقاص TTL وتعديل MAC addresses).</li>
+              <li>فحص جداول التمرير السريع (FIB - Forwarding Information Base) وجدول الـ Adjacency في تقنية Cisco Express Forwarding (CEF).</li>
+              <li>إسقاط الحزم عند مطابقة الـ ACLs وتطبيق علامات الـ QoS.</li>
+            </ul>
+          </li>
+          <li><strong>Control Plane:</strong> العقل المفكر. وظائفه:
+            <ul>
+              <li>تبادل رسائل التوجيه بين الراوترات (Hello packets, LSAs, Updates).</li>
+              <li>بناء جدول التوجيه العام (RIB - Routing Information Base).</li>
+              <li>تشغيل خوارزميات الشجرة الممتدة (STP) ومطابقة رسائل الـ ARP.</li>
+            </ul>
+          </li>
+          <li><strong>Management Plane:</strong> قناة الوصول البشري والبرمجي للجهاز عبر SSH أو HTTPS أو SNMP.</li>
+        </ul>
+      </section>
+
+      <!-- ================= Cisco Controller Solutions ================= -->
+      <section class="cmd" id="cisco-controllers" dir="rtl">
+        <h3><span dir="ltr">Cisco Controller Architectures</span> <small dir="ltr">SD-Access & SD-WAN</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam Core</span>
+          <span class="badge theory">Theory</span>
+        </p>
+        <p><strong>1. حل Cisco SD-Access (Software-Defined Access):</strong></p>
+        <p>مخصص لشبكات الحرم الجامعي والمؤسسات المحلية (Campus LAN). يعتمد على المتحكم المركزي <strong>Cisco Catalyst Center (DNA Center)</strong> ويستخدم ثلاث تقنيات أساسية:</p>
+        <ul>
+          <li><strong>Control Plane:</strong> يعتمد على بروتوكول <strong>LISP (Location/Identifier Separation Protocol)</strong> لتعقب أماكن وجود الأجهزة والمستخدمين بكفاءة.</li>
+          <li><strong>Data Plane:</strong> يعتمد على تقنية <strong>VXLAN (Virtual Extensible LAN)</strong> لتغليف الإطارات في حزم UDP (منفذ 4789) ونقلها عبر الـ Underlay.</li>
+          <li><strong>Policy Plane:</strong> يعتمد على تقنية <strong>Cisco TrustSec (CTS)</strong> وعلامات <strong>SGT (Scalable Group Tags)</strong> لتطبيق قواعد الحماية بدون الاعتماد على الأيبيهات.</li>
+        </ul>
+
+        <p><strong>2. حل Cisco SD-WAN (Software-Defined WAN):</strong></p>
+        <p>مخصص لربط الفروع البعيدة ومراكز البيانات فوق خطوط الإنترنت و MPLS. ينقسم معمارياً إلى أربعة مكونات رئيسية (سؤال إجباري في الامتحان):</p>
+        <ul>
+          <li><strong dir="ltr">vManage:</strong> مستوى الإدارة (Management Plane) - لوحة تحكم الرسومية المركزية للكونفيج والمراقبة.</li>
+          <li><strong dir="ltr">vSmart:</strong> مستوى التحكم (Control Plane) - المتحكم الذي يبني جداول التوجيه ويوزع السياسات عبر بروتوكول <strong>OMP (Overlay Management Protocol)</strong>.</li>
+          <li><strong dir="ltr">vBond:</strong> مستوى التنسيق (Orchestration Plane) - المسؤول عن مصادقة الراوترات وتجاوز الـ NAT (NAT Traversal).</li>
+          <li><strong dir="ltr">vEdge / cEdge:</strong> مستوى البيانات (Data Plane) - راوترات الفروع التي تمرر ترافيك المستخدمين داخل أنفاق IPsec مشفرة.</li>
+        </ul>
+      </section>
+
+      <!-- ================= Cisco Catalyst Center (DNA Center) ================= -->
+      <section class="cmd" id="dna-center-pillars" dir="rtl">
+        <h3><span dir="ltr">Cisco Catalyst Center (DNA Center)</span> <small dir="ltr">Management Pillars</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam Core</span>
+          <span class="badge theory">Theory</span>
+        </p>
+        <p><strong>الأركان الوظيفية الخمسة في واجهة Catalyst Center:</strong></p>
+        <ol>
+          <li><strong>Design (التصميم):</strong> تحديد المواقع الجغرافية والمباني والأدوار وإعدادات الشبكة العامة (IP pools, DNS, NTP, DHCP).</li>
+          <li><strong>Policy (السياسات):</strong> إنشاء ملفات التعريف الافتراضية وقواعد الوصول (Virtual Networks وعلامات SGT).</li>
+          <li><strong>Provision (التجهيز والنشر):</strong> إرسال الإعدادات تلقائياً للأجهزة وربطها بالمباني وميزة <strong>Plug and Play (PnP)</strong>.</li>
+          <li><strong>Assurance (الضمان والمراقبة الذكية):</strong> تحليل صحة الشبكة والمستخدمين بالذكاء الاصطناعي (AI/ML Health Scores) واستباق الأعطال.</li>
+          <li><strong>Platform (المنصة البرمجية):</strong> واجهات برمجة التطبيقات (APIs) لتكامل النظام مع برامج خارجية مثل ServiceNow.</li>
+        </ol>
+      </section>
+
+      <!-- ================= NETCONF & RESTCONF Commands ================= -->
+      <section class="cmd" id="netconf-restconf-enable" dir="rtl">
+        <h3><span dir="ltr">netconf-yang & restconf</span> <small dir="ltr">Southbound Device APIs</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT Partial</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>! تفعيل واجهة NETCONF (تستخدم بروتوكول SSH على بورت 830 وصيغة بيانات XML)
+netconf-yang
+
+! تفعيل واجهة RESTCONF (تستخدم بروتوكول HTTPS على بورت 443 وصيغة بيانات JSON أو XML)
+restconf</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> هذه هي البروتوكولات الحديثة (Southbound APIs) التي تستخدمها برامج الأتمتة لقراءة وكتابة إعدادات الراوتر بدقة عبر نماذج بيانات مهيكلة (YANG Data Models) كبديل متطور عن أوامر الـ CLI النصية القديمة.</p>
+      </section>
+
+    </section>
+
+    <section id="verification">
+      <h2>أوامر التحقق وفحص الأتمتة</h2>
+
+      <section class="cmd" id="show-netconf-yang" dir="rtl">
+        <h3><span dir="ltr">show netconf-yang sessions</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+        </p>
+        <p><strong>الشرح:</strong> يعرض جلسات الاتصال النشطة مع أنظمة الأتمتة عبر بروتوكول NETCONF ورقم الـ Session ID واسم المستخدم المتصل.</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>show netconf-yang sessions
+R1#show netconf-yang sessions
+Number of sessions: 1
+Session-id   Username    Client-Address
+10           netops      192.168.1.50</code></pre>
+        </div>
+      </section>
+
+      <section class="cmd" id="show-yang-processes" dir="rtl">
+        <h3><span dir="ltr">show platform software yang-management process</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+        </p>
+        <p><strong>الشرح:</strong> التأكد من أن العمليات المسؤولة عن تشغيل نماذج الـ YANG و NETCONF تعمل بشكل طبيعي (Running) في نظام تشغيل Cisco IOS XE.</p>
+      </section>
+
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فحص الأعطال (Troubleshooting)</h2>
+      <ul>
+        <li><strong>أدوات الأتمتة تفشل في الاتصال عبر NETCONF:</strong>
+          <ol>
+            <li>تأكد من فتح منفذ <strong>TCP Port 830</strong> في الجدران النارية والـ ACLs الفاصلة بين خادم الأتمتة والراوتر.</li>
+            <li>تأكد من تفعيل <code dir="ltr">netconf-yang</code> في وضع الكونفيج العام للراوتر.</li>
+            <li>تأكد من توليد مفاتيح تشفير RSA بحجم 2048 بت للـ SSH؛ لأن NETCONF يعتمد كلياً على نفق SSH مشفر.</li>
+          </ol>
+        </li>
+        <li><strong>أدوات الأتمتة تفشل في الاتصال عبر RESTCONF:</strong>
+          <ol>
+            <li>تأكد من تفعيل خادم الويب الآمن في الراوتر عبر أمر <code dir="ltr">ip http secure-server</code> (HTTPS).</li>
+            <li>تأكد من فتح منفذ <strong>TCP Port 443</strong>، وصحة اسم المستخدم وكلمة المرور وصلاحيات الوصول (Privilege 15).</li>
+          </ol>
+        </li>
+      </ul>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li><strong>اتجاهات الـ APIs (فخ كلاسيكي):</strong>
+          <ul>
+            <li><strong>Northbound:</strong> متجهة لأعلى (من المتحكم &larr; إلى تطبيقات إدارة الأعمال والبرمجة). تستخدم غالباً <strong>REST APIs / JSON</strong>.</li>
+            <li><strong>Southbound:</strong> متجهة لأسفل (من المتحكم &larr; إلى راوترات وسويتشات الـ Data plane). تستخدم <strong>NETCONF, RESTCONF, OpenFlow, OpFlex</strong>.</li>
+          </ul>
+        </li>
+        <li><strong>توزيع أدوار Cisco SD-WAN للامتحان:</strong>
+          <table style="margin-top: 10px;">
+            <thead>
+              <tr>
+                <th>المكون (Component)</th>
+                <th>المستوى (Plane)</th>
+                <th>الوظيفة الرئيسية</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong dir="ltr">vManage</strong></td>
+                <td>Management Plane</td>
+                <td>الواجهة الرسومية المركزية للتهيئة والمراقبة وتوزيع التحديثات.</td>
+              </tr>
+              <tr>
+                <td><strong dir="ltr">vSmart</strong></td>
+                <td>Control Plane</td>
+                <td>بناء وتوجيه الترافيك وتطبيق السياسات عبر بروتوكول OMP.</td>
+              </tr>
+              <tr>
+                <td><strong dir="ltr">vBond</strong></td>
+                <td>Orchestration Plane</td>
+                <td>المصادقة الأولية للراوترات والتنسيق وتجاوز NAT Traversal.</td>
+              </tr>
+              <tr>
+                <td><strong dir="ltr">vEdge / cEdge</strong></td>
+                <td>Data Plane</td>
+                <td>توجيه وتمرير ترافيك المستخدمين الفعلي عبر أنفاق الـ IPsec.</td>
+              </tr>
+            </tbody>
+          </table>
+        </li>
+        <li><strong>بروتوكولات الـ SD-Access الثلاثة:</strong>
+          <ul>
+            <li><strong>LISP:</strong> مستوى التحكم (Control Plane) لتعقب أماكن الأجهزة.</li>
+            <li><strong>VXLAN:</strong> مستوى البيانات (Data Plane) لتغليف الإطارات في UDP Port 4789.</li>
+            <li><strong>TrustSec (SGT):</strong> مستوى السياسات (Policy Plane) للتحكم في الصلاحيات.</li>
+          </ul>
+        </li>
+        <li><strong>شروط شبكة الـ Underlay في SD-Access:</strong>
+          <p>يجب أن تدعم شبكة الـ Underlay حجماً أكبر لحزم البيانات (MTU أكبر من 1600 بايت أو Jumbo Frames) لتتسع لترويسة الـ VXLAN الإضافية بدون حدوث تجزئة (Fragmentation).</p>
+        </li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Concept / Command</th>
+            <th dir="ltr">Type</th>
+            <th>الوظيفة (Purpose)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">Data Plane</code></td>
+            <td>Architecture</td>
+            <td>تمرير ومعالجة الحزم وتطبيق جداول الـ FIB والـ ASICs.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">Control Plane</code></td>
+            <td>Architecture</td>
+            <td>اتخاذ قرارات التوجيه وحساب الجداول عبر بروتوكولات التوجيه.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">Management Plane</code></td>
+            <td>Architecture</td>
+            <td>قناة وصول المهندسين وبرامج الإدارة للجهاز (SSH, HTTPS, SNMP).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">Northbound API</code></td>
+            <td>API</td>
+            <td>الاتصال بين المتحكم والتطبيقات الخارجية (غالباً REST API).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">Southbound API</code></td>
+            <td>API</td>
+            <td>الاتصال بين المتحكم وأجهزة الشبكة (NETCONF, RESTCONF, OpenFlow).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">netconf-yang</code></td>
+            <td>Global config</td>
+            <td>تفعيل واجهة NETCONF البرمجية عبر SSH منفذ 830 ونماذج YANG.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">restconf</code></td>
+            <td>Global config</td>
+            <td>تفعيل واجهة RESTCONF البرمجية عبر HTTPS منفذ 443.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show netconf-yang sessions</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>عرض جلسات الاتصال البرمجية النشطة مع أنظمة الأتمتة.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="../05-security/vpn-wireless-sec.html" class="nav-btn">« السابق: شبكات VPN وحماية اللاسلكي</a>
+      <a href="data-formats.html" class="nav-btn">التالي: صيغ البيانات وواجهات REST APIs »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

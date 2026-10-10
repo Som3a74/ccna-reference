@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CCNA Cheat Sheets & Quick Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>جداول ومراجع سريعة (CCNA Cheat Sheets)</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>هذه الصفحة هي المرجع الذهبي الشامل والمكثف لكل الأرقام والجداول والبروتوكولات التي لا يخلو منها أي امتحان <strong>CCNA 200-301</strong>. تم تجميعها لتكون ورقة مراجعة سريعة (Cheat Sheet) قبل دخول الامتحان أو أثناء العمل الميداني:</p>
+      <ul>
+        <li>جدول حساب وتقسيم الشبكات (Subnetting & VLSM Cheat Sheet).</li>
+        <li>جدول المنافذ والبروتوكولات المشهورة (Well-Known Ports & Protocols).</li>
+        <li>جدول المسافات الإدارية لبروتوكولات التوجيه (Administrative Distance Master Table).</li>
+        <li>جدول حالات ومراحل الـ OSPF والـ STP.</li>
+        <li>جدول مستويات السيسلوج وعلامات الـ QoS.</li>
+      </ul>
+    </section>
+
+    <section id="step-by-step">
+      <h2>جداول المراجعة المركزة</h2>
+
+      <!-- ================= Subnetting Cheat Sheet ================= -->
+      <section class="cmd" id="subnetting-table" dir="rtl">
+        <h3><span dir="ltr">Subnetting & CIDR Master Table (/8 to /32)</span> <small dir="ltr">IPv4 Math</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam Core</span>
+          <span class="badge theory">Subnetting</span>
+        </p>
+        <p><strong>جدول الـ Magic Number وحساب الـ Subnets للأوكتت الرابع (/24 إلى /32):</strong></p>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th dir="ltr">CIDR</th>
+                <th dir="ltr">Subnet Mask</th>
+                <th dir="ltr">Wildcard Mask</th>
+                <th>قيمة القفزة (Magic Number)</th>
+                <th>إجمالي الأجهزة (Total)</th>
+                <th>الأجهزة الصالحة (Usable Hosts)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><code dir="ltr">/24</code></td><td dir="ltr">255.255.255.0</td><td dir="ltr">0.0.0.255</td><td>256</td><td>256</td><td><strong>254</strong></td></tr>
+              <tr><td><code dir="ltr">/25</code></td><td dir="ltr">255.255.255.128</td><td dir="ltr">0.0.0.127</td><td>128</td><td>128</td><td><strong>126</strong></td></tr>
+              <tr><td><code dir="ltr">/26</code></td><td dir="ltr">255.255.255.192</td><td dir="ltr">0.0.0.63</td><td>64</td><td>64</td><td><strong>62</strong></td></tr>
+              <tr><td><code dir="ltr">/27</code></td><td dir="ltr">255.255.255.224</td><td dir="ltr">0.0.0.31</td><td>32</td><td>32</td><td><strong>30</strong></td></tr>
+              <tr><td><code dir="ltr">/28</code></td><td dir="ltr">255.255.255.240</td><td dir="ltr">0.0.0.15</td><td>16</td><td>16</td><td><strong>14</strong></td></tr>
+              <tr><td><code dir="ltr">/29</code></td><td dir="ltr">255.255.255.248</td><td dir="ltr">0.0.0.7</td><td>8</td><td>8</td><td><strong>6</strong></td></tr>
+              <tr><td><code dir="ltr">/30</code></td><td dir="ltr">255.255.255.252</td><td dir="ltr">0.0.0.3</td><td>4</td><td>4</td><td><strong>2 (Point-to-Point)</strong></td></tr>
+              <tr><td><code dir="ltr">/31</code></td><td dir="ltr">255.255.255.254</td><td dir="ltr">0.0.0.1</td><td>2</td><td>2</td><td>2 (RFC 3021 Routers)</td></tr>
+              <tr><td><code dir="ltr">/32</code></td><td dir="ltr">255.255.255.255</td><td dir="ltr">0.0.0.0</td><td>1</td><td>1</td><td>1 (Host / Loopback)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p><strong>معادلة الـ Magic Number:</strong> <code dir="ltr">Magic Number = 256 - Octet Value</code> (مثلاً: 256 - 224 = 32).</p>
+      </section>
+
+      <!-- ================= Private & Special IPv4/IPv6 ================= -->
+      <section class="cmd" id="ip-ranges-table" dir="rtl">
+        <h3><span dir="ltr">Special IP Ranges (RFC 1918 & IPv6)</span> <small dir="ltr">IP Addressing</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam Core</span>
+          <span class="badge theory">IP Ranges</span>
+        </p>
+        <p><strong>1. عناوين IPv4 الخاصة (RFC 1918 Private Addresses):</strong></p>
+        <ul>
+          <li><strong>Class A:</strong> من <code dir="ltr">10.0.0.0</code> إلى <code dir="ltr">10.255.255.255</code> (قناع <code dir="ltr">/8</code>).</li>
+          <li><strong>Class B:</strong> من <code dir="ltr">172.16.0.0</code> إلى <code dir="ltr">172.31.255.255</code> (قناع <code dir="ltr">/12</code> - 16 شبكة).</li>
+          <li><strong>Class C:</strong> من <code dir="ltr">192.168.0.0</code> إلى <code dir="ltr">192.168.255.255</code> (قناع <code dir="ltr">/16</code> - 256 شبكة).</li>
+          <li><strong>APIPA (Link-Local):</strong> من <code dir="ltr">169.254.0.0</code> إلى <code dir="ltr">169.254.255.255</code> (عند فشل DHCP).</li>
+          <li><strong>Loopback:</strong> <code dir="ltr">127.0.0.0/8</code> (للاختبار الداخلي).</li>
+        </ul>
+        <p><strong>2. أنواع عناوين IPv6 الخاصة للامتحان:</strong></p>
+        <ul>
+          <li><strong>Global Unicast (GUA):</strong> تبدأ بـ <code dir="ltr">2000::/3</code> (عناوين عامة قابلة للتوجيه في الإنترنت).</li>
+          <li><strong>Unique Local (ULA):</strong> تبدأ بـ <code dir="ltr">fc00::/7</code> (خاصة بالشبكات الداخلية - بديل RFC 1918).</li>
+          <li><strong>Link-Local (LLA):</strong> تبدأ بـ <code dir="ltr">fe80::/10</code> (خاصة بالاتصال على نفس الرابط، إلزامية لكل منفذ).</li>
+          <li><strong>Multicast:</strong> تبدأ بـ <code dir="ltr">ff00::/8</code>:
+            <ul>
+              <li><code dir="ltr">ff02::1</code> = كل الأجهزة (All Nodes).</li>
+              <li><code dir="ltr">ff02::2</code> = كل الراوترات (All Routers).</li>
+              <li><code dir="ltr">ff02::5</code> = كل راوترات OSPFv3.</li>
+              <li><code dir="ltr">ff02::6</code> = راوترات الـ DR/BDR في OSPFv3.</li>
+            </ul>
+          </li>
+          <li><strong>Loopback:</strong> <code dir="ltr">::1/128</code>.</li>
+          <li><strong>Unspecified:</strong> <code dir="ltr">::/128</code>.</li>
+        </ul>
+      </section>
+
+      <!-- ================= Ports & Protocols Table ================= -->
+      <section class="cmd" id="ports-protocols-table" dir="rtl">
+        <h3><span dir="ltr">Well-Known Ports & Protocols</span> <small dir="ltr">L4 Master Table</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam Core</span>
+          <span class="badge theory">Ports</span>
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th dir="ltr">Port</th>
+              <th dir="ltr">Protocol</th>
+              <th>الاسم والوظيفة</th>
+              <th dir="ltr">Transport</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><code dir="ltr">20 / 21</code></td><td>FTP</td><td>نقل الملفات (20 للبيانات Data و 21 للأوامر Control)</td><td>TCP</td></tr>
+            <tr><td><code dir="ltr">22</code></td><td>SSH / SFTP</td><td>إدارة الأجهزة ونقل الملفات المشفرة</td><td>TCP</td></tr>
+            <tr><td><code dir="ltr">23</code></td><td>Telnet</td><td>إدارة الأجهزة بنص غير مشفر (ممنوع استخدامه)</td><td>TCP</td></tr>
+            <tr><td><code dir="ltr">25</code></td><td>SMTP</td><td>إرسال البريد الإلكتروني بين الخوادم</td><td>TCP</td></tr>
+            <tr><td><code dir="ltr">53</code></td><td>DNS</td><td>ترجمة الأسماء إلى أيبيهات (Zone Transfers بـ TCP)</td><td>UDP & TCP</td></tr>
+            <tr><td><code dir="ltr">67 / 68</code></td><td>DHCP</td><td>توزيع الأيبيهات (67 للسيرفر و 68 للعميل)</td><td>UDP</td></tr>
+            <tr><td><code dir="ltr">69</code></td><td>TFTP</td><td>نقل ملفات النظام والنسخ الاحتياطي بدون مصادقة</td><td>UDP</td></tr>
+            <tr><td><code dir="ltr">80</code></td><td>HTTP (WWW)</td><td>تصفح صفحات الويب غير المشفرة</td><td>TCP</td></tr>
+            <tr><td><code dir="ltr">110</code></td><td>POP3</td><td>استقبال وتحميل البريد الإلكتروني</td><td>TCP</td></tr>
+            <tr><td><code dir="ltr">123</code></td><td>NTP</td><td>مزامنة التوقيت بين الأجهزة</td><td>UDP</td></tr>
+            <tr><td><code dir="ltr">161 / 162</code></td><td>SNMP</td><td>مراقبة الأجهزة (161 للاستعلامات و 162 للتنبيهات Traps)</td><td>UDP</td></tr>
+            <tr><td><code dir="ltr">179</code></td><td>BGP</td><td>بروتوكول توجيه الإنترنت بين الـ Autonomous Systems</td><td>TCP</td></tr>
+            <tr><td><code dir="ltr">443</code></td><td>HTTPS</td><td>تصفح الويب الآمن المشفر بـ TLS/SSL</td><td>TCP</td></tr>
+            <tr><td><code dir="ltr">514</code></td><td>Syslog</td><td>إرسال سجلات وأحداث النظام لخادم مركزي</td><td>UDP</td></tr>
+            <tr><td><code dir="ltr">49</code></td><td>TACACS+</td><td>إدارة الأجهزة وصلاحيات الـ AAA (سيسكو)</td><td>TCP</td></tr>
+            <tr><td><code dir="ltr">1812 / 1813</code></td><td>RADIUS</td><td>نظام AAA للتحكم بالوصول (1812 مصادقة و 1813 محاسبة)</td><td>UDP</td></tr>
+            <tr><td><code dir="ltr">500 / 4500</code></td><td>IKE / NAT-T</td><td>مفاوضات أنفاق الـ IPsec VPN</td><td>UDP</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- ================= Administrative Distance Table ================= -->
+      <section class="cmd" id="ad-table" dir="rtl">
+        <h3><span dir="ltr">Administrative Distance (AD) Master Table</span> <small dir="ltr">Route Preference</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam Core</span>
+          <span class="badge theory">Routing Priority</span>
+        </p>
+        <p><em>قاعدة الاختيار:</em> الرقم <strong>الأقل</strong> يعني مصداقية أعلى ويتم تفضيله في جدول التوجيه:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>المصدر (Route Source)</th>
+              <th dir="ltr">Administrative Distance (AD)</th>
+              <th>رمز المسار في جدول التوجيه</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Connected (متصل فيزيائياً)</strong></td><td dir="ltr"><strong>0</strong></td><td><code dir="ltr">C</code></td></tr>
+            <tr><td><strong>Static Route (مسار ثابت)</strong></td><td dir="ltr"><strong>1</strong></td><td><code dir="ltr">S</code></td></tr>
+            <tr><td><strong>External BGP (eBGP)</strong></td><td dir="ltr"><strong>20</strong></td><td><code dir="ltr">B</code></td></tr>
+            <tr><td><strong>EIGRP (Internal)</strong></td><td dir="ltr"><strong>90</strong></td><td><code dir="ltr">D</code></td></tr>
+            <tr><td><strong>OSPF</strong></td><td dir="ltr"><strong>110</strong></td><td><code dir="ltr">O</code></td></tr>
+            <tr><td><strong>IS-IS</strong></td><td dir="ltr"><strong>115</strong></td><td><code dir="ltr">i</code></td></tr>
+            <tr><td><strong>RIP</strong></td><td dir="ltr"><strong>120</strong></td><td><code dir="ltr">R</code></td></tr>
+            <tr><td><strong>EIGRP (External)</strong></td><td dir="ltr"><strong>170</strong></td><td><code dir="ltr">D EX</code></td></tr>
+            <tr><td><strong>Internal BGP (iBGP)</strong></td><td dir="ltr"><strong>200</strong></td><td><code dir="ltr">B</code></td></tr>
+            <tr><td><strong>DHCP Default Route</strong></td><td dir="ltr"><strong>254</strong></td><td><code dir="ltr">S*</code></td></tr>
+            <tr><td><strong>Unreachable / Unknown</strong></td><td dir="ltr"><strong>255</strong> (مرفوض تماماً)</td><td>لا يوضع في الجدول</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- ================= OSPF States & STP States ================= -->
+      <section class="cmd" id="protocol-states-table" dir="rtl">
+        <h3><span dir="ltr">OSPF Adjacency & STP Port States</span> <small dir="ltr">Protocol Lifecycle</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam Core</span>
+          <span class="badge theory">States</span>
+        </p>
+        <p><strong>1. مراحل جيرة OSPF بالترتيب الزمني:</strong></p>
+        <ol>
+          <li><strong dir="ltr">Down:</strong> لا توجد أي رسائل Hello مستلمة.</li>
+          <li><strong dir="ltr">Init:</strong> استلم الراوتر حزمة Hello لكن اسمه (Router-ID) غير موجود فيها بعد.</li>
+          <li><strong dir="ltr">2-Way:</strong> رأى الراوتر اسمه في رسالة Hello الطرف الآخر (تم تأكيد الاتصال ثنائي الاتجاه، ويتم انتخاب الـ DR/BDR في هذه المرحلة).</li>
+          <li><strong dir="ltr">ExStart:</strong> تحديد السيد والتابع (Master / Slave) واختيار رقم التسلسل الابتدائي للـ DBD.</li>
+          <li><strong dir="ltr">Exchange:</strong> تبادل ملخصات قاعدة البيانات (DBD Packets).</li>
+          <li><strong dir="ltr">Loading:</strong> طلب التفاصيل الناقصة عبر LSR واستلام الرد بـ LSU وإرسال تأكيد LSAck.</li>
+          <li><strong dir="ltr">Full:</strong> اكتمال المزامنة التامة والتطابق الكامل لقاعدة بيانات الـ LSDB.</li>
+        </ol>
+        <p><strong>2. مقارنة حالات منافذ STP (802.1D) مقابل Rapid-PVST (802.1w):</strong></p>
+        <table>
+          <thead>
+            <tr>
+              <th>حالة STP التقليدي (802.1D)</th>
+              <th>حالة Rapid-PVST (802.1w)</th>
+              <th>هل يمرر البيانات؟</th>
+              <th>هل يتعلم MAC addresses؟</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Disabled / Blocking</strong></td><td><strong>Discarding</strong></td><td>لا</td><td>لا</td></tr>
+            <tr><td><strong>Listening</strong></td><td><strong>Discarding</strong></td><td>لا</td><td>لا</td></tr>
+            <tr><td><strong>Learning</strong></td><td><strong>Learning</strong></td><td>لا</td><td><strong>نعم</strong></td></tr>
+            <tr><td><strong>Forwarding</strong></td><td><strong>Forwarding</strong></td><td><strong>نعم</strong></td><td><strong>نعم</strong></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- ================= EtherChannel Modes Matrix ================= -->
+      <section class="cmd" id="etherchannel-matrix" dir="rtl">
+        <h3><span dir="ltr">EtherChannel Compatibility Matrix</span> <small dir="ltr">LACP vs PAgP vs Static</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam Core</span>
+          <span class="badge theory">Compatibility</span>
+        </p>
+        <p><strong>جدول توافق أوضاع دمج المنافذ (Channel-Group Modes):</strong></p>
+        <table>
+          <thead>
+            <tr>
+              <th>الطرف الأول</th>
+              <th>الطرف الثاني</th>
+              <th>البروتوكول</th>
+              <th>هل يقوم الـ EtherChannel بنجاح؟</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><code dir="ltr">Active</code></td><td><code dir="ltr">Active</code></td><td>LACP (802.3ad)</td><td><span style="color:#28a745; font-weight:bold;">نعم ✔</span></td></tr>
+            <tr><td><code dir="ltr">Active</code></td><td><code dir="ltr">Passive</code></td><td>LACP (802.3ad)</td><td><span style="color:#28a745; font-weight:bold;">نعم ✔</span></td></tr>
+            <tr><td><code dir="ltr">Passive</code></td><td><code dir="ltr">Passive</code></td><td>LACP (802.3ad)</td><td><span style="color:#d9534f; font-weight:bold;">لا (كلاهما ينتظر الآخر)</span></td></tr>
+            <tr><td><code dir="ltr">Desirable</code></td><td><code dir="ltr">Desirable</code></td><td>PAgP (Cisco)</td><td><span style="color:#28a745; font-weight:bold;">نعم ✔</span></td></tr>
+            <tr><td><code dir="ltr">Desirable</code></td><td><code dir="ltr">Auto</code></td><td>PAgP (Cisco)</td><td><span style="color:#28a745; font-weight:bold;">نعم ✔</span></td></tr>
+            <tr><td><code dir="ltr">Auto</code></td><td><code dir="ltr">Auto</code></td><td>PAgP (Cisco)</td><td><span style="color:#d9534f; font-weight:bold;">لا (كلاهما ينتظر الآخر)</span></td></tr>
+            <tr><td><code dir="ltr">On</code></td><td><code dir="ltr">On</code></td><td>Static (بدون بروتوكول)</td><td><span style="color:#28a745; font-weight:bold;">نعم ✔</span></td></tr>
+            <tr><td><code dir="ltr">On</code></td><td>أي وضع آخر</td><td>-</td><td><span style="color:#d9534f; font-weight:bold;">لا (فشل وتعارض)</span></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- ================= Syslog Severity Levels Table ================= -->
+      <section class="cmd" id="syslog-levels-table" dir="rtl">
+        <h3><span dir="ltr">Syslog Severity Levels (0 to 7)</span> <small dir="ltr">Logging Priority</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam Core</span>
+          <span class="badge theory">Syslog 0-7</span>
+        </p>
+        <p><em>قاعدة الحفظ:</em> الرقم <strong>0 هو الأخطر والأشد طوارئ</strong>، والرقم <strong>7 هو الأقل خطورة (التصحيح الميداني)</strong>. (طريقة شهيرة للتذكر: <strong>E</strong>very <strong>A</strong>lley <strong>C</strong>at <strong>E</strong>ats <strong>W</strong>eed, <strong>N</strong>ot <strong>I</strong>ce <strong>D</strong>ope):</p>
+        <table>
+          <thead>
+            <tr>
+              <th dir="ltr">Level</th>
+              <th dir="ltr">Severity Name</th>
+              <th>الاسم والوصف بالعربي</th>
+              <th>مثال للحدث في سيسكو</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong dir="ltr">0</strong></td><td><strong dir="ltr">Emergency</strong></td><td>طوارئ قصوى - النظام غير مستقر وموشك على الانهيار</td><td>رسائل عطل عتادي شامل في المعالج أو الباور</td></tr>
+            <tr><td><strong dir="ltr">1</strong></td><td><strong dir="ltr">Alert</strong></td><td>تنبيه فوري - يتطلب تدخلاً هندسياً عاجلاً الآن</td><td>تلف أو سقوط قاعدة بيانات النظام الأساسية</td></tr>
+            <tr><td><strong dir="ltr">2</strong></td><td><strong dir="ltr">Critical</strong></td><td>حالة حرجة - فشل في مكوّن أمني أو فيزيائي حساس</td><td>توقف مروحة التبريد أو ارتفاع الحرارة لمستوى حرج</td></tr>
+            <tr><td><strong dir="ltr">3</strong></td><td><strong dir="ltr">Error</strong></td><td>خطأ تشغيلي - خطأ يؤثر على خدمة معينة</td><td>فشل في إرسال حزم التشفير أو نفاذ الذاكرة</td></tr>
+            <tr><td><strong dir="ltr">4</strong></td><td><strong dir="ltr">Warning</strong></td><td>تحذير - خطأ محتمل قد يتطور إذا لم يُعالج</td><td>اكتشاف تكرار IP في الشبكة أو انتهاء صلاحية جلسة</td></tr>
+            <tr><td><strong dir="ltr">5</strong></td><td><strong dir="ltr">Notice</strong></td><td>إشعار عادي - حالة طبيعية ولكنها جديرة بالتوثيق</td><td>تغير حالة المنفذ (<code dir="ltr">UPDOWN / CHANGED</code>) أو تغير جيرة STP</td></tr>
+            <tr><td><strong dir="ltr">6</strong></td><td><strong dir="ltr">Informational</strong></td><td>معلوماتي - أحداث تشغيل اعتيادية</td><td>تسجيل دخول مستخدم أو إعداد عبر الكونسول</td></tr>
+            <tr><td><strong dir="ltr">7</strong></td><td><strong dir="ltr">Debugging</strong></td><td>تصحيح الأخطاء - تفاصيل بروتوكولية دقيقة ومكثفة</td><td>مخرجات أوامر الـ <code dir="ltr">debug</code> البرمجية</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- ================= QoS Marking Cheat Sheet ================= -->
+      <section class="cmd" id="qos-marking-table" dir="rtl">
+        <h3><span dir="ltr">QoS Marking & DSCP Master Table</span> <small dir="ltr">L2 CoS vs L3 DSCP</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam Core</span>
+          <span class="badge theory">DiffServ Architecture</span>
+        </p>
+        <p><strong>مقارنة تمييز الجودة بين الطبقة الثانية (CoS - 3 بت) والطبقة الثالثة (DSCP - 6 بت):</strong></p>
+        <table>
+          <thead>
+            <tr>
+              <th dir="ltr">Traffic Type</th>
+              <th dir="ltr">L2 CoS (0-7)</th>
+              <th dir="ltr">DSCP Value</th>
+              <th dir="ltr">Decimal</th>
+              <th>سلوك المعالجة (Per-Hop Behavior)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Voice (صوت المكالمات)</strong></td><td dir="ltr">5</td><td dir="ltr"><strong>EF (Expedited Forwarding)</strong></td><td dir="ltr"><strong>46</strong></td><td>طابور ذو أولوية مطلقة (Strict Priority Queue) بأقل تأخير وتفاوت.</td></tr>
+            <tr><td><strong>Interactive Video (فيديو مباشر)</strong></td><td dir="ltr">4</td><td dir="ltr"><strong>AF41</strong></td><td dir="ltr">34</td><td>ضمان سعة عالية ونسبة إسقاط منخفضة (Low Drop Probability).</td></tr>
+            <tr><td><strong>Streaming Video (بث فيديو)</strong></td><td dir="ltr">4</td><td dir="ltr"><strong>AF31</strong></td><td dir="ltr">26</td><td>طوابير مخصصة مع تحمل التخزين المؤقت (Buffering).</td></tr>
+            <tr><td><strong>Call Signaling (إشارات الهاتف)</strong></td><td dir="ltr">3</td><td dir="ltr"><strong>CS3</strong> / AF31</td><td dir="ltr">24</td><td>ضمان سرعة إقامة المكالمات والتحكم في SIP/SCCP.</td></tr>
+            <tr><td><strong>Mission-Critical Data (بيانات حرجة)</strong></td><td dir="ltr">2</td><td dir="ltr"><strong>AF21</strong></td><td dir="ltr">18</td><td>تفضيل معالجة قواعد البيانات وأنظمة الـ ERP على الترافيك العادي.</td></tr>
+            <tr><td><strong>Best Effort (تصفح عادي / إنترنت)</strong></td><td dir="ltr">0</td><td dir="ltr"><strong>DF (Default) / CS0</strong></td><td dir="ltr"><strong>0</strong></td><td>المعاملة الافتراضية بدون أي ضمانات سعة أو تأخير.</td></tr>
+            <tr><td><strong>Scavenger (ترافيك الترفيه/تورنت)</strong></td><td dir="ltr">1</td><td dir="ltr"><strong>CS1</strong></td><td dir="ltr">8</td><td>أقل من العادي؛ أول ما يتم إسقاطه فور حدوث أي ازدحام.</td></tr>
+          </tbody>
+        </table>
+        <p><strong>معادلة قيم AFxy:</strong> <code dir="ltr">DSCP = 8 × x + 2 × y</code> (مثلاً لـ AF31: 8 × 3 + 2 × 1 = 26).</p>
+      </section>
+
+    </section>
+
+    <footer class="page-footer">
+      <a href="../07-troubleshooting/methodology-playbooks.html" class="nav-btn">« السابق: أدلة فحص الأعطال (Troubleshooting)</a>
+      <a href="lab-configs.html" class="nav-btn">التالي: إعدادات اللاب الكاملة (Lab Configs) »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

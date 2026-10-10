@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NAT & PAT Services - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>خدمات NAT و PAT</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>خدمة <strong>NAT (Network Address Translation)</strong> بتترجم الأيبيهات الخاصة (Private) لأيبيهات عامة (Public) عشان الأجهزة تقدر تطلع إنترنت. في CCNA عندنا نوعين مهمين جداً في العملي: <strong>Static NAT</strong> (بتربط IP داخلي بـ IP خارجي واحد لواحد، وغالباً بيتعمل للسيرفرات)، و <strong>PAT أو NAT Overload</strong> (بيخلي كل أجهزة الشركة تطلع إنترنت بـ IP خارجي واحد بس عن طريق أرقام البورتات).</p>
+    </section>
+
+    <section id="quick-config">
+      <h2>إعداد سريع (انسخ والصق)</h2>
+      <p>إعداد PAT (Overload) عشان تخلي شبكة داخلية تطلع إنترنت باستخدام الـ IP الخاص بفتحة الـ WAN:</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>! 1. تحديد الفتحات الداخلية والخارجية
+interface g0/0
+ ip nat inside
+interface g0/1
+ ip nat outside
+
+! 2. عمل Access List تحدد مين مسموح له يطلع إنترنت
+access-list 1 permit 192.168.1.0 0.0.0.255
+
+! 3. تشغيل الـ PAT وربطه بالفتحة الخارجية
+ip nat inside source list 1 interface g0/1 overload</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>الإعداد خطوة بخطوة</h2>
+
+      <!-- NAT Interfaces -->
+      <section class="cmd" id="ip-nat-inside-outside" dir="rtl">
+        <h3><span dir="ltr">ip nat inside / outside</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ip nat inside
+ip nat outside</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> أهم خطوة تنساها في الامتحان! لازم تدخل على الفتحة اللي واصلة بالشبكة الداخلية (LAN) وتكتب <code dir="ltr">ip nat inside</code>، وتدخل على الفتحة اللي واصلة بالإنترنت (WAN) وتكتب <code dir="ltr">ip nat outside</code> عشان الراوتر يعرف هيترجم من فين لفين.</p>
+      </section>
+
+      <!-- Static NAT -->
+      <section class="cmd" id="ip-nat-static" dir="rtl">
+        <h3><span dir="ltr">ip nat inside source static</span> <small dir="ltr">Global config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ip nat inside source static &lt;local-ip&gt; &lt;global-ip&gt;</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">&lt;local-ip&gt;</code> = الـ IP الداخلي الخاص (Inside Local) زي <code dir="ltr">192.168.1.10</code>.</li>
+          <li><code dir="ltr">&lt;global-ip&gt;</code> = الـ IP العام اللي اشتريته من مزود الخدمة (Inside Global) زي <code dir="ltr">200.1.1.5</code>.</li>
+        </ul>
+        <p><strong>الشرح:</strong> الـ Static NAT بيعمل ربط 1-to-1. أي حد على الإنترنت هيكتب <code dir="ltr">200.1.1.5</code> الراوتر هيحوله فوراً للسيرفر الداخلي <code dir="ltr">192.168.1.10</code>. دي خطوة أساسية لو عندك Web Server عايز تطلعه للعالم.</p>
+      </section>
+
+      <!-- PAT / Overload -->
+      <section class="cmd" id="ip-nat-pat" dir="rtl">
+        <h3><span dir="ltr">ip nat inside source list (PAT)</span> <small dir="ltr">Global config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ip nat inside source list &lt;acl-number&gt; interface &lt;exit-interface&gt; overload</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> ده الـ PAT (Port Address Translation). بيسمح لأجهزة كتير تطلع إنترنت بـ IP عام واحد فقط (وهو الـ IP الموجود على الفتحة <code dir="ltr">interface</code> اللي هتكتبها). لازم الأول تعمل <code dir="ltr">access-list</code> تحدد فيها الأيبيهات الداخلية المسموح لها تطلع إنترنت، وبعدين تكتب الأمر ده وتربطهم ببعض، ومتنساش كلمة <strong>overload</strong> في الآخر، من غيرها مش هيشتغل كـ PAT!</p>
+      </section>
+
+    </section>
+
+    <section id="verification">
+      <h2>أوامر التحقق</h2>
+
+      <section class="cmd" id="show-ip-nat-translations" dir="rtl">
+        <h3><span dir="ltr">show ip nat translations</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> بيعرض جدول الترجمة الحالي، وبيوضح كل IP داخلي واخد بورت كام وطالع يكلم مين على الإنترنت.</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>show ip nat translations
+Pro Inside global      Inside local       Outside local      Outside global
+tcp 200.1.1.2:1024     192.168.1.10:1024  8.8.8.8:80         8.8.8.8:80
+tcp 200.1.1.2:1025     192.168.1.15:1025  8.8.8.8:80         8.8.8.8:80
+--- 200.1.1.5          192.168.1.100      ---                ---</code></pre>
+        </div>
+        <p><em>ملاحظة:</em> السطر الأخير اللي مفيهوش بورتات ده بتاع الـ Static NAT، والباقي ده الـ PAT.</p>
+      </section>
+
+      <section class="cmd" id="show-ip-nat-statistics" dir="rtl">
+        <h3><span dir="ltr">show ip nat statistics</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> بيوريك إحصائيات سريعة، كم عملية ترجمة تمت، وإيه هي الفتحات الـ Inside والـ Outside.</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>show ip nat statistics
+Total active translations: 3 (1 static, 2 dynamic; 2 extended)
+Outside interfaces:
+  GigabitEthernet0/1
+Inside interfaces: 
+  GigabitEthernet0/0
+Hits: 45  Misses: 0</code></pre>
+        </div>
+      </section>
+
+      <section class="cmd" id="clear-ip-nat" dir="rtl">
+        <h3><span dir="ltr">clear ip nat translation *</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> بيمسح كل الترجمات الحالية من الجدول (ما عدا الـ Static). مفيد لو غيرت الإعدادات وعايز الراوتر يبدأ من جديد بدون ما تعمل ريستارت.</p>
+      </section>
+
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فحص الأعطال (Troubleshooting)</h2>
+      <ul>
+        <li><strong>الإنترنت مش شغال رغم إعداد الـ PAT:</strong> تأكد من 3 حاجات:
+          <ol>
+            <li>هل نسيت أو عكست الـ <code dir="ltr">ip nat inside</code> والـ <code dir="ltr">ip nat outside</code> على الفتحات؟</li>
+            <li>هل الـ Access List اللي مستخدمها بتسمح بشبكتك فعلاً؟ (جرب <code dir="ltr">show access-lists</code>).</li>
+            <li>هل نسيت كلمة <code dir="ltr">overload</code> في نهاية الأمر؟</li>
+          </ol>
+        </li>
+      </ul>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li><strong>مصطلحات الـ NAT للامتحان:</strong> سيسكو بتحب تلعب بالألفاظ دي جداً:
+          <ul>
+            <li dir="ltr"><strong>Inside Local:</strong> الـ IP الداخلي الخاص بالجهاز بتاعك (192.168.x.x).</li>
+            <li dir="ltr"><strong>Inside Global:</strong> الـ IP العام اللي الراوتر بيترجمك ليه عشان تطلع إنترنت.</li>
+            <li dir="ltr"><strong>Outside Local / Outside Global:</strong> الـ IP بتاع الموقع اللي بتزوره (في الغالب هما الاتنين واحد).</li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Command</th>
+            <th>الوظيفة (Purpose)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">ip nat inside</code></td>
+            <td>تحديد الفتحة الداخلية للـ NAT.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ip nat outside</code></td>
+            <td>تحديد الفتحة الخارجية للـ NAT.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ip nat inside source static [local] [global]</code></td>
+            <td>إعداد مسار NAT ثابت 1-to-1 لسيرفر.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ip nat inside source list [acl] interface [int] overload</code></td>
+            <td>تفعيل الـ PAT لشبكة كاملة عشان تطلع بـ IP الفتحة دي.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show ip nat translations</code></td>
+            <td>عرض جدول الأيبيهات والبورتات المترجمة.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="dhcp-dns.html" class="nav-btn">« السابق: خدمات DHCP & DNS</a>
+      <a href="ntp-syslog-snmp.html" class="nav-btn">التالي: NTP, Syslog & SNMP »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Troubleshooting Methodology & Playbooks - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>منهجية الفحص وسيناريوهات الأعطال (Troubleshooting)</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>فحص وحل أعطال الشبكات (Troubleshooting) ليس مجرد تجربة أوامر عشوائية، بل مهارة هندسية منظمة تعتمد على نماذج علمية لتحديد سبب العطل بأسرع وقت وأقل جهد ممكن. في امتحان CCNA 200-301، تركز سيسكو على منهجيات الفحص وتفسير مخرجات الأخطاء:</p>
+      <ul>
+        <li><strong>منهجيات فحص نموذج الـ OSI:</strong>
+          <ul>
+            <li><strong>Divide and Conquer (فرق تسد - المنهجية الأكثر استخداماً):</strong> تبدأ الفحص من الطبقة الثالثة (Network Layer 3) باستخدام أوامر <code dir="ltr">ping</code> و <code dir="ltr">traceroute</code>. فإذا نجح البينج، ينحصر العطل في الطبقات العليا (L4-L7). وإذا فشل، نبحث في الطبقات الدنيا (L1-L2).</li>
+            <li><strong>Bottom-Up (من الأسفل للأعلى):</strong> تبدأ من كابلات الطبقة الأولى الفيزيائية صعوداً للبرامج؛ مثالية عند توصيل كابل جديد أو رابط فيزيائي يظهر <code dir="ltr">down/down</code>.</li>
+            <li><strong>Top-Down (من الأعلى للأسفل):</strong> تبدأ من فحص التطبيق ومتصفح الويب والـ DNS نزولاً للكابلات؛ ممتازة عندما تشتكي البرامج من بطء أو فشل مصادقة.</li>
+          </ul>
+        </li>
+        <li><strong>حالات المنافذ الأربعة (Interface Statuses):</strong>
+          <ul>
+            <li><strong dir="ltr">up / up:</strong> المنفذ سليم تماماً ويعمل في الطبقتين L1 و L2.</li>
+            <li><strong dir="ltr">down / down:</strong> عطل فيزيائي في الطبقة الأولى (كابل مقطوع، جهاز الطرف الآخر مطفأ، أو عدم تطابق السرعة Speed Mismatch).</li>
+            <li><strong dir="ltr">up / down:</strong> الطبقة الأولى تعمل لكن هناك عطل في الطبقة الثانية (Clock rate مفقود، خطأ في الـ Keepalive، أو عدم تطابق في الـ Encapsulation أو الـ Duplex).</li>
+            <li><strong dir="ltr">administratively down / down:</strong> المنفذ مغلق يدوياً بوجود أمر <code dir="ltr">shutdown</code> تحت إعداداته (يحتاج أمر <code dir="ltr">no shutdown</code>).</li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <section id="quick-config">
+      <h2>ترسانة أدوات الفحص السريع (انسخ واستخدم)</h2>
+      <p>أهم الأوامر التشخيصية الشاملة لكشف حالة الشبكة ومسار الحزم في ثوانٍ معدودة:</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>! 1. كشف حالة جميع المنافذ وتلخيصها في سطر واحد
+show ip interface brief
+show interfaces status
+
+! 2. فحص أخطاء الكابلات والتصادمات وازدواجية المنافذ
+show interfaces GigabitEthernet0/1 | include drops|errors|CRC|collision|duplex
+
+! 3. فحص التوجيه والمسار الافتراضي
+show ip route
+show ip route 0.0.0.0
+
+! 4. البينج الموسع (Extended Ping) لفحص الـ MTU وتحديد المنفذ المصدر
+ping 10.1.1.1 source GigabitEthernet0/0 size 1500 df-bit
+
+! 5. تتبع القفزات وتحديد الراوتر المتسبب في قطع الاتصال
+traceroute 8.8.8.8</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>أدلة الفحص العملية (Troubleshooting Playbooks)</h2>
+
+      <!-- ================= Playbook 1: Physical & Layer 2 Errors ================= -->
+      <section class="cmd" id="playbook-l1-l2-errors" dir="rtl">
+        <h3><span dir="ltr">Playbook 1: Cable & Duplex Errors</span> <small dir="ltr">L1 / L2 Diagnostics</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router# / Switch#</span>
+          <span class="badge exam">Exam Core</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>تفسير عدادات الأخطاء في مخرجات <code dir="ltr">show interfaces</code>:</strong></p>
+        <ul>
+          <li><strong>CRC Errors (أخطاء تدقيق التكرار الدوري):</strong> تشير إلى تلف الإطارات أثناء النقل. أسبابها الشائعة: <strong>كابل شبكة تالف أو رديء، تداخل كهرومغناطيسي شديد، أو عدم تطابق في الـ Duplex</strong>.</li>
+          <li><strong>Late Collisions (التصادمات المتأخرة):</strong> تحدث بعد إرسال أول 64 بايت من الإطار. <strong>السبب الرئيسي الأول في CCNA: عدم تطابق Duplex (طرف Full وطرف Half)</strong>، أو طول الكابل تجاوز الحد الأقصى لمعيار إيثرنت (100 متر).</li>
+          <li><strong>Runts:</strong> إطارات سقطت لأن حجمها أقل من الحد الأدنى لمعيار إيثرنت (أقل من 64 بايت)، وتنتج عن التصادمات العادية في شبكات Half-Duplex.</li>
+          <li><strong>Giants:</strong> إطارات تم إسقاطها لأن حجمها أكبر من الحد الأقصى المسموح به للمنفذ (أكبر من 1518 بايت)، وتحدث عند مرور حزم ضخمة (Jumbo Frames) أو ترويسات QinQ/MPLS على منفذ لم يُهيأ لذلك.</li>
+          <li><strong>Input Errors / Output Drops:</strong> تشير إلى امتلاء ذاكرة المنفذ المؤقتة (Buffer Exhaustion) بسبب ازدحام خانق للترافيك (Congestion).</li>
+        </ul>
+      </section>
+
+      <!-- ================= Playbook 2: OSPF Adjacency ================= -->
+      <section class="cmd" id="playbook-ospf-adjacency" dir="rtl">
+        <h3><span dir="ltr">Playbook 2: OSPF Neighbor Adjacency</span> <small dir="ltr">Routing Diagnostics</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam Core</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>قائمة التحقق الذهبية عند فشل تكوين علاقة جيرة OSPF:</strong></p>
+        <ol>
+          <li><strong>MTU Mismatch (تفاوت حجم الـ MTU):</strong> أشهر فخ امتحاني! إذا كان الـ MTU مختلفاً بين المنفذين، تعبر حزم الـ Hello ولكن تعلق الجيرة في حالة <strong>EXSTART أو EXCHANGE</strong> للأبد! الحل: توحيد الـ MTU أو كتابة <code dir="ltr">ip ospf mtu-ignore</code> تحت المنفذ.</li>
+          <li><strong>Hello / Dead Timers:</strong> يجب أن تتطابق مؤقتات الـ Hello والـ Dead تماماً بين الراوترين (الافتراضي 10/40 على شبكات Broadcast و Point-to-Point، و 30/120 على شبكات NBMA و Point-to-Multipoint).</li>
+          <li><strong>Area ID:</strong> يجب أن ينتمي المنفذان لنفس رقم الـ Area ونفس نوع المنطقة (Stub/NSSA).</li>
+          <li><strong>Subnet Mask:</strong> على شبكات الـ Broadcast (مثل Ethernet)، يجب أن يكون الـ IP والـ Subnet Mask في نفس النطاق تماماً.</li>
+          <li><strong>Authentication:</strong> تطابق نوع التوثيق وكلمة المرور المشتركة (Pre-Shared Key).</li>
+          <li><strong>Duplicate Router-ID:</strong> تطابق الـ Router-ID بين راوترين يمنع إنشاء الجيرة.</li>
+          <li><strong>Passive Interface:</strong> التأكد من عدم تفعيل <code dir="ltr">passive-interface</code> بالخطأ على الواجهة الرابطة بين الراوترين.</li>
+        </ol>
+      </section>
+
+      <!-- ================= Playbook 3: VLANs & Trunking ================= -->
+      <section class="cmd" id="playbook-vlans-trunking" dir="rtl">
+        <h3><span dir="ltr">Playbook 3: VLANs & Trunking Issues</span> <small dir="ltr">Switching Diagnostics</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Switch#</span>
+          <span class="badge exam">Exam Core</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>سيناريوهات أعطال السويتشات الشائعة:</strong></p>
+        <ul>
+          <li><strong>Native VLAN Mismatch:</strong> رسالة تحذير شهيرة في CDP:
+            <div class="code" dir="ltr"><pre><code>%CDP-4-NATIVE_VLAN_MISMATCH: Native VLAN mismatch discovered on GigabitEthernet0/1 (1), with Switch2 GigabitEthernet0/1 (99).</code></pre></div>
+            <p><strong>الحل:</strong> توحيد رقم الـ Native VLAN على طرفي كابل الـ Trunk باستخدام <code dir="ltr">switchport trunk native vlan 99</code> لمنع تسرب الترافيك وتكون حلقات الـ STP.</p>
+          </li>
+          <li><strong>Allowed VLAN List (قائمة الفيلانات المسموحة):</strong> التأكد من أن الـ VLAN المطلوبة ليست محذوفة من كابل الـ Trunk عبر فحص <code dir="ltr">show interfaces trunk</code>.</li>
+          <li><strong>DTP Negotiation Failure:</strong> إذا تم ضبط أحد الطرفين كـ <code dir="ltr">dynamic auto</code> والآخر أيضاً كـ <code dir="ltr">dynamic auto</code>، فسيظل الخط في وضع Access ولن يتحول إلى Trunk! الحل: ضبط أحد الطرفين أو كليهما كـ <code dir="ltr">switchport mode trunk</code>.</li>
+          <li><strong>VLAN غير موجودة:</strong> إذا تم ربط منفذ بفيلان غير منشأة في قاعدة بيانات السويتش (<code dir="ltr">vlan 10</code>)، يظل المنفذ في وضع غير نشط ولن يمرر أي ترافيك!</li>
+        </ul>
+      </section>
+
+      <!-- ================= Playbook 4: Routing & Gateways ================= -->
+      <section class="cmd" id="playbook-routing-connectivity" dir="rtl">
+        <h3><span dir="ltr">Playbook 4: IP Routing & Gateway Issues</span> <small dir="ltr">Connectivity Diagnostics</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam Core</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>خطوات التحقق من التوجيه:</strong></p>
+        <ul>
+          <li><strong>Longest Prefix Match:</strong> الراوتر يختار دائماً المسار الأكثر تحديداً (صاحب أطول Subnet Mask مثل <code dir="ltr">/28</code> قبل <code dir="ltr">/24</code>) بغض النظر عن قيمة الـ Administrative Distance!</li>
+          <li><strong>Administrative Distance (AD):</strong> عند تساوي الـ Prefix Mask، يفوز البروتوكول صاحب أقل قيمة AD:
+            <ul>
+              <li>Connected: 0 | Static: 1 | EIGRP Internal: 90 | OSPF: 110 | RIP: 120 | External BGP: 20</li>
+            </ul>
+          </li>
+          <li><strong>Default Route (بوابة الخروج الأخيرة):</strong> التأكد من وجود مسار افتراضي <code dir="ltr">S* 0.0.0.0/0</code> للخروج للإنترنت إذا لم توجد مطابقة في جدول التوجيه.</li>
+          <li><strong>Next-Hop Unreachable:</strong> إذا تم كتابة Static Route يشير إلى عنوان Next-Hop لا يمتلك الراوتر مساراً للوصول إليه، فلن يظهر المسار في جدول التوجيه الفعلي (<code dir="ltr">show ip route</code>)!</li>
+        </ul>
+      </section>
+
+      <!-- ================= Playbook 5: Extended Ping & Traceroute ================= -->
+      <section class="cmd" id="extended-ping-traceroute" dir="rtl">
+        <h3><span dir="ltr">Extended Ping & Traceroute</span> <small dir="ltr">Advanced Verification</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam Core</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>استخدامات الـ Extended Ping المتقدمة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>! 1. تحديد منفذ المصدر لاختبار مسارات محددة
+ping 192.168.20.1 source Loopback0
+
+! 2. فحص أقصى حجم MTU مسموح به بدون تجزئة (MTU Discovery)
+ping 192.168.20.1 size 1500 df-bit
+
+! 3. اختبار ثبات الخط بعدد حزم كبير ومعدل تكرار سريع
+ping 192.168.20.1 repeat 1000 timeout 1</code></pre>
+        </div>
+        <p><strong>تفسير رموز الـ Ping في سيسكو:</strong></p>
+        <ul>
+          <li><code dir="ltr">!</code> = نجاح استلام الرد (Success / Echo Reply).</li>
+          <li><code dir="ltr">.</code> = انتهاء المهلة الزمنية (Timed Out) - الحزمة سقطت في المسار أو حظرها جدار ناري.</li>
+          <li><code dir="ltr">U</code> = الوجهة غير قابلة للوصول (Destination Unreachable) - رد الراوتر برسالة ICMP تفيد بعدم وجود مسار للشبكة.</li>
+          <li><code dir="ltr">Q</code> = السيرفر أو الراوتر مصدر الرسالة يعاني من اختناق (Source Quench).</li>
+          <li><code dir="ltr">M</code> = الحزمة تحتاج تجزئة ولكن علم الـ DF-bit مفعل (Could not fragment).</li>
+        </ul>
+      </section>
+
+    </section>
+
+    <section id="verification">
+      <h2>أوامر العرض السريع لتشخيص المشاكل</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Command</th>
+            <th dir="ltr">Mode</th>
+            <th>ماذا يكشف هذا الأمر؟</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">show ip interface brief</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>ملخص فوري لحالة المنافذ الفيزيائية والمنطقية (Up/Down) والأيبيهات المسندة.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show interfaces status</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>كشف منافذ السويتشات المفتوحة والمغلقة ورقم الفيلان ونوع السرعة والـ Duplex.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show interfaces trunk</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>كشف المنافذ التي تعمل كـ Trunk والفيلانات المسموحة والـ Native VLAN.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show ip route</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>فحص جدول التوجيه الكامل والتأكد من وجود المسارات والبوابة الافتراضية.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show ip ospf neighbor</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>فحص حالة جيران الـ OSPF والتأكد من وصولهم لحالة FULL.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show cdp neighbors [detail]</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>كشف الأجهزة المجاورة المتصلة فيزيائياً وموديلاتها ومنافذ التوصيل وعناوين الـ IP.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show interfaces status err-disabled</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>كشف المنافذ المقفولة أمنياً ومعرفة سبب القفل (مثل Port Security أو BPDUGuard).</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فخاخ امتحانية وسيناريوهات استكشاف الأخطاء</h2>
+      <ul>
+        <li><strong>الجهاز يرى البوابة الافتراضية (Default Gateway) لكن لا يخرج للإنترنت:</strong>
+          <ol>
+            <li>افحص إعدادات الـ <strong>NAT/PAT</strong> على الراوتر: هل تم تطبيق <code dir="ltr">ip nat inside</code> و <code dir="ltr">ip nat outside</code> على المنافذ الصحيحة؟</li>
+            <li>افحص الـ Access List المربوطة بالـ NAT؛ هل تتضمن شبكة هذا الجهاز؟</li>
+            <li>تأكد من وجود مسار افتراضي <code dir="ltr">ip route 0.0.0.0 0.0.0.0 &lt;ISP-IP&gt;</code> يشير لمزود الخدمة.</li>
+          </ol>
+        </li>
+        <li><strong>أجهزة كمبيوتر في نفس الفيلان لا تستطيع الوصول لبعضها:</strong>
+          <ol>
+            <li>تأكد من أن كابل الـ Trunk بين السويتشين يسمح بمرور هذه الـ VLAN (<code dir="ltr">show interfaces trunk</code>).</li>
+            <li>تأكد من أن الـ VLAN تم إنشاؤها في كلا السويتشين (<code dir="ltr">show vlan brief</code>).</li>
+            <li>تأكد من عدم وجود خاصية <strong>Private VLAN</strong> أو عزل للمنافذ (Protected Ports) تمنع الاتصال بينهما.</li>
+          </ol>
+        </li>
+      </ul>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة في منهجية الفحص</h2>
+      <ul>
+        <li><strong>تغيير عدة إعدادات في نفس الوقت:</strong>
+          <p>أكبر خطأ هندسي؛ إذا قمت بتغيير عدة إعدادات دفعة واحدة وعادت الشبكة للعمل، فلن تعرف ما هو السبب الحقيقي وراء المشكلة، وقد تزرع ثغرات أمنية جديدة دون قصد. القاعدة: <strong>غيّر إعداداً واحداً فقط في المرة واختبر النتيجة فوراً</strong>.</p>
+        </li>
+        <li><strong>إهمال التحقق من الكابلات والطبقة الأولى:</strong>
+          <p>أكثر من 70% من أعطال الشبكات الواقعية سببها كابل تالف أو غير موصل بإحكام أو عطل في محول الـ SFP. لا تقفز فوراً لتعديل الـ OSPF أو الـ BGP قبل التأكد من لمبات المنافذ وحالة <code dir="ltr">up/up</code>!</p>
+        </li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Approach / Command</th>
+            <th dir="ltr">Domain</th>
+            <th>الوظيفة (Purpose)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">Divide-and-Conquer</code></td>
+            <td>Methodology</td>
+            <td>البدء من الطبقة الثالثة (Ping/Trace) لتحديد مصدر العطل فوراً.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">Bottom-Up</code></td>
+            <td>Methodology</td>
+            <td>البدء من الكابلات والطبقة الأولى صعوداً للتطبيقات.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">Top-Down</code></td>
+            <td>Methodology</td>
+            <td>البدء من البرامج ومتصفح الويب والـ DNS نزولاً للشبكة.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ping &lt;ip&gt; df-bit size &lt;bytes&gt;</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>فحص أقصى حجم حزم مسموح به بدون تجزئة (MTU Discovery).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">traceroute &lt;ip&gt;</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>تتبع مسار القفزات قفزة بقفزة وتحديد الراوتر المتعطل.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show interfaces status err-disabled</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>كشف المنافذ المعطلة أمنياً وتحديد سبب التعطيل فوراً.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="../06-automation/config-management.html" class="nav-btn">« السابق: أدوات إدارة الإعدادات (Config Management)</a>
+      <a href="../08-cheatsheets/cheat-sheets.html" class="nav-btn">التالي: جداول ومراجع سريعة (Cheat Sheets) »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

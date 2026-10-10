@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Routing Fundamentals - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+  <main id="content">
+    <h1>Routing Fundamentals (أساسيات التوجيه)</h1>
+    
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>التوجيه (Routing) هو عملية اختيار أفضل مسار لنقل البيانات من شبكة لأخرى. الراوتر بيبني جدول توجيه (Routing Table) عشان يعرف يوصل للشبكات المختلفة. المسارات ممكن تكون متصلة مباشرة (Connected/Local)، أو مكتوبة يدوياً (Static)، أو متعلمة ديناميكياً عن طريق بروتوكولات التوجيه زي OSPF.</p>
+    </section>
+
+    <section id="quick-config">
+      <h2>إعداد سريع (انسخ والصق)</h2>
+      <p>إعداد مسار ثابت (Static Route) ومسار افتراضي (Default Route):</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>Router(config)# ip route 192.168.2.0 255.255.255.0 10.1.1.2
+Router(config)# ip route 0.0.0.0 0.0.0.0 10.1.1.2
+Router(config)# ip route 192.168.2.0 255.255.255.0 10.1.1.3 50</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>الإعداد خطوة بخطوة</h2>
+
+      <section class="cmd" id="ip-route-static" dir="rtl">
+        <h3><span dir="ltr">ip route (Static Route)</span> <small dir="ltr">Config mode</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ip route &lt;destination_network&gt; &lt;subnet_mask&gt; &lt;next_hop_ip | exit_interface&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيستخدم لإضافة مسار ثابت يدوياً لشبكة معينة. بتحدد الشبكة الهدف (Destination)، قناع الشبكة (Subnet Mask)، وعنوان الراوتر اللي بعدك (Next-hop IP) أو اسم الفتحة اللي هتخرج منها (Exit Interface).</p>
+      </section>
+
+      <section class="cmd" id="ip-route-default" dir="rtl">
+        <h3><span dir="ltr">ip route 0.0.0.0 0.0.0.0 (Default Route)</span> <small dir="ltr">Config mode</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ip route 0.0.0.0 0.0.0.0 &lt;next_hop_ip | exit_interface&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> المسار الافتراضي (Default Route) بيستخدم عشان الراوتر يبعت أي بيانات لشبكة مش موجودة عنده في الـ Routing Table للمسار ده. بيعتبر "Gateway of Last Resort".</p>
+      </section>
+
+      <section class="cmd" id="floating-static-route" dir="rtl">
+        <h3><span dir="ltr">Floating Static Route</span> <small dir="ltr">Config mode</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ip route &lt;destination_network&gt; &lt;subnet_mask&gt; &lt;next_hop_ip&gt; &lt;AD&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> مسار ثابت احتياطي. بتضيف له Administrative Distance (AD) أعلى من المسار الأساسي. مش بيظهر في جدول التوجيه إلا لو المسار الأساسي وقع.</p>
+      </section>
+    </section>
+
+    <section id="verification">
+      <h2>مفاهيم التوجيه الأساسية (كيف يختار الراوتر المسار؟)</h2>
+      <p>عشان الراوتر يقرر يبعت الداتا في أي طريق، بيمشي على 3 قواعد بالترتيب:</p>
+      <ol>
+        <li><strong>الأطابق الأطول (Longest Prefix Match):</strong> دي القاعدة الأهم على الإطلاق. الراوتر بيفضل المسار اللي فيه تطابق أكتر في الـ Subnet Mask. يعني مسار <code dir="ltr">/26</code> هيكسب مسار <code dir="ltr">/24</code> لنفس الـ IP، بغض النظر عن أي حاجة تانية.</li>
+        <li><strong>المسافة الإدارية (Administrative Distance - AD):</strong> لو الراوتر عنده مسارين لنفس الشبكة وبنفس الـ Mask بس من بروتوكولين مختلفين (مثلاً OSPF و Static)، هيختار صاحب الـ AD <strong>الأقل</strong>. الـ Static (1) بيكسب الـ OSPF (110).</li>
+        <li><strong>المعيار (Metric):</strong> لو المسارين من نفس البروتوكول (مثلاً طريقين OSPF)، الراوتر بيختار المسار صاحب الـ Metric <strong>الأقل</strong> (التكلفة الأقل).</li>
+      </ol>
+    </section>
+
+    <section id="verification-commands">
+      <h2>أوامر التحقق</h2>
+
+      <section class="cmd" id="show-ip-route" dir="rtl">
+        <h3><span dir="ltr">show ip route</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> بيعرض جدول التوجيه (Routing Table). بيوريك كل الشبكات اللي الراوتر يعرف يوصلها، سواء متصلة مباشرة (C)، أو مسجلة كـ Local (L)، أو ثابتة (S)، أو عبر بروتوكولات زي OSPF (O).</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>Router# show ip route
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area 
+...
+Gateway of last resort is 10.1.1.2 to network 0.0.0.0
+
+S*    0.0.0.0/0 [1/0] via 10.1.1.2
+      10.0.0.0/8 is variably subnetted, 2 subnets, 2 masks
+C        10.1.1.0/30 is directly connected, GigabitEthernet0/0
+L        10.1.1.1/32 is directly connected, GigabitEthernet0/0
+      192.168.2.0/24 is variably subnetted, 2 subnets, 2 masks
+S        192.168.2.0/24 [1/0] via 10.1.1.2
+O        192.168.3.0/24 [110/65] via 10.1.1.2, 00:05:32, GigabitEthernet0/0</code></pre>
+        </div>
+        <p><strong>كيف تقرأ المسار [110/65]؟</strong> الرقم الأول (110) هو الـ AD، والرقم التاني (65) هو الـ Metric للوصول للشبكة دي.</p>
+      </section>
+
+      <section class="cmd" id="show-ip-route-static" dir="rtl">
+        <h3><span dir="ltr">show ip route static</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>show ip route static</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيعمل فلترة لجدول التوجيه عشان يعرض فقط المسارات الثابتة (Static Routes) والمسار الافتراضي (Gateway of Last Resort S*) اللي تم تكوينها يدوياً. مفيد جداً للتأكد من صحة مسارات الـ Static والتأكد من ظهور المسارات الاحتياطية (Floating Static).</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>show ip route static
+S*    0.0.0.0/0 [1/0] via 10.1.1.2
+S     192.168.2.0/24 [1/0] via 10.1.1.2</code></pre>
+        </div>
+      </section>
+      
+      <section class="cmd" id="show-ip-route-ip" dir="rtl">
+        <h3><span dir="ltr">show ip route &lt;ip-address&gt;</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> أمر ممتاز للفحص. بتديله IP لجهاز معين، وهو يقولك بالضبط هيستخدم أي مسار في الجدول عشان يوصله (بيحسبلك الـ Longest Match أوتوماتيك).</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>Router# show ip route 192.168.3.50
+Routing entry for 192.168.3.0/24
+  Known via "ospf 1", distance 110, metric 65, type intra area
+  Last update from 10.1.1.2 on GigabitEthernet0/0, 00:15:32 ago
+  Routing Descriptor Blocks:
+  * 10.1.1.2, from 10.1.1.2, 00:15:32 ago, via GigabitEthernet0/0
+      Route metric is 65, traffic share count is 1</code></pre>
+        </div>
+      </section>
+
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فحص الأعطال (Troubleshooting)</h2>
+      <ul>
+        <li><strong>المسار الثابت مش بيظهر في جدول التوجيه:</strong> تأكد إن الفتحة (Interface) اللي متوصلة بـ Next-hop شغالة (Up/Up)، لأن الراوتر مش هيحط المسار في الجدول لو مفيش اتصال فيزيائي سليم.</li>
+        <li><strong>Floating Static Route مش شغال وقت العطل:</strong> تأكد إن الـ AD اللي اديته للمسار الاحتياطي أعلى من الـ AD بتاع المسار الأساسي (مثلاً أعلى من 1 لو كان الأساسي Static، أو أعلى من 110 لو كان OSPF).</li>
+        <li><strong>مشكلة الـ Next-hop Reachability:</strong> لو الـ Next-hop مش في نفس الشبكة المتصلة بيك مباشرة، الراوتر لازم يكون عنده مسار يقدر يوصل بيه للـ Next-hop ده (ويعرف بـ Recursive Routing).</li>
+        <li><strong>استخدام Exit Interface في شبكات الـ Ethernet:</strong> لو عملت مسار ثابت باستخدام اسم الفتحة (زي <code dir="ltr">ip route 10.0.0.0 255.0.0.0 G0/0</code>) على شبكة Ethernet، الراوتر هيبعت ARP Request لكل IP بيحاول يكلمه في الشبكة دي. ده بيعمل حمل كبير جداً وممكن يفشل لو الراوتر اللي قدامك قافل الـ <code dir="ltr">Proxy ARP</code>. دايماً استخدم الـ Next-hop IP.</li>
+      </ul>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li><strong>الخلط بين C و L في جدول التوجيه:</strong> الحرف <code dir="ltr">C</code> معناه الشبكة بالكامل (Connected Route)، بينما الحرف <code dir="ltr">L</code> معناه الـ IP الخاص بالراوتر نفسه على الفتحة دي (Local Route) وبيكون بـ subnet mask /32.</li>
+        <li><strong>Administrative Distance (AD):</strong> لازم تكون حافظ قيم الـ AD الأساسية للامتحان:
+          <ul>
+            <li dir="ltr">Connected: 0</li>
+            <li dir="ltr">Static: 1</li>
+            <li dir="ltr">eBGP: 20</li>
+            <li dir="ltr">EIGRP: 90</li>
+            <li dir="ltr">OSPF: 110</li>
+            <li dir="ltr">IS-IS: 115</li>
+            <li dir="ltr">RIP: 120</li>
+          </ul>
+        </li>
+        <li><strong>Fully Specified Static Route:</strong> في الامتحان ممكن يطلب منك مسار محدد بالكامل. معناه إنك تكتب الـ exit interface والـ next-hop IP في نفس الأمر: <code dir="ltr">ip route 192.168.1.0 255.255.255.0 G0/0 10.1.1.2</code>.</li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر</h2>
+      <table>
+        <thead>
+          <tr><th dir="ltr">Command</th><th>الوظيفة (Purpose)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code dir="ltr">ip route [net] [mask] [next-hop]</code></td><td>إضافة مسار ثابت (Static Route).</td></tr>
+          <tr><td><code dir="ltr">ip route 0.0.0.0 0.0.0.0 [next-hop]</code></td><td>إضافة مسار افتراضي (Default Route).</td></tr>
+          <tr><td><code dir="ltr">ip route [net] [mask] [next-hop] [AD]</code></td><td>إضافة مسار ثابت احتياطي (Floating Static Route).</td></tr>
+          <tr><td><code dir="ltr">show ip route</code></td><td>عرض جدول التوجيه.</td></tr>
+          <tr><td><code dir="ltr">show ip route static</code></td><td>عرض المسارات الثابتة فقط.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="../02-network-access/wireless-lan.html" class="nav-btn">« السابق</a>
+      <a href="ospfv2-single-area.html" class="nav-btn">التالي »</a>
+    </footer>
+  </main>
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

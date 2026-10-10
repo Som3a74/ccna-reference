@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CCNA Command Reference 200-301 | دليل أوامر سيسكو الشامل</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <div class="hero-box">
+      <h1>مرجع ودليل أوامر Cisco CCNA 200-301 الشامل</h1>
+      <p>
+        مرجع هندسي متكامل وموثق باللغة العربية، مبني خطوة بخطوة وفق أحدث مواصفات منهج <strong>Cisco CCNA 200-301</strong>.
+        يحتوي على شرح معماري دقيق لكل بروتوكول، أوامر الإعداد العملية مع أمثلة نسخ ولصق جاهزة، شارات التوافق مع <strong>Packet Tracer</strong>،
+        فخاخ وأسرار الامتحان، أدلة فحص الأعطال (Troubleshooting)، وجداول المراجعة السريعة ولابات الإنتاجية الكاملة.
+      </p>
+
+      <div class="stats-bar">
+        <span class="stat-chip">📚 31 مقالاً هندسياً متخصصاً</span>
+        <span class="stat-chip">⚡ 228+ أمر وفحص مفهرس</span>
+        <span class="stat-chip">📊 6 جداول Cheat Sheets مكثفة</span>
+        <span class="stat-chip">🧪 3 لابات إنتاجية متكاملة</span>
+        <span class="stat-chip">🎯 تغطية مجالات الامتحان بنسبة 100%</span>
+      </div>
+
+      <div style="margin-top: 1.25rem; display: flex; flex-wrap: wrap; gap: 0.75rem;">
+        <a href="pages/08-cheatsheets/cheat-sheets.html" class="nav-btn" style="background: var(--primary-color); color: #fff; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none;">📋 مراجع سريعة (Cheat Sheets)</a>
+        <a href="pages/08-cheatsheets/lab-configs.html" class="nav-btn" style="background: #28a745; color: #fff; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none;">🧪 إعدادات اللابات الكاملة (Labs)</a>
+        <a href="pages/07-troubleshooting/methodology-playbooks.html" class="nav-btn" style="background: #17a2b8; color: #fff; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none;">🛠️ أدلة فحص الأعطال (Playbooks)</a>
+      </div>
+    </div>
+
+    <h2>أقسام ومجالات المنهج (Curriculum Modules)</h2>
+    <p>اختر قسماً للتصفح المباشر، أو استخدم شريط البحث أعلاه (أو اضغط زر <kbd>/</kbd>) للبحث الفوري عن أي أمر:</p>
+    
+    <div id="category-grid">
+      <!-- Populated dynamically by app.js from navData -->
+    </div>
+  </main>
+
+  <script src="js/nav.js"></script>
+  <script src="js/search-index.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

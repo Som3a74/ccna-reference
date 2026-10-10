@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NTP, Syslog & SNMP Services - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>بروتوكولات NTP, Syslog و SNMP</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>في إدارة ومراقبة شبكات سيسكو المؤسسية، بتعتمد العمليات اليومية والتحقيقات الأمنية على ثلاثة بروتوكولات أساسية في الطبقة السابعة:</p>
+      <ul>
+        <li><strong>NTP (Network Time Protocol - UDP 123):</strong> بروتوكول مزامنة التوقيت بدقة بالغة. توحيد الوقت إجباري عشان تقدر تربط سجلات الأحداث (Log Correlation) بين مختلف الأجهزة، وتتأكد من صلاحية الشهادات الرقمية (Certificates) وسجلات الدخول (AAA Accounting). بيستخدم مفهوم الطبقات (Stratum) من 0 إلى 15 (حيث 0 مصدر توقيت ذري أو GPS، و 1 سيرفر متصل به مباشرة)، و 16 تعني أن الجهاز غير متزامن إطلاقاً.</li>
+        <li><strong>Syslog (UDP 514):</strong> بروتوكول تجميع وتوثيق رسائل النظام والأحداث. رسالة السيسلوج لها هيكل ثابت: <code dir="ltr">*timestamp: %facility-severity-MNEMONIC: description</code>. وتتدرج خطورة الرسائل في 8 مستويات من 0 (الأخطر - الطوارئ) إلى 7 (الأقل خطورة - التصحيح).</li>
+        <li><strong>SNMP (Simple Network Management Protocol):</strong> بروتوكول إدارة ومراقبة الأجهزة عبر نظام مركزي (NMS). يعتمد على تبادل البيانات عبر قاعدة معلومات الإدارة (MIB) وعناوين التعريف (OID). يشمل عمليات القراءة والكتابة (GET, SET) والإشعارات الفورية كالتنبيهات غير المؤكدة (Traps على UDP 162) أو المؤكدة (Informs على UDP 162). يشمل ثلاثة إصدارات رئيسية: v1 و v2c (يعتمدان على كلمة مرور نصية Community String) و v3 (يوفر المصادقة والتشفير التام).</li>
+      </ul>
+    </section>
+
+    <section id="quick-config">
+      <h2>إعداد سريع (انسخ والصق)</h2>
+      <p>تفعيل مزامنة التوقيت عبر NTP، وإرسال السجلات لسيرفر Syslog مع طابع زمني دقيق، وتفعيل SNMPv2c و SNMPv3:</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>! 1. ضبط المنطقة الزمنية وربط الراوتر بسيرفر NTP
+clock timezone EEST 2 0
+ntp server 192.168.1.100 prefer
+ntp source GigabitEthernet0/0
+
+! 2. تفعيل الطوابع الزمنية الدقيقة وإرسال السجلات لسيرفر Syslog
+service timestamps log datetime msec
+logging buffered 64000 informational
+logging host 192.168.1.50
+logging trap warnings
+
+! 3. تفعيل SNMPv2c للقراءة فقط (Read-Only) مع استقبال الـ Traps
+snmp-server community NetAdminRO RO
+snmp-server host 192.168.1.50 version 2c NetAdminRO
+snmp-server enable traps
+
+! 4. إعداد SNMPv3 مشفر وآمن (AuthPriv)
+snmp-server group SECURE-GRP v3 priv
+snmp-server user admin1 SECURE-GRP v3 auth sha AuthPass123! priv aes 128 PrivPass123!</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>الإعداد خطوة بخطوة</h2>
+
+      <!-- ================= NTP Commands ================= -->
+      <section class="cmd" id="ntp-server" dir="rtl">
+        <h3><span dir="ltr">ntp server</span> <small dir="ltr">NTP Client Mode</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ntp server &lt;ip-address&gt; [prefer]</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">&lt;ip-address&gt;</code> = عنوان IP لسيرفر التوقيت الخارجي أو الداخلي.</li>
+          <li><code dir="ltr">prefer</code> = كلمة اختيارية بتخلي الراوتر يفضل السيرفر ده عن باقي السيرفرات لو ضفت أكتر من سيرفر.</li>
+        </ul>
+        <p><strong>الشرح:</strong> ده الأمر اللي بيحول الجهاز لـ <strong>NTP Client</strong> عشان يسحب الوقت بانتظام من سيرفر مركزي عبر منفذ UDP 123.</p>
+      </section>
+
+      <section class="cmd" id="ntp-master" dir="rtl">
+        <h3><span dir="ltr">ntp master</span> <small dir="ltr">NTP Server Mode</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ntp master [stratum-number]</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيخلي الراوتر ده نفسه يشتغل كـ <strong>NTP Master/Server</strong> ويوزع الوقت للأجهزة التانية لو مفيش اتصال بسيرفر خارجي. قيمة الـ <code dir="ltr">stratum-number</code> الافتراضية هي 8 (تقدر تحددها من 1 إلى 15).</p>
+      </section>
+
+      <section class="cmd" id="ntp-source" dir="rtl">
+        <h3><span dir="ltr">ntp source</span> <small dir="ltr">Source Interface</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ntp source &lt;interface&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيحدد المنفذ اللي الراوتر هيستخدم الـ IP بتاعه كـ Source IP في باكتات الـ NTP المرسلة. ممارسة شائعة جداً في الشبكات الاحترافية إنك تربطه بفتحة <code dir="ltr">Loopback0</code> عشان تضمن ثبات الاتصال حتى لو فتحة فيزيائية وقعت.</p>
+      </section>
+
+      <section class="cmd" id="ntp-peer" dir="rtl">
+        <h3><span dir="ltr">ntp peer</span> <small dir="ltr">Symmetric Active Mode</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ntp peer &lt;ip-address&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيخلي راوترين في نفس الـ Stratum يشتغلوا مع بعض كأنداد (Peers)، بحيث أي راوتر فيهم عنده مصدر توقيت أدق يظبط الراوتر التاني، ولو المصدر وقع يتبادلوا التوقيت تلقائياً.</p>
+      </section>
+
+      <section class="cmd" id="ntp-auth" dir="rtl">
+        <h3><span dir="ltr">ntp authenticate / trusted-key</span> <small dir="ltr">NTP MD5 Authentication</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ntp authenticate
+ntp authentication-key &lt;key-id&gt; md5 &lt;password&gt;
+ntp trusted-key &lt;key-id&gt;
+ntp server &lt;ip-address&gt; key &lt;key-id&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> خطوة حماية أساسية لمنع هجمات انتحال وقت الشبكة (Time Spoofing). بيشترط إن الكلاينت والسيرفر يكون عندهم نفس المفتاح المشترك المشفر بـ MD5 ونفس الـ Key ID.</p>
+      </section>
+
+      <section class="cmd" id="clock-timezone" dir="rtl">
+        <h3><span dir="ltr">clock timezone / clock set</span> <small dir="ltr">Timezone & Manual Clock</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)# / Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>! في Global Configuration: تحديد المنطقة الزمنية وفرق الساعات عن UTC
+clock timezone &lt;zone-name&gt; &lt;hours-offset&gt; [minutes-offset]
+
+! في Privileged EXEC: ضبط الساعة يدوياً عند عدم توفر NTP
+clock set &lt;hh:mm:ss&gt; &lt;day&gt; &lt;month&gt; &lt;year&gt;</code></pre>
+        </div>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>clock timezone EEST 2 0
+clock set 14:30:00 10 October 2026</code></pre>
+        </div>
+      </section>
+
+      <!-- ================= Syslog Commands ================= -->
+      <section class="cmd" id="service-timestamps" dir="rtl">
+        <h3><span dir="ltr">service timestamps log datetime</span> <small dir="ltr">Log Timestamp Format</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>service timestamps log datetime [msec] [localtime] [show-timezone]</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> أمر امتحاني شهير جداً! افتراضياً، سيسكو بتعرض الوقت في السجلات كـ Uptime (المدة من وقت تشغيل الراوتر). بتنفيذ هذا الأمر، بتتحول السجلات لعرض التاريخ والوقت الفعلي بدقة أجزاء الثانية (Milliseconds).</p>
+      </section>
+
+      <section class="cmd" id="logging-host" dir="rtl">
+        <h3><span dir="ltr">logging host</span> <small dir="ltr">Remote Syslog Server</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>logging host &lt;ip-address&gt;
+! أو في نسخ IOS أقدم:
+logging &lt;ip-address&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> توجيه رسائل السيسلوج إلى خادم سجلات مركزي (Syslog Server / SIEM) عبر منفذ UDP 514 للاحتفاظ بالسجلات على المدى الطويل.</p>
+      </section>
+
+      <section class="cmd" id="logging-trap" dir="rtl">
+        <h3><span dir="ltr">logging trap</span> <small dir="ltr">Syslog Severity Filter</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>logging trap &lt;level-name | level-number&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيحدد مستوى الخطورة للرسائل المرسلة لخادم الـ Syslog الخارجي. لما تحدد مستوى مثل <code dir="ltr">warnings</code> (4)، الراوتر هيبعت المستوى ده <strong>وجميع المستويات الأكثر خطورة منه عددياً</strong> (يعني 0، 1، 2، 3، و 4).</p>
+      </section>
+
+      <section class="cmd" id="logging-buffered" dir="rtl">
+        <h3><span dir="ltr">logging buffered</span> <small dir="ltr">RAM Buffer Storage</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>logging buffered [buffer-size] [severity-level]</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيخزن السجلات في ذاكرة الرام (RAM) المؤقتة للجهاز، بحيث تقدر تستعرضها بأمر <code dir="ltr">show logging</code>. الحجم بالبايت (مثلاً 64000 بايت).</p>
+      </section>
+
+      <section class="cmd" id="terminal-monitor" dir="rtl">
+        <h3><span dir="ltr">terminal monitor</span> <small dir="ltr">Display Logs on SSH / Telnet</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>terminal monitor</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> أحد أكبر الفخاخ العملية والامتحانية! افتراضياً، رسايل السيسلوج بتظهر فقط على شاشة الـ Console الفيزيائية ولا تظهر لجلسات الـ SSH أو Telnet عن بعد. عشان تشوف الرسايل أثناء اتصالك عن بعد، لازم تكتب هذا الأمر في وضع الـ Privileged EXEC. (لإيقافها: <code dir="ltr">terminal no monitor</code>).</p>
+      </section>
+
+      <section class="cmd" id="logging-synchronous" dir="rtl">
+        <h3><span dir="ltr">logging synchronous</span> <small dir="ltr">Line Clean Output</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-line)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>line con 0
+ logging synchronous
+line vty 0 4
+ logging synchronous</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيمنع رسائل السيسلوج المفاجئة من مقاطعة الأمر اللي بتكتبه في الـ CLI، بحيث لو ظهرت رسالة يقوم السطر بإعادة كتابة ما كنت تكتبه في سطر جديد نظيف.</p>
+      </section>
+
+      <!-- ================= SNMP Commands ================= -->
+      <section class="cmd" id="snmp-community" dir="rtl">
+        <h3><span dir="ltr">snmp-server community</span> <small dir="ltr">SNMPv1 / SNMPv2c Community String</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>snmp-server community &lt;string&gt; {ro | rw} [access-list-number-or-name]</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">&lt;string&gt;</code> = كلمة السر المشتركة (Community String) بين الـ NMS والراوتر.</li>
+          <li><code dir="ltr">ro</code> = صلاحية القراءة فقط (Read-Only) - الموصى بها لمنع التعديل.</li>
+          <li><code dir="ltr">rw</code> = صلاحية القراءة والتعديل (Read-Write) - خطيرة وتسمح بتغيير الإعدادات.</li>
+          <li><code dir="ltr">[access-list]</code> = اختياري وموصى به جداً، لتحديد أيبيهات سيرفرات الـ NMS المسموح لها فقط بإرسال استعلامات.</li>
+        </ul>
+      </section>
+
+      <section class="cmd" id="snmp-host" dir="rtl">
+        <h3><span dir="ltr">snmp-server host & enable traps</span> <small dir="ltr">SNMP Traps & Informs</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>! تفعيل إرسال كل إشعارات التنبيهات
+snmp-server enable traps
+
+! تحديد عنوان سيرفر الـ NMS المستلم للتنبيهات
+snmp-server host &lt;ip-address&gt; [version {1 | 2c | 3}] &lt;community-string-or-user&gt; [traps | informs]</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيرسل تنبيهات تلقائية من الراوتر لسيرفر المراقبة في حال حدوث أحداث مفاجئة (زي سقوط واجهة LinkDown أو ارتفاع حرارة المعالج). الـ <strong>Trap</strong> بيتبعت بدون انتظار رد تأكيد (Unacknowledged على UDP 162)، أما الـ <strong>Inform</strong> فيحتاج تأكيد استلام من الـ NMS (Acknowledged).</p>
+      </section>
+
+      <section class="cmd" id="snmpv3-group-user" dir="rtl">
+        <h3><span dir="ltr">snmp-server group & user</span> <small dir="ltr">SNMPv3 Secure Configuration</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>! 1. إنشاء مجموعة بصلاحيات الأمان المطلوبة
+snmp-server group &lt;group-name&gt; v3 {noauth | auth | priv} [read &lt;view-name&gt;]
+
+! 2. إنشاء المستخدم وربطه بالمجموعة وتحديد خوارزميات التشفير
+snmp-server user &lt;username&gt; &lt;group-name&gt; v3 auth {md5 | sha} &lt;auth-pass&gt; priv {des | 3des | aes {128 | 192 | 256}} &lt;priv-pass&gt;</code></pre>
+        </div>
+        <p><strong>مستويات أمان SNMPv3:</strong></p>
+        <ul>
+          <li><code dir="ltr">noAuthNoPriv</code>: اسم مستخدم فقط بدون تشفير أو مصادقة تجزئة.</li>
+          <li><code dir="ltr">authNoPriv</code>: مصادقة وتأكد من سلامة البيانات عبر (MD5 أو SHA)، لكن بدون تشفير للرسالة.</li>
+          <li><code dir="ltr">authPriv</code>: المستوى الأعلى والأقوى (مصادقة عبر SHA وتشفير كامل للبيانات عبر AES).</li>
+        </ul>
+      </section>
+
+      <section class="cmd" id="snmp-contact-location" dir="rtl">
+        <h3><span dir="ltr">snmp-server location / contact</span> <small dir="ltr">Device Metadata</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>snmp-server location &lt;building-or-rack&gt;
+snmp-server contact &lt;admin-name-or-email&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> معلومات توثيقية تضاف لبيانات الـ MIB (System MIB) بتسهل على أنظمة المراقبة عرض مكان الجهاز في المبنى واسم المهندس المسؤول عنه.</p>
+      </section>
+
+    </section>
+
+    <section id="verification">
+      <h2>أوامر التحقق والمراقبة</h2>
+
+      <section class="cmd" id="show-ntp-status" dir="rtl">
+        <h3><span dir="ltr">show ntp status</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> الأمر الأهم على الإطلاق لمعرفة حالة تزامن الساعة ورقم الـ Stratum ومصدر التوقيت المرجعي.</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>show ntp status
+Clock is synchronized, stratum 2, reference is 192.168.1.100
+nominal freq is 250.0000 Hz, actual freq is 249.9995 Hz, precision is 2**18
+ntp uptime is 192800 (1/100 of seconds), resolution is 4000
+reference time is EAA12C12.1824716A (14:32:18.094 UTC Fri Oct 10 2026)
+clock offset is 0.1245 msec, root delay is 1.42 msec
+root dispersion is 11.23 msec, peer dispersion is 1.15 msec</code></pre>
+        </div>
+        <p><em>ملاحظة:</em> لو شفت في أول سطر <code dir="ltr">Clock is unsynchronized</code>، يبقى الراوتر لسه ما ضبطش وقته أو مش قادر يوصل للسيرفر.</p>
+      </section>
+
+      <section class="cmd" id="show-ntp-associations" dir="rtl">
+        <h3><span dir="ltr">show ntp associations</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> بيعرض جدول السيرفرات المتصل بها الراوتر ورموز حالتها.</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>show ntp associations
+  address         ref clock       st   when poll reach  delay  offset   disp
+*~192.168.1.100   10.0.0.1         1     42   64   377   1.42    0.12   1.15
++~192.168.1.101   10.0.0.2         2     18   64   377   2.10    0.35   1.40
+ * master (synced), # master (unsynced), + selected, - candidate, ~ configured</code></pre>
+        </div>
+        <p><strong>دلالة الرموز الهامة:</strong></p>
+        <ul>
+          <li><code dir="ltr">*</code> = السيرفر المتزامن معه حالياً (System Peer / Master).</li>
+          <li><code dir="ltr">+</code> = مرشح ممتاز جاهز للعمل لو السيرفر الأساسي سقط (Candidate Peer).</li>
+          <li><code dir="ltr">~</code> = سيرفر تم إعداده يدوياً في الكونفيج (Configured).</li>
+        </ul>
+      </section>
+
+      <section class="cmd" id="show-clock" dir="rtl">
+        <h3><span dir="ltr">show clock [detail]</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> بيعرض الوقت الحالي على الجهاز، ومصدر الوقت (NTP أو Hardware Calendar).</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>show clock detail
+14:35:10.124 EEST Fri Oct 10 2026
+Time source is NTP</code></pre>
+        </div>
+      </section>
+
+      <section class="cmd" id="show-logging" dir="rtl">
+        <h3><span dir="ltr">show logging</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> بيعرض إعدادات ومستويات السيسلوج، وسيرفرات الـ Logging المستهدفة، ومحتويات الـ Buffer المخزنة في الذاكرة.</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>show logging
+Syslog logging: enabled (0 messages dropped, 0 messages rate-limited)
+    Console logging: level debugging, 120 messages logged
+    Monitor logging: level debugging, 0 messages logged
+    Buffer logging:  level informational, 45 messages logged, xml disabled
+    Trap logging:    level warnings, 12 message lines logged
+        Logging to 192.168.1.50  (udp port 514, audit disabled,
+          link up),
+          12 message lines logged, 0 message lines dropped
+
+Log Buffer (64000 bytes):
+*Oct 10 14:30:12.102 EEST: %LINK-3-UPDOWN: Interface GigabitEthernet0/0, changed state to up
+*Oct 10 14:30:13.103 EEST: %SYS-5-CONFIG_I: Configured from console by console</code></pre>
+        </div>
+      </section>
+
+      <section class="cmd" id="show-snmp" dir="rtl">
+        <h3><span dir="ltr">show snmp & show snmp community</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>show snmp
+show snmp community
+show snmp group
+show snmp user</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> فحص إحصائيات حزم SNMP، والتأكد من كلمات الـ Community المسجلة وصلاحياتها (RO/RW)، بالإضافة لفحص مستخدمي ومجموعات SNMPv3 وخوارزميات التشفير المطبقة.</p>
+      </section>
+
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فحص الأعطال (Troubleshooting)</h2>
+      <ul>
+        <li><strong>الساعة غير متزامنة (Clock is unsynchronized / Stratum 16):</strong>
+          <ol>
+            <li>تأكد من إمكانية الوصول للـ IP الخاص بسيرفر الـ NTP باستخدام أمر <code dir="ltr">ping</code>.</li>
+            <li>تأكد من عدم وجود Access List أو جدار ناري يمنع حزم <strong>UDP Port 123</strong>.</li>
+            <li>لو مفعل التوثيق (Authentication)، تأكد من تطابق الـ <code dir="ltr">key-id</code> والـ <code dir="ltr">trusted-key</code> وكلمة السر المشفرة تماماً.</li>
+            <li>تأكد إن الراوتر مش شايف دورة توقيت (Time Loop) رفعت الـ Stratum لرقم 16.</li>
+          </ol>
+        </li>
+        <li><strong>السجلات مش ظاهرة على جلسة SSH أو Telnet:</strong>
+          <ol>
+            <li>اكتب فوراً <code dir="ltr">terminal monitor</code> في وضع الـ Enable.</li>
+            <li>تأكد إن إعداد الـ <code dir="ltr">logging monitor</code> مش معمول على مستوى خطورة مرتفع جداً يستثني الرسايل العادية.</li>
+          </ol>
+        </li>
+        <li><strong>خادم الـ Syslog مش بيستلم أي رسائل:</strong>
+          <ol>
+            <li>تأكد من الـ Routing بين الراوتر وسيرفر الـ Syslog على منفذ <strong>UDP 514</strong>.</li>
+            <li>افحص أمر <code dir="ltr">logging trap</code>؛ لو معمول مثلاً <code dir="ltr">logging trap errors</code>، رسايل الـ Warnings والـ Notifications والـ Informational مش هتروح للسيرفر إطلاقاً!</li>
+          </ol>
+        </li>
+        <li><strong>سيرفر المراقبة NMS عاجز عن سحب بيانات SNMP:</strong>
+          <ol>
+            <li>تأكد من تطابق الـ <strong>Community String</strong> تماماً؛ فهي حساسة لحالة الأحرف (Case-Sensitive).</li>
+            <li>لو في Access List مربوطة مع الـ Community، تأكد إنها بتسمح بـ IP سيرفر الـ NMS.</li>
+            <li>تأكد إن منفذ <strong>UDP 161</strong> مسموح بيه (للاستعلامات GET) ومنفذ <strong>UDP 162</strong> مسموح بيه (للتنبيهات Traps).</li>
+            <li>في SNMPv3، تأكد من صحة الـ Security Level (noAuthNoPriv / authNoPriv / authPriv) وتطابق الـ EngineID وكلمات سر الـ Auth والـ Priv.</li>
+          </ol>
+        </li>
+      </ul>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li><strong>مستويات خطورة Syslog الثمانية (0 - 7):</strong> السؤال ده بيتكرر في كل امتحان CCNA بدون استثناء:
+          <ul>
+            <li><strong dir="ltr">Level 0: Emergency</strong> (System is unusable - النظام غير صالح للاستخدام إطلاقاً)</li>
+            <li><strong dir="ltr">Level 1: Alert</strong> (Immediate action needed - يتطلب تدخلاً فورياً)</li>
+            <li><strong dir="ltr">Level 2: Critical</strong> (Critical condition - حالة حرجة)</li>
+            <li><strong dir="ltr">Level 3: Error</strong> (Error condition - خطأ في أحد الوظائف)</li>
+            <li><strong dir="ltr">Level 4: Warning</strong> (Warning condition - تحذير)</li>
+            <li><strong dir="ltr">Level 5: Notification</strong> (Normal but significant condition - حدث طبيعي لكنه ذو دلالة زي Up/Down للواجهة)</li>
+            <li><strong dir="ltr">Level 6: Informational</strong> (Informational message - رسالة استعلامية اعتيادية)</li>
+            <li><strong dir="ltr">Level 7: Debugging</strong> (Debug output - مخرجات التصحيح التفصيلية)</li>
+          </ul>
+          <p><em>جملة الحفظ الذهبية:</em> <strong>E</strong>very <strong>A</strong>lley <strong>C</strong>at <strong>E</strong>ats <strong>W</strong>atermelon <strong>N</strong>ot <strong>I</strong>ce <strong>D</strong>oughnuts.</p>
+        </li>
+        <li><strong>فخ أرقام الخطورة (Lower is More Severe):</strong> الرقم <strong>0</strong> هو الأخطر، والرقم <strong>7</strong> هو الأقل خطورة. لو حددت <code dir="ltr">logging trap 4</code>، الجهاز هيبعت المستويات (0 و 1 و 2 و 3 و 4).</li>
+        <li><strong>مفهوم الـ Stratum في NTP:</strong>
+          <ul>
+            <li><strong>Stratum 0:</strong> مصدر الساعة الذرية المباشر أو الـ GPS، ولا يمكن ربطه مباشرة بكابل شبكة IP.</li>
+            <li><strong>Stratum 1:</strong> أول جهاز سيرفر شبكي متصل فيزيائياً بمصدر التوقيت Stratum 0.</li>
+            <li><strong>Stratum 16:</strong> يعني التوقيت غير صالح / غير متزامن إطلاقاً (Unsynchronized). أقصى Stratum صالح في الشبكة هو <strong>15</strong>.</li>
+          </ul>
+        </li>
+        <li><strong>الفرق بين SNMP Trap و SNMP Inform:</strong>
+          <ul>
+            <li><strong>Trap:</strong> إشعار غير موثوق به (Unreliable / Unacknowledged) بيتبعت عبر UDP 162، والراوتر مبيعرفش إذا كان وصل للـ NMS ولا لأ.</li>
+            <li><strong>Inform:</strong> إشعار موثوق (Acknowledged عبر UDP 162)، الـ NMS بيرد على الراوتر بـ SNMP Response تأكيد استلام، وإذا لم يصل التأكيد يقوم الراوتر بإعادة الإرسال.</li>
+          </ul>
+        </li>
+        <li><strong>رموز الـ Facility الشائعة في رسائل Syslog:</strong> الـ Facility بيحدد موديول النظام اللي ولد الرسالة:
+          <ul>
+            <li><code dir="ltr">SYS</code>: نظام تشغيل الراوتر (IOS System).</li>
+            <li><code dir="ltr">LINK</code>: الطبقة الفيزيائية للواجهة (Interface Hardware State).</li>
+            <li><code dir="ltr">LINEPROTO</code>: بروتوكول الخط في الطبقة الثانية (Data-Link Line Protocol State).</li>
+            <li><code dir="ltr">OSPF</code>: رسائل وإشعارات بروتوكول التوجيه OSPF.</li>
+            <li><code dir="ltr">SEC</code>: أحداث الأمن وحزم الـ IP Security.</li>
+          </ul>
+        </li>
+        <li><strong>بنية SNMP MIB و OID:</strong>
+          <ul>
+            <li><strong>MIB (Management Information Base):</strong> قاعدة بيانات شجرية منظمة تحتوي على كل المتغيرات التي يمكن مراقبتها على الجهاز.</li>
+            <li><strong>OID (Object Identifier):</strong> المعرف الرقمي الهرمي لكل متغير في الشجرة (مثلاً: <code dir="ltr">1.3.6.1.2.1.1.1</code> يشير إلى متغير <code dir="ltr">sysDescr</code>).</li>
+          </ul>
+        </li>
+        <li><strong>بورتات البروتوكولات للامتحان:</strong>
+          <ul>
+            <li>NTP: <strong>UDP 123</strong></li>
+            <li>Syslog: <strong>UDP 514</strong></li>
+            <li>SNMP Queries (Manager to Agent): <strong>UDP 161</strong></li>
+            <li>SNMP Notifications (Agent to Manager - Traps / Informs): <strong>UDP 162</strong></li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Command</th>
+            <th dir="ltr">Mode</th>
+            <th>الوظيفة (Purpose)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">ntp server &lt;ip&gt; [prefer]</code></td>
+            <td dir="ltr">Global config</td>
+            <td>تحديد سيرفر NTP خارجي لمزامنة الوقت معه كعميل (Client).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ntp master [stratum]</code></td>
+            <td dir="ltr">Global config</td>
+            <td>تفعيل الراوتر كسيرفر NTP لتوزيع التوقيت على أجهزة الشبكة.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show ntp status</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>فحص حالة تزامن التوقيت ورقم الـ Stratum ومصدر الساعة.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show ntp associations</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>عرض قائمة السيرفرات المتاحة وحالة الارتباط بها (* للأساسي و + للمرشح).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">service timestamps log datetime msec</code></td>
+            <td dir="ltr">Global config</td>
+            <td>تفعيل التاريخ والوقت بدقة أجزاء الثانية في رسائل السيسلوج.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">logging host &lt;ip&gt;</code></td>
+            <td dir="ltr">Global config</td>
+            <td>توجيه رسائل السجلات إلى سيرفر Syslog خارجي (UDP 514).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">logging trap &lt;level&gt;</code></td>
+            <td dir="ltr">Global config</td>
+            <td>تحديد مستوى الخطورة للرسائل المرسلة لسيرفر الـ Syslog.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">logging buffered &lt;bytes&gt; [level]</code></td>
+            <td dir="ltr">Global config</td>
+            <td>حفظ السجلات في ذاكرة الرام المؤقتة للجهاز بالمستوى المحدد.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">terminal monitor</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>عرض رسائل السيسلوج أثناء الاتصال عبر جلسة SSH أو Telnet.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">snmp-server community &lt;str&gt; {ro|rw}</code></td>
+            <td dir="ltr">Global config</td>
+            <td>إعداد كلمة سر الـ Community String لـ SNMPv1/v2c وتحديد الصلاحية.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">snmp-server host &lt;ip&gt; &lt;str&gt;</code></td>
+            <td dir="ltr">Global config</td>
+            <td>تحديد عنوان الـ NMS المستقبل لإشعارات الـ Traps / Informs.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">snmp-server enable traps</code></td>
+            <td dir="ltr">Global config</td>
+            <td>تفعيل إرسال تنبيهات الـ SNMP التلقائية للـ NMS.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">snmp-server group &lt;grp&gt; v3 priv</code></td>
+            <td dir="ltr">Global config</td>
+            <td>إنشاء مجموعة SNMPv3 بمستوى أمان المصادقة والتشفير (authPriv).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show logging</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>عرض إعدادات السيسلوج ومحتويات السجلات المخزنة في الـ Buffer.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="nat-pat.html" class="nav-btn">« السابق: تقنية NAT & PAT</a>
+      <a href="qos-ftp.html" class="nav-btn">التالي: جودة الخدمة (QoS) ونقل الملفات »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

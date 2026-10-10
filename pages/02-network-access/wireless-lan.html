@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الشبكات اللاسلكية (Wireless LAN) - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>الشبكات اللاسلكية (Wireless LAN & WLC)</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>في منهج CCNA الحديث، إعدادات الشبكات اللاسلكية مش بتتم بأوامر الشاشة السوداء (CLI) زي الروترات، لكن بتتم من خلال واجهة المستخدم الرسومية (GUI) لجهاز الـ <span dir="ltr">WLC (Wireless LAN Controller)</span>. الـ WLC هو العقل المدبر اللي بيتحكم في كل أجهزة الـ Access Points (APs) اللي في المبنى. بروتوكول <span dir="ltr">CAPWAP</span> هو اللي بيربط الـ AP بالـ WLC.</p>
+    </section>
+
+    <section id="quick-config">
+      <h2>إعداد سريع (إعدادات السويتش)</h2>
+      <p>عشان تركب WLC و AP في الشبكة بتاعتك، دي إعدادات السويتش اللي هتوصلهم عليه:</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>! البورت الواصل بالـ WLC (لازم يكون Trunk)
+interface g0/1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,99
+
+! البورت الواصل بالـ AP العادي (لازم يكون Access)
+interface g0/2
+ switchport mode access
+ switchport access vlan 99
+ ! الـ AP بيحتاج كهرباء عبر الكابل
+ power inline auto</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>مفاهيم الـ WLC GUI (للامتحان)</h2>
+
+      <!-- Creating WLAN -->
+      <section class="cmd" id="create-wlan" dir="rtl">
+        <h3>1. إنشاء شبكة وايرلس جديدة (WLAN)</h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">WLC GUI</span>
+          <span class="badge exam">Exam</span>
+        </p>
+        <p><strong>الخطوات:</strong></p>
+        <ol>
+          <li>بتدخل على قائمة <code dir="ltr">WLANs</code> من القائمة العلوية.</li>
+          <li>بتختار <code dir="ltr">Create New</code> وتضغط <code dir="ltr">Go</code>.</li>
+          <li>بتكتب اسم الشبكة (<code dir="ltr">Profile Name</code>) واسم الـ SSID اللي هيظهر للموبايلات واللابات.</li>
+          <li>بتختار رقم الـ <code dir="ltr">WLAN ID</code> (يفضل يكون نفس رقم الـ VLAN عشان متتلخبطش).</li>
+        </ol>
+      </section>
+
+      <!-- Security -->
+      <section class="cmd" id="wlan-security" dir="rtl">
+        <h3>2. إعدادات الحماية (Security)</h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">WLC GUI</span>
+          <span class="badge exam">Exam</span>
+        </p>
+        <p><strong>الخطوات:</strong></p>
+        <ul>
+          <li>من داخل إعدادات الـ WLAN، بتروح لتاب <code dir="ltr">Security</code> وبعدين <code dir="ltr">Layer 2</code>.</li>
+          <li>لعمل باسورد عادية (زي البيت): بتختار <code dir="ltr">WPA+WPA2</code>، وتعلم على <code dir="ltr">PSK</code> وتكتب الباسورد.</li>
+          <li>لربط الشبكة بسيرفر حسابات للموظفين: بتختار <code dir="ltr">802.1x</code>.</li>
+        </ul>
+        <p><em>معلومة للامتحان: بروتوكول WPA2 بيستخدم تشفير AES/CCMP وهو الآمن، بينما WPA القديم بيستخدم TKIP.</em></p>
+      </section>
+
+      <!-- Interface Mapping -->
+      <section class="cmd" id="wlan-interface" dir="rtl">
+        <h3>3. ربط الـ WLAN بالـ VLAN</h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">WLC GUI</span>
+          <span class="badge exam">Exam</span>
+        </p>
+        <p><strong>الشرح:</strong></p>
+        <p>من تاب <code dir="ltr">General</code> جوه إعدادات الـ WLAN، بتلاقي اختيار اسمه <code dir="ltr">Interface/Interface Group</code>. هنا بتختار الـ Dynamic Interface (اللي بيمثل الـ VLAN) اللي عايز الناس اللي تدخل على الوايرلس ده تسحب IP منها.</p>
+      </section>
+
+      <!-- Wi-Fi Standards Table -->
+      <section class="cmd" id="wifi-standards-table" dir="rtl">
+        <h3>4. معايير وترددات الشبكات اللاسلكية (Wi-Fi Standards)</h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam Core</span>
+          <span class="badge theory">IEEE 802.11</span>
+        </p>
+        <p><strong>جدول تطور معايير الوايرلس من الأقدم إلى الأحدث للامتحان:</strong></p>
+        <table>
+          <thead>
+            <tr>
+              <th>المعيار (IEEE)</th>
+              <th>الاسم التجاري</th>
+              <th>نطاق التردد (Frequency)</th>
+              <th>السرعة القصوى النظرية</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong dir="ltr">802.11b</strong></td><td>-</td><td>2.4 GHz</td><td>11 Mbps</td></tr>
+            <tr><td><strong dir="ltr">802.11a</strong></td><td>-</td><td>5 GHz</td><td>54 Mbps</td></tr>
+            <tr><td><strong dir="ltr">802.11g</strong></td><td>-</td><td>2.4 GHz</td><td>54 Mbps</td></tr>
+            <tr><td><strong dir="ltr">802.11n</strong></td><td><strong>Wi-Fi 4</strong></td><td>2.4 GHz & 5 GHz (MIMO)</td><td>600 Mbps</td></tr>
+            <tr><td><strong dir="ltr">802.11ac</strong></td><td><strong>Wi-Fi 5</strong></td><td>5 GHz فقط (Wave 1 / Wave 2 MU-MIMO)</td><td>6.9 Gbps</td></tr>
+            <tr><td><strong dir="ltr">802.11ax</strong></td><td><strong>Wi-Fi 6</strong></td><td>2.4 GHz & 5 GHz (OFDMA)</td><td>9.6 Gbps</td></tr>
+            <tr><td><strong dir="ltr">802.11ax (6E)</strong></td><td><strong>Wi-Fi 6E</strong></td><td><strong>6 GHz</strong> (نطاق عريض جديد خالي من التشويش)</td><td>9.6 Gbps</td></tr>
+            <tr><td><strong dir="ltr">802.11be</strong></td><td><strong>Wi-Fi 7</strong></td><td>2.4 GHz & 5 GHz & 6 GHz (320 MHz Channels)</td><td>46 Gbps</td></tr>
+          </tbody>
+        </table>
+        <p><strong>قنوات التردد 2.4 GHz غير المتداخلة (Non-overlapping Channels):</strong> القنوات <strong>1 و 6 و 11</strong> بعرض 20 MHz (سؤال متكرر في الامتحان).</p>
+      </section>
+
+      <!-- Cloud-Managed Meraki -->
+      <section class="cmd" id="cloud-managed-meraki" dir="rtl">
+        <h3>5. الإدارة السحابية للأجهزة (Cisco Meraki)</h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam Core</span>
+          <span class="badge theory">Cloud Architecture</span>
+        </p>
+        <p><strong>معمارية Cisco Meraki للامتحان:</strong></p>
+        <ul>
+          <li><strong>Out-of-band Cloud Management:</strong> لوحة تحكم سحابية مركزية (Meraki Dashboard). بيانات المستخدمين (Data Plane) تمر محلياً عبر الأجهزة ولا تصعد للسحابة إطلاقاً. فقط بيانات المراقبة والكونفيج (Management Plane) هي التي تمر إلى سيرفرات سيسكو عبر أنفاق HTTPS/TLS آمنة.</li>
+          <li><strong>Zero-Touch Provisioning:</strong> بمجرد توصيل جهاز Meraki الجديد (MR Access Point أو MS Switch أو MX Security Appliance) بالكهرباء والإنترنت، يسحب عنوان IP عبر DHCP ويتصل بالسحابة تلقائياً ويحمل إعداداته خلال دقائق.</li>
+        </ul>
+      </section>
+
+    </section>
+
+    <section id="verification">
+      <h2>أوامر التحقق من السويتش</h2>
+
+      <h3>1. <span dir="ltr">show cdp neighbors</span></h3>
+      <p>عشان تتأكد إن الـ AP واصل السويتش وواخد كهرباء وشغال.</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code><span class="prompt">SW1# </span>show cdp neighbors
+Device ID        Local Intrfce     Holdtme    Capability  Platform  Port ID
+AP-Floor1        Gig 0/2           120             T I    AIR-CAP   Gig 0</code></pre>
+      </div>
+
+      <h3>2. <span dir="ltr">show power inline</span></h3>
+      <p>بيعرض حالة الكهرباء (PoE) اللي طالعة من السويتش للـ AP.</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code><span class="prompt">SW1# </span>show power inline
+Module   Available     Used     Remaining
+         (Watts)      (Watts)    (Watts)
+------   ---------   --------   ---------
+1           370.0      15.4       354.6
+
+Interface Admin  Oper       Power   Device              Class Max
+--------- ------ ---------- ------- ------------------- ----- ----
+Gi0/2     auto   on         15.4    AIR-CAP2702I-E-K9   4     30.0</code></pre>
+      </div>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فحص الأعطال (Troubleshooting)</h2>
+      
+      <h3>الـ AP مش قادر يوصل للـ WLC</h3>
+      <p>لو الـ AP مش راضي ينور أخضر ومش ظاهر في الـ WLC، اتاكد من الحاجات دي:</p>
+      <ul>
+        <li><strong>DHCP:</strong> الـ AP أول ما بيشتغل بيحتاج يسحب IP عشان يقدر يكلم الـ WLC، لو مفيش DHCP سيرفر شغال، الـ AP هيعطل.</li>
+        <li><strong>Option 43:</strong> ده أوبشن بيتحط في الـ DHCP عشان يقول للـ AP "عنوان الـ WLC بتاعك هو كذا". بدونه، الـ AP هيعمل Broadcast وممكن ميوصلش للـ WLC لو هما في VLANs مختلفة.</li>
+      </ul>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li><strong>Access vs Trunk:</strong> البورت الواصل بالـ WLC <strong>دائماً Trunk</strong> (عشان بيشيل الداتا بتاعة كل شبكات الوايرلس). البورت الواصل بالـ AP في وضع الـ Local Mode <strong>دائماً Access</strong> (لأن الـ AP بيبعت الداتا متغلفة في نفق CAPWAP).</li>
+        <li><strong>Local vs FlexConnect:</strong> في وضع الـ <code dir="ltr">Local</code>، الداتا بتروح للـ WLC الأول. في وضع الـ <code dir="ltr">FlexConnect</code>، الـ AP بيقدر يطلع الداتا على السويتش مباشرة (وساعتها بورت الـ AP لازم يكون Trunk).</li>
+        <li><strong>WLC Management:</strong> عشان تدخل على الـ WLC وتعمل إعداداته، لازم تستخدم <code dir="ltr">HTTPS</code> من المتصفح للـ IP الخاص بالـ Management Interface.</li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر لمصطلحات الوايرلس</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Term</th>
+            <th>المعنى</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">WLC</code></td>
+            <td>العقل المدبر اللي بيتحكم في كل أجهزة الوايرلس (Controller).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">CAPWAP</code></td>
+            <td>النفق اللي بيتبني بين الـ AP والـ WLC لنقل الإعدادات والداتا.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">WLAN</code></td>
+            <td>اسم شبكة الوايرلس اللي بتكريتها (موازية للـ VLAN في السلكي).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">SSID</code></td>
+            <td>اسم الشبكة اللي بيظهر للناس على موبايلاتهم.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">PSK</code></td>
+            <td>Pre-Shared Key، يعني الباسورد العادية بتاعة الوايرلس.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">802.1x</code></td>
+            <td>حماية متقدمة، كل يوزر ليه Username و Password خاصين بيه.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="etherchannel.html" class="nav-btn">« السابق: الـ EtherChannel</a>
+      <a href="../03-ip-connectivity/routing-fundamentals.html" class="nav-btn">التالي: أساسيات التوجيه »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

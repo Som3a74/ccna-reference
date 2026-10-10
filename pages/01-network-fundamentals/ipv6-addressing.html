@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>عناوين IPv6 (IPv6 Addressing) - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>عناوين IPv6 وإعدادات المنافذ</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>عناوين <span dir="ltr">IPv6</span> بتختلف عن IPv4 في إنها بتنكتب بصيغة الـ Hex، ومفيهاش قناع شبكة (Subnet Mask) صريح لكن بتستخدم الـ Prefix (زي <code dir="ltr">/64</code>). الميزة الأهم إن أي منفذ بياخد IP عالمي (Global) بيولّد لنفسه أوتماتيك عنوان محلي (Link-Local) بيبدأ بـ <code dir="ltr">FE80</code> عشان الأجهزة المجاورة تكلمه بيه.</p>
+    </section>
+
+    <section id="quick-config">
+      <h2>إعداد سريع (انسخ والصق)</h2>
+      <p>عشان تشغل الـ IPv6 على الراوتر وتدي منفذ عنوان ثابت (أهم خطوة هي تفعيل التوجيه أولاً):</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>ipv6 unicast-routing
+interface g0/0
+ ipv6 address 2001:DB8:ACAD:1::1/64
+ no shutdown</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>الإعداد خطوة بخطوة</h2>
+
+      <!-- Command 1: ipv6 unicast-routing -->
+      <section class="cmd" id="ipv6-unicast-routing" dir="rtl">
+        <h3><span dir="ltr">ipv6 unicast-routing</span> <small dir="ltr">Global config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ipv6 unicast-routing</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> أهم أمر في IPv6. رواتر سيسكو مقفول عليها توجيه الـ IPv6 افتراضياً. لو معملتش الأمر ده، الراوتر هيتعامل مع المنافذ بتاعته كأنها جهاز كمبيوتر عادي (Host)، ومش هيبعت بيانات لشبكات تانية، ومش هيبعت رسائل RA للأجهزة عشان يوزع IPs بنظام الـ (SLAAC).</p>
+      </section>
+
+      <!-- Command 2: ipv6 address (static) -->
+      <section class="cmd" id="ipv6-address" dir="rtl">
+        <h3><span dir="ltr">ipv6 address</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ipv6 address &lt;ipv6-address&gt;/&lt;prefix&gt;</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">&lt;ipv6-address&gt;</code> = العنوان العالمي (Global Unicast Address).</li>
+          <li><code dir="ltr">&lt;prefix&gt;</code> = حجم الشبكة، وغالباً بيكون <code dir="ltr">64</code>.</li>
+        </ul>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1(config-if)# </span>ipv6 address 2001:DB8:ACAD:1::1/64</code></pre>
+        </div>
+      </section>
+
+      <!-- Command 3: EUI-64 -->
+      <section class="cmd" id="ipv6-eui64" dir="rtl">
+        <h3><span dir="ltr">ipv6 address eui-64</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ipv6 address &lt;ipv6-prefix&gt;/&lt;prefix&gt; eui-64</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بدل ما تكتب الـ IP كله بإيدك، بتكتب عنوان الشبكة بس (أول 64 بت)، والراوتر بيكمل النص التاني (آخر 64 بت) لوحده باستخدام الـ MAC Address بتاع المنفذ بعد ما يقلب البت السابع (7th bit) ويحط <code dir="ltr">FFFE</code> في النص. دي طريقة عشان تتأكد إن الـ IP فريد ومبيتكررش.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1(config-if)# </span>ipv6 address 2001:DB8:ACAD:2::/64 eui-64</code></pre>
+        </div>
+      </section>
+
+      <!-- Command 4: Autoconfig (SLAAC) -->
+      <section class="cmd" id="ipv6-autoconfig" dir="rtl">
+        <h3><span dir="ltr">ipv6 address autoconfig</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ipv6 address autoconfig</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيخلي المنفذ يتصرف كـ Client ويسحب الـ IP العالمي بتاعه والـ Gateway من راوتر تاني باستخدام رسائل <span dir="ltr">Router Advertisement (RA)</span> بنظام SLAAC.</p>
+      </section>
+
+      <!-- Command 5: IPv6 Enable -->
+      <section class="cmd" id="ipv6-enable" dir="rtl">
+        <h3><span dir="ltr">ipv6 enable</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ipv6 enable</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> لو كتبت الأمر ده، المنفذ هيولّد عنوان محلي (Link-Local) يبدأ بـ <code dir="ltr">FE80</code> فقط بناءً على الـ MAC Address تاعه، ومش هياخد عنوان عالمي. الأمر ده بيستخدم لو إنت عايز تشغل بروتوكولات التوجيه (زي OSPFv3) من غير ما تدي للرواتر IPs عالمية، كنوع من توفير العناوين والحماية.</p>
+      </section>
+
+    </section>
+
+    <section id="verification">
+      <h2>أوامر التحقق</h2>
+
+      <h3>1. <span dir="ltr">show ipv6 interface brief</span></h3>
+      <p>الأمر الأساسي. بيوريك إن كل منفذ شغال أخد عنوانين: الأول <span dir="ltr">Link-Local</span> (بيبدأ بـ <code dir="ltr">FE80</code>) والتاني <span dir="ltr">Global</span> (الرقم اللي إنت كتبته).</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code><span class="prompt">R1# </span>show ipv6 interface brief
+GigabitEthernet0/0     [up/up]
+    FE80::201:C9FF:FE11:2233
+    2001:DB8:ACAD:1::1
+GigabitEthernet0/1     [administratively down/down]
+    unassigned</code></pre>
+      </div>
+      
+      <h3>2. <span dir="ltr">show ipv6 interface</span></h3>
+      <p>أمر بيعرض تفاصيل أكتر، وأهمها إنه بيوريك مجموعات الـ Multicast اللي المنفذ منضم ليها (مثلاً <code dir="ltr">FF02::1</code> لكل الأجهزة و <code dir="ltr">FF02::2</code> لكل الرواتر).</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code><span class="prompt">R1# </span>show ipv6 interface g0/0
+GigabitEthernet0/0 is up, line protocol is up
+  IPv6 is enabled, link-local address is FE80::201:C9FF:FE11:2233 
+  Global unicast address(es):
+    2001:DB8:ACAD:1::1, subnet is 2001:DB8:ACAD:1::/64
+  Joined group address(es):
+    FF02::1
+    FF02::2
+    FF02::1:FF00:1</code></pre>
+      </div>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فحص الأعطال (Troubleshooting)</h2>
+      
+      <h3>الأجهزة مش بتسحب IPv6 (SLAAC مش شغال)</h3>
+      <p>لو فعلت الـ IP على واجهة الراوتر والأجهزة (الكمبيوترات) مش راضية تسحب أرقام، المشكلة بنسبة 99% إنك نسيت تكتب أمر <code dir="ltr">ipv6 unicast-routing</code> على الراوتر من برة (Global config). الراوتر من غيره مش بيبعت رسايل RA للأجهزة.</p>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li><strong>عنوان EUI-64:</strong> في الامتحان، هيجيبلك الـ MAC (مثلاً <code dir="ltr">0000.1111.2222</code>) ويطلب منك تتوقع الـ Link-Local. هتقسم الـ MAC نصين وتحط <code dir="ltr">FFFE</code> في النص وتقلّب البت السابع. الـ <code dir="ltr">00</code> في الهيكسا هتبقى <code dir="ltr">02</code>. الإجابة هتكون <code dir="ltr">FE80::0200:11FF:FE11:2222</code>.</li>
+        <li><strong>ipv6 enable:</strong> الأمر ده مش بيدي IP عالمي، هو بيكتفي بالـ Link-Local فقط. لو عايز تدي IP عالمي، استخدم <code dir="ltr">ipv6 address</code>، وهو هيولد الـ Link-Local تلقائياً ومفيش داعي تكتب <code dir="ltr">ipv6 enable</code> معاه.</li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Command</th>
+            <th>الوظيفة (Purpose)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">ipv6 unicast-routing</code></td>
+            <td>تفعيل توجيه الـ IPv6 والسماح للراوتر بتوزيع العناوين.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ipv6 address &lt;ipv6&gt;/&lt;prefix&gt;</code></td>
+            <td>إعطاء المنفذ عنوان عالمي (Global Unicast) ثابت.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ipv6 address &lt;prefix&gt; eui-64</code></td>
+            <td>إعطاء المنفذ عنوان، واستنتاج النصف الثاني من الـ MAC.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ipv6 address autoconfig</code></td>
+            <td>سحب عنوان للمنفذ من راوتر آخر (نظام SLAAC).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ipv6 enable</code></td>
+            <td>توليد عنوان Link-Local فقط بدون عنوان عالمي.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show ipv6 interface brief</code></td>
+            <td>التحقق من عناوين المنفذ (Link-Local و Global).</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="ipv4-addressing.html" class="nav-btn">« السابق: عناوين IPv4</a>
+      <a href="../02-network-access/vlans-trunking.html" class="nav-btn">التالي: شبكات VLAN والـ Trunking »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>أوضاع CLI والتنقل (CLI Modes) - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>أوضاع CLI والتنقل (CLI Modes)</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>نظام تشغيل سيسكو (<span dir="ltr">Cisco IOS</span>) بيعتمد على واجهة سطر الأوامر (<span dir="ltr">CLI</span>). الأوامر فيه متقسمة لمستويات أو أوضاع (<span dir="ltr">Modes</span>) هرمية: وضع المستخدم (<span dir="ltr">User EXEC</span>) للمشاهدة البسيطة، وضع الامتيازات (<span dir="ltr">Privileged EXEC</span>) للفحص الكامل والحفظ، ووضع الإعدادات (<span dir="ltr">Global Configuration</span>) اللي منه بتغير في برمجة الراوتر.</p>
+    </section>
+
+    <section id="quick-config">
+      <h2>إعداد سريع (انسخ والصق)</h2>
+      <p>عشان تدخل من أول ما تفتح الراوتر لحد ما تبرمج منفذ، وترجع تاني لبره:</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>enable
+configure terminal
+interface g0/0
+end</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>الإعداد خطوة بخطوة</h2>
+
+      <!-- Command: enable -->
+      <section class="cmd" id="enable" dir="rtl">
+        <h3><span dir="ltr">enable</span> <small dir="ltr">User EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router></span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>enable</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بينقلك من الـ <span dir="ltr">User EXEC mode</span> (اللي علامته <code dir="ltr">></code>) للـ <span dir="ltr">Privileged EXEC mode</span> (اللي علامته <code dir="ltr">#</code>). الوضع ده بيديك صلاحيات تشوف كل الإعدادات (<span dir="ltr">show</span>) وتعمل حفظ.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router> </span>enable
+<span class="prompt">Router# </span></code></pre>
+        </div>
+        <p><strong>للتأكد:</strong> شكل الـ Prompt هيتغير لـ <code dir="ltr">#</code>.</p>
+      </section>
+
+      <!-- Command: disable -->
+      <section class="cmd" id="disable" dir="rtl">
+        <h3><span dir="ltr">disable</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>disable</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيعمل العكس، بينزلك من الـ <span dir="ltr">Privileged EXEC mode</span> لـ <span dir="ltr">User EXEC mode</span>.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>disable
+<span class="prompt">Router> </span></code></pre>
+        </div>
+      </section>
+
+      <!-- Command: configure terminal -->
+      <section class="cmd" id="configure-terminal" dir="rtl">
+        <h3><span dir="ltr">configure terminal</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>configure terminal</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيدخلك على الـ <span dir="ltr">Global Configuration mode</span> اللي تقدر منه تغير برمجة الراوتر ككل. علامته <code dir="ltr">(config)#</code>.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>configure terminal
+<span class="prompt">Router(config)# </span></code></pre>
+        </div>
+        <p class="note"><strong>انتبه:</strong> معظم المهندسين بيكتبوها باختصار <code dir="ltr">conf t</code>.</p>
+      </section>
+
+      <!-- Command: exit / end -->
+      <section class="cmd" id="exit-end" dir="rtl">
+        <h3><span dir="ltr">exit / end</span> <small dir="ltr">Any Mode</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config...)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>exit
+end</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> أمر <code dir="ltr">exit</code> بيرجعك خطوة واحدة لورا في التسلسل الهرمي. أمر <code dir="ltr">end</code> (أو اختصار <code dir="ltr">Ctrl+Z</code>) بيرجعك فوراً للـ <span dir="ltr">Privileged EXEC mode</span> مهما كنت متعق في الإعدادات الفرعية.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router(config-if)# </span>exit
+<span class="prompt">Router(config)# </span>end
+<span class="prompt">Router# </span></code></pre>
+        </div>
+      </section>
+
+      <!-- Command: do -->
+      <section class="cmd" id="do" dir="rtl">
+        <h3><span dir="ltr">do &lt;command&gt;</span> <small dir="ltr">Config modes</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config...)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>do &lt;command&gt;</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">&lt;command&gt;</code> = أي أمر من أوامر <span dir="ltr">Privileged EXEC</span> زي <code dir="ltr">show</code> أو <code dir="ltr">ping</code> أو <code dir="ltr">write</code>.</li>
+        </ul>
+        <p><strong>الشرح:</strong> بيسمحلك تنفذ أوامر الفحص والـ <span dir="ltr">show</span> وإنت لسة جوة وضع الإعدادات، بدل ما تضطر تخرج بـ <code dir="ltr">end</code> وتنفذ الأمر وترجع تدخل تاني.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router(config-if)# </span>do show ip interface brief</code></pre>
+        </div>
+        <p class="note"><strong>انتبه:</strong> لما بتستخدم <code dir="ltr">do</code>، زرار الـ <span dir="ltr">Tab</span> مش بيكمل الكلمة لوحده زي العادي.</p>
+      </section>
+
+      <!-- Command: ? -->
+      <section class="cmd" id="help" dir="rtl">
+        <h3><span dir="ltr">?</span> <small dir="ltr">Any Mode</small></h3>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>?
+&lt;command&gt; ?</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> علامة الاستفهام بتعرضلك كل الأوامر المتاحة في الوضع الحالي. لو كتبتها بعد أمر معين، هتقولك إيه الخيارات المتاحة للأمر ده.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>clock ?
+  set  Set the time and date</code></pre>
+        </div>
+      </section>
+      
+      <!-- Command: Filtering -->
+      <section class="cmd" id="filtering" dir="rtl">
+        <h3><span dir="ltr">| include / exclude / begin / section</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT Partial</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>show &lt;command&gt; | { include | exclude | begin | section } &lt;Regex&gt;</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">&lt;command&gt;</code> = أي أمر زي <code dir="ltr">show running-config</code>.</li>
+          <li><code dir="ltr">&lt;Regex&gt;</code> = الكلمة أو النص اللي بتدور عليه. حساس لحالة الأحرف (Capital/Small).</li>
+        </ul>
+        <p><strong>الشرح:</strong> بيعمل فلترة لنتائج أوامر الـ <span dir="ltr">show</span> الطويلة:</p>
+        <ul>
+          <li><code dir="ltr">include</code>: يعرض السطور اللي فيها الكلمة دي بس.</li>
+          <li><code dir="ltr">exclude</code>: يعرض كل السطور ما عدا اللي فيها الكلمة دي.</li>
+          <li><code dir="ltr">begin</code>: يعرض النتائج بدايةً من أول سطر يلاقي فيه الكلمة دي للآخر.</li>
+          <li><code dir="ltr">section</code>: بيعرض الفقرة كاملة (الجزء اللي الكلمة دي جواه).</li>
+        </ul>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>show running-config | include ip address
+<span class="prompt">Router# </span>show running-config | section ospf</code></pre>
+        </div>
+        <p class="note"><strong>انتبه:</strong> الـ Packet Tracer مش دايماً بيدعم <code dir="ltr">section</code> أو <code dir="ltr">count</code>.</p>
+      </section>
+
+      <!-- Command: terminal length -->
+      <section class="cmd" id="terminal-length" dir="rtl">
+        <h3><span dir="ltr">terminal length 0</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Extra</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>terminal length 0</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيلغي التوقف عند كلمة <code dir="ltr">--More--</code> وبيخلي مخرجات الأوامر الطويلة تطبع كلها دفعة واحدة في الشاشة. مفيد جداً لما تحب تنسخ إعدادات الراوتر كلها بدون ما تضغط المسطرة كل شوية.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>terminal length 0
+<span class="prompt">Router# </span>show running-config</code></pre>
+        </div>
+      </section>
+
+    </section>
+
+    <section id="verification">
+      <h2>أوامر التحقق</h2>
+
+      <h3>1. <span dir="ltr">show privilege</span></h3>
+      <p>بيوريك مستوى الصلاحيات الحالي بتاعك.</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code><span class="prompt">Router# </span>show privilege
+Current privilege level is 15</code></pre>
+      </div>
+      <ul>
+        <li><strong>Level 1:</strong> وضع المستخدم (User EXEC).</li>
+        <li><strong>Level 15:</strong> وضع الامتيازات الكامل (Privileged EXEC).</li>
+      </ul>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فحص الأعطال ورسائل الخطأ</h2>
+      
+      <h3>رسائل الأخطاء المشهورة في الـ CLI</h3>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Error Message</th>
+            <th>السبب بالعربي</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">% Invalid input detected at '^' marker.</code></td>
+            <td>الراوتر مش فاهم الكلمة اللي مكتوبة عند علامة <code dir="ltr">^</code>. ممكن تكون كاتب حرف غلط أو الأمر مش مدعوم في الوضع الحالي.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">% Incomplete command.</code></td>
+            <td>الأمر صح، بس ناقصه متغيرات أو كلام تاني بعده عشان يكمل. استخدم <code dir="ltr">?</code> عشان تعرف الناقص.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">% Ambiguous command.</code></td>
+            <td>أنت كتبت اختصار لأمر، بس الاختصار ده بيشترك فيه أكتر من أمر. لازم تزود حروف كمان. (مثلاً <code dir="ltr">c</code> بس ممكن تبقى <code dir="ltr">configure</code> أو <code dir="ltr">copy</code>).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">Translating "..."...domain server (255.255.255.255)</code></td>
+            <td>أنت كتبت كلمة غلط والراوتر افتكرها اسم جهاز وبيحاول يعملها DNS Lookup. الحل: اضغط <code dir="ltr">Ctrl+Shift+6</code> عشان تلغي البحث بسرعة.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li>تكتب <code dir="ltr">show run</code> وأنت لسة جوة الـ <span dir="ltr">(config)#</span> وتستغرب إنه مش شغال، الحل إنك تكتب قبله <code dir="ltr">do</code>.</li>
+        <li>الفرق بين <code dir="ltr">no</code> و <code dir="ltr">default</code>: عشان تلغي أي أمر استخدم قبله <code dir="ltr">no</code>. أمر <code dir="ltr">default</code> بيرجع الإعداد لقيمته الأصلية (مثال: <code dir="ltr">default interface g0/0</code> بيمسح برمجة المنفذ كلها).</li>
+        <li>البحث بالـ Pipe (<code dir="ltr">|</code>) دايماً Case-Sensitive، لو كتبت <code dir="ltr">include ospf</code> مش هيلاقي كلمة <code dir="ltr">OSPF</code> بالحروف الكبيرة.</li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر (اختصارات لوحة المفاتيح)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Shortcut</th>
+            <th>الوظيفة (Purpose)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">Tab</code></td>
+            <td>إكمال الكلمة تلقائياً لو كتبت جزء مميز منها.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">Ctrl + A</code></td>
+            <td>نقل المؤشر لأول السطر.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">Ctrl + E</code></td>
+            <td>نقل المؤشر لآخر السطر.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">Ctrl + U</code></td>
+            <td>مسح السطر بالكامل.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">Ctrl + C</code> / <code dir="ltr">Ctrl + Z</code></td>
+            <td>الخروج للـ Privileged EXEC.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">Ctrl + Shift + 6</code></td>
+            <td>إلغاء عملية الـ Ping أو التتبع أو الـ DNS Lookup المزعج.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="../../index.html" class="nav-btn">« الصفحة الرئيسية</a>
+      <a href="initial-setup.html" class="nav-btn">التالي: الإعداد المبدئي »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

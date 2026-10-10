@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security Concepts & Hardening - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>مفاهيم الحماية وتقوية الأجهزة (Security Concepts)</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>الأمن السيبراني في شبكات المؤسسات لا يقتصر على برامج مكافحة الفيروسات، بل هو منظومة متكاملة تبدأ من فهم التهديدات وتنتهي بتطبيق سياسات التقوية (Hardening) على كل راوتر وسويتش في الشبكة:</p>
+      <ul>
+        <li><strong>مثلث الحماية (CIA Triad):</strong>
+          <ul>
+            <li><strong>السرية (Confidentiality):</strong> منع الوصول غير المصرح به للبيانات عبر التشفير (مثل AES و 3DES).</li>
+            <li><strong>التكاملية وسلامة البيانات (Integrity):</strong> ضمان عدم تعديل البيانات أثناء نقلها عبر دوال التجزئة (Hashing مثل SHA-256 و HMAC).</li>
+            <li><strong>التوافر والجاهزية (Availability):</strong> ضمان وصول المستخدمين المصرح لهم للخدمات بدون انقطاع عبر تقنيات التكرارية والوفرة (Redundancy كـ FHRP و STP) والحماية من هجمات DoS.</li>
+          </ul>
+        </li>
+        <li><strong>المصطلحات الأساسية للامتحان:</strong>
+          <ul>
+            <li><strong>Threat (التهديد):</strong> الخطر أو الهجوم المحتمل الذي يهدد استقرار الشبكة.</li>
+            <li><strong>Vulnerability (الثغرة):</strong> نقطة ضعف في نظام التشغيل أو التطبيق أو الإعدادات أو العامل البشري.</li>
+            <li><strong>Exploit (الاستغلال):</strong> الكود أو الآلية البرمجية التي يستغل بها المهاجم الثغرة لاختراق النظام.</li>
+            <li><strong>Risk (الخطر):</strong> احتمال حدوث الهجوم مضروباً في حجم الضرر الناتج عنه (<code dir="ltr">Risk = Threat × Vulnerability</code>).</li>
+            <li><strong>Mitigation (الحد من المخاطر):</strong> الإجراءات والتدابير الدفاعية لتطويق وتقليل الخطر.</li>
+          </ul>
+        </li>
+        <li><strong>أنواع الهجمات:</strong> الاستطلاعية (Reconnaissance)، هجمات الوصول وكسر كلمات المرور (Access Attacks)، حجب الخدمة (DoS & DDoS)، وهجمات الهندسة الاجتماعية (Social Engineering كالـ Phishing).</li>
+        <li><strong>بدائل كلمات المرور والتحقق:</strong> المصادقة متعددة العوامل (MFA)، الشهادات الرقمية (PKI / X.509)، والبصمات الحيوية (Biometrics).</li>
+      </ul>
+    </section>
+
+    <section id="quick-config">
+      <h2>إعداد سريع (انسخ والصق)</h2>
+      <p>تطبيق حزمة التقوية الأمنية المبدئية لحماية الراوتر أو السويتش من الاختراق وهجمات التخمين:</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>! 1. حظر هجمات التخمين Brute-Force (حظر 120 ثانية بعد 3 محاولات فاشلة خلال 60 ثانية)
+login block-for 120 attempts 3 within 60
+login on-failure log
+login on-success log
+
+! 2. فرض حد أدنى لطول كلمات المرور وتشفير كلمات السر في الـ Config
+security passwords min-length 10
+service password-encryption
+enable algorithm-type sha256 secret CiscoAdminSecure#2026
+
+! 3. تأمين منافذ التحكم Console و VTY مع مهلة خمول 5 دقائق
+line con 0
+ exec-timeout 5 0
+ logging synchronous
+line vty 0 4
+ exec-timeout 5 0
+ transport input ssh
+ logging synchronous
+line aux 0
+ no exec
+
+! 4. إضافة رسالة تحذير قانونية (Banner MOTD)
+banner motd ^
+****************************************************************
+* WARNING: Authorized Access Only!                             *
+* All activities are monitored and logged.                     *
+* Disconnect immediately if you are not an authorized user.   *
+****************************************************************
+^</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>الإعداد خطوة بخطوة</h2>
+
+      <!-- ================= Login Block-For ================= -->
+      <section class="cmd" id="login-block-for" dir="rtl">
+        <h3><span dir="ltr">login block-for</span> <small dir="ltr">Login Enhancements</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>login block-for &lt;block-seconds&gt; attempts &lt;max-tries&gt; within &lt;window-seconds&gt;
+login on-failure log
+login on-success log</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">&lt;block-seconds&gt;</code> = عدد الثواني التي سيتم خلالها حظر أي محاولات تسجيل دخول جديدة بالكامل (Quiet Mode).</li>
+          <li><code dir="ltr">&lt;max-tries&gt;</code> = أقصى عدد من المحاولات الفاشلة المسموح بها قبل فرض الحظر.</li>
+          <li><code dir="ltr">&lt;window-seconds&gt;</code> = النافذة الزمنية لاحتساب المحاولات الفاشلة.</li>
+        </ul>
+        <p><strong>الشرح:</strong> الدفاع الأساسي ضد هجمات كسر وتخمين كلمات المرور (Brute-Force & Dictionary Attacks). إذا حاول مهاجم تخمين كلمة السر 3 مرات خلال 60 ثانية، يقفل الراوتر إمكانية تسجيل الدخول لمدة دقيقتين ويسجل الحادثة في الـ Syslog.</p>
+      </section>
+
+      <!-- ================= Security Passwords Min-Length ================= -->
+      <section class="cmd" id="passwords-min-length" dir="rtl">
+        <h3><span dir="ltr">security passwords min-length</span> <small dir="ltr">Password Policy</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>security passwords min-length &lt;number-of-characters&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> يمنع مهندسي الشبكة من تعيين كلمات مرور قصيرة وسهلة التخمين (مثل <code dir="ltr">cisco</code> أو <code dir="ltr">1234</code>). يرفض الراوتر أي كلمة سر تقل عن الحد الأدنى المحدد (مثلاً 10 أحرف أو أكثر).</p>
+      </section>
+
+      <!-- ================= Service Password-Encryption & Enable Secret ================= -->
+      <section class="cmd" id="password-encryption-types" dir="rtl">
+        <h3><span dir="ltr">service password-encryption / enable secret</span> <small dir="ltr">Password Hashing Types</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>! تشفير كلمات السر العادية (Type 7 - ضعيف جداً)
+service password-encryption
+
+! استخدام دوال التجزئة القوية لكلمة سر وضع الـ Enable
+enable secret &lt;password&gt;
+
+! في أنظمة IOS الحديثة (تحديد خوارزمية التجزئة يدوياً):
+enable algorithm-type {sha256 | scrypt} secret &lt;password&gt;</code></pre>
+        </div>
+        <p><strong>أنواع التشفير والتجزئة في سيسكو (فخ امتحاني مهم):</strong></p>
+        <ul>
+          <li><strong dir="ltr">Type 0:</strong> نص واضح صريح غير مشفر (Plaintext) - خطر جداً.</li>
+          <li><strong dir="ltr">Type 7:</strong> تشفير بسيط عبر خوارزمية Vigenère Cipher؛ يُفك في ثانية واحدة بأي موقع مجاني على الإنترنت! وظيفته فقط منع النظر من فوق الكتف (Shoulder Surfing).</li>
+          <li><strong dir="ltr">Type 5:</strong> تجزئة عبر MD5 المستخدمة مع <code dir="ltr">enable secret</code> التقليدية.</li>
+          <li><strong dir="ltr">Type 8:</strong> تجزئة عبر PBKDF2 مع SHA-256 (قوي وحديث).</li>
+          <li><strong dir="ltr">Type 9:</strong> تجزئة عبر خوارزمية scrypt (الأقوى والأكثر مقاومة لهجمات المعالجات الرسومية GPU).</li>
+        </ul>
+      </section>
+
+      <!-- ================= Exec-Timeout ================= -->
+      <section class="cmd" id="exec-timeout" dir="rtl">
+        <h3><span dir="ltr">exec-timeout</span> <small dir="ltr">Session Inactivity Timeout</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-line)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>line con 0
+ exec-timeout &lt;minutes&gt; [seconds]
+line vty 0 4
+ exec-timeout &lt;minutes&gt; [seconds]</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> إغلاق الجلسة تلقائياً وتسجيل الخروج في حال ترك المهندس الشاشة مفتوحة بدون كتابة أي أمر للمدة المحددة (مثلاً <code dir="ltr">exec-timeout 5 0</code> تعني 5 دقائق). كتابة <code dir="ltr">exec-timeout 0 0</code> تعطل المهلة نهائياً (ممنوع في بيئات الإنتاج لأسباب أمنية!).</p>
+      </section>
+
+      <!-- ================= Banner MOTD ================= -->
+      <section class="cmd" id="banner-motd" dir="rtl">
+        <h3><span dir="ltr">banner motd</span> <small dir="ltr">Legal Notice Banner</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>banner motd &lt;delimiting-character&gt;
+[نص الرسالة التحذيرية]
+&lt;delimiting-character&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> رسالة تظهر لكل من يحاول الاتصال بالجهاز قبل تسجيل الدخول. في معايير سيسكو والأمن السيبراني، <strong>يحظر تماماً كتابة كلمة مرحباً (Welcome)</strong> لأنها قد تُستغل قانونياً في المحاكم كدعوة للدخول! يجب أن تتضمن الرسالة تحذيراً صريحاً بأن الوصول مقتصر على المصرح لهم فقط وأن كافة الأنشطة مراقبة.</p>
+      </section>
+
+      <!-- ================= Disabling Unused Services ================= -->
+      <section class="cmd" id="disable-unused-services" dir="rtl">
+        <h3><span dir="ltr">no ip http server / no exec</span> <small dir="ltr">Reduce Attack Surface</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>! تعطيل واجهة الويب غير المشفرة (HTTP Port 80)
+no ip http server
+
+! إغلاق منفذ الـ AUX بالكامل
+line aux 0
+ no exec
+
+! تعطيل بروتوكولات البحث القديمة
+no ip domain-lookup</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> تقليص مساحة الهجوم (Reduce Attack Surface) بإغلاق أي منافذ أو بروتوكولات لا تستخدمها الشبكة فعلياً.</p>
+      </section>
+
+      <!-- ================= Zero Trust & SASE ================= -->
+      <section class="cmd" id="zero-trust-sase" dir="rtl">
+        <h3><span dir="ltr">Zero Trust & SASE Architecture</span> <small dir="ltr">Modern Security Frameworks</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge exam">Exam Core (v1.1)</span>
+          <span class="badge theory">Theory</span>
+        </p>
+        <p><strong>1. بنية انعدام الثقة (Zero Trust Architecture - ZTA):</strong></p>
+        <ul>
+          <li><strong>المبدأ الجوهري:</strong> "لا تثق بأحد أبداً، وتحقق من كل شيء دائماً" (<strong>Never Trust, Always Verify</strong>).</li>
+          <li>في الشبكات التقليدية القديمة، كان يُفترض أن أي شخص داخل شبكة الشركة المحلية موثوق به. أما في Zero Trust، حتى لو كان الجهاز متصلاً بكابل LAN داخل مقر الشركة، لا يُمنح أي وصول إلا بعد المصادقة والتحقق من صحة الجهاز (Device Posture) وهويته في كل جلسة منفردة.</li>
+          <li><strong>التقسيم المصغر (Micro-segmentation):</strong> عزل أجزاء الشبكة وخوادمها لتقييد الحركة الجانبية للمهاجم (Lateral Movement) إذا تمكن من اختراق نقطة واحدة.</li>
+          <li><strong>مبدأ الصلاحيات الدنيا (Least Privilege):</strong> منح المستخدم أقل قدر ممكن من الصلاحيات والوصول المطلوب لإنجاز وظيفته فقط.</li>
+        </ul>
+        <p><strong>2. معمارية SASE و SSE:</strong></p>
+        <ul>
+          <li><strong>SASE (Secure Access Service Edge):</strong> دمج قدرات شبكات الـ SD-WAN مع خدمات الأمان السحابية المتكاملة في منصة واحدة لحماية المستخدمين أينما وجدوا (في المكتب أو عن بُعد).</li>
+          <li><strong>SSE (Security Service Edge):</strong> الجانب الأمني السحابي من SASE، ويشمل:
+            <ul>
+              <li><strong>CASB (Cloud Access Security Broker):</strong> مراقبة وحماية استهلاك تطبيقات السحابة (SaaS).</li>
+              <li><strong>SWG (Secure Web Gateway):</strong> فلترة تصفح الإنترنت وفحص التهديدات وحظر المواقع الضارة.</li>
+              <li><strong>ZTNA (Zero Trust Network Access):</strong> إتاحة الوصول للتطبيقات الداخلية الخاصة بدون الحاجة لإنشاء نفق VPN كامل لكل الشبكة.</li>
+              <li><strong>FWaaS (Firewall as a Service):</strong> جدار ناري مدار سحابياً (مثل Cisco Umbrella).</li>
+            </ul>
+          </li>
+        </ul>
+      </section>
+
+    </section>
+
+    <section id="verification">
+      <h2>أوامر التحقق وفحص الأمان</h2>
+
+      <section class="cmd" id="show-login" dir="rtl">
+        <h3><span dir="ltr">show login</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> فحص حالة نظام حماية الدخول، والتأكد إذا كان الراوتر حالياً في وضع الحظر (Quiet Mode) بسبب محاولات تخمين هجومية أم في الوضع الطبيعي (Normal Mode).</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>show login
+     OK: Fast login enabled
+     Mode: Normal
+     Login block-for: 120 (sec)
+     Attempts: 3 within 60 (sec)
+     State: Normal (no quiet-period active)</code></pre>
+        </div>
+      </section>
+
+      <section class="cmd" id="show-running-config-security" dir="rtl">
+        <h3><span dir="ltr">show running-config | include</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>show running-config | section line
+show running-config | include secret|password</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> مراجعة سريعة للتأكد من تشفير كل كلمات المرور، وتطبيق الـ <code dir="ltr">exec-timeout</code>، وحظر بروتوكول Telnet غير المشفر بحصر الدخول على <code dir="ltr">transport input ssh</code>.</p>
+      </section>
+
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فحص الأعطال (Troubleshooting)</h2>
+      <ul>
+        <li><strong>تم حظر تسجيل دخول المهندسين بسبب Brute-Force:</strong>
+          <ol>
+            <li>إذا تكررت المحاولات الفاشلة ودخل الراوتر في الـ Quiet Mode، يمكنك الدخول حصرياً عبر منفذ الـ Console الفيزيائي إذا تم استثناؤه أو الانتظار حتى تنتهي مهلة الـ <code dir="ltr">block-for</code>.</li>
+            <li>تأكد من فحص سجلات الـ Syslog لمعرفة الـ IP المصدر للهجوم وحظره عبر Access List.</li>
+          </ol>
+        </li>
+        <li><strong>جلسات الاتصال تقفل بسرعة أثناء العمل:</strong>
+          <ol>
+            <li>افحص إعداد الـ <code dir="ltr">exec-timeout</code> تحت <code dir="ltr">line vty</code> و <code dir="ltr">line con 0</code>. إذا تم ضبط الثواني بدلاً من الدقائق بالخطأ (مثلاً <code dir="ltr">exec-timeout 0 5</code> تعني 5 ثوانٍ فقط!)، قم بتعديلها إلى <code dir="ltr">exec-timeout 5 0</code> (5 دقائق).</li>
+          </ol>
+        </li>
+        <li><strong>كلمات المرور مكشوفة كنص صريح في ملف الـ Config:</strong>
+          <ol>
+            <li>اكتب أمر <code dir="ltr">service password-encryption</code> فوراً في وضع الكونفيج العام ليقوم الراوتر بتشفير جميع كلمات السر الحالية.</li>
+            <li>استبدل أمر <code dir="ltr">enable password</code> بأمر <code dir="ltr">enable secret</code> فوراً.</li>
+          </ol>
+        </li>
+      </ul>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li><strong>الفرق بين Type 7 و Type 5 و Type 8/9:</strong>
+          <ul>
+            <li>أمر <code dir="ltr">service password-encryption</code> ينشئ تشفير <strong>Type 7</strong> فقط (ضعيف جداً ويمكن فكه بلمح البصر).</li>
+            <li>أمر <code dir="ltr">enable secret</code> ينشئ تجزئة <strong>Type 5 (MD5)</strong> أو <strong>Type 8/9</strong> (قوية جداً ومحمية بخوارزميات تجزئة أحادية الاتجاه One-Way Hashing).</li>
+            <li>إذا كتبت <code dir="ltr">enable password</code> و <code dir="ltr">enable secret</code> معاً على نفس الجهاز، فإن الراوتر <strong>سيعتمد دائماً enable secret</strong> ويتجاهل enable password تماماً!</li>
+          </ul>
+        </li>
+        <li><strong>فخ الـ Delimiter في Banner MOTD:</strong>
+          <p>الحرف الذي تفتتح به الرسالة (مثل <code dir="ltr">^</code> أو <code dir="ltr">#</code> أو <code dir="ltr">Z</code>) هو الذي ينهيها. إذا كتبت نفس الحرف داخل نص الرسالة، سيعتبر الراوتر أن الرسالة انتهت عند تلك النقطة!</p>
+        </li>
+        <li><strong>فخاخ الهندسة الاجتماعية (Social Engineering):</strong>
+          <ul>
+            <li><strong>Phishing:</strong> رسائل بريد إلكتروني احتيالية عامة تستهدف أعداداً ضخمة من الموظفين.</li>
+            <li><strong>Spear Phishing:</strong> هجوم بريد إلكتروني مخصص وموجه لشخص أو منصب محدد بدقة.</li>
+            <li><strong>Whaling:</strong> هجوم يستهدف كبار المدراء التنفيذيين (C-Level Executives كالـ CEO).</li>
+            <li><strong>Vishing:</strong> تصيد عبر المكالمات الصوتية الهاتفية (Voice Phishing).</li>
+            <li><strong>Smishing:</strong> تصيد عبر الرسائل النصية القصيرة (SMS Phishing).</li>
+            <li><strong>Watering Hole:</strong> اختراق موقع إلكتروني يتردد عليه موظفو الشركة المستهدفة بكثرة وإصابتهم من خلاله.</li>
+          </ul>
+        </li>
+        <li><strong>أجهزة الحماية المتقدمة (Cisco Security Portfolio):</strong>
+          <ul>
+            <li><strong>NGFW (Next-Generation Firewall):</strong> مثل Cisco Firepower؛ يجمع بين جدار الحماية الحركي (Stateful Inspection) ونظام كشف الاختراق (IPS) والتحكم بالتطبيقات (AVC).</li>
+            <li><strong>Cisco ISE (Identity Services Engine):</strong> خادم مركزي لنظام الـ AAA وتطبيق سياسات التحكم بالوصول إلى الشبكة (Network Access Control - NAC).</li>
+            <li><strong>Cisco Umbrella:</strong> جدار حماية سحابي وحماية على مستوى استعلامات الـ DNS لحجب الروابط الخبيثة قبل الاتصال بها.</li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Command</th>
+            <th dir="ltr">Mode</th>
+            <th>الوظيفة (Purpose)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">login block-for &lt;s&gt; attempts &lt;n&gt; within &lt;s&gt;</code></td>
+            <td dir="ltr">Global config</td>
+            <td>حظر تسجيل الدخول تلقائياً عند تكرار محاولات التخمين الفاشلة (Brute-Force).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">security passwords min-length &lt;len&gt;</code></td>
+            <td dir="ltr">Global config</td>
+            <td>فرض حد أدنى لعدد حروف كلمات المرور على الجهاز لمنع كلمات السر الضعيفة.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">service password-encryption</code></td>
+            <td dir="ltr">Global config</td>
+            <td>تشفير جميع كلمات المرور الحالية في ملف الإعدادات بتشفير Type 7.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">enable secret &lt;password&gt;</code></td>
+            <td dir="ltr">Global config</td>
+            <td>تعيين كلمة سر وضع الـ Privileged EXEC بتجزئة قوية (Type 5/8/9).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">exec-timeout &lt;min&gt; [sec]</code></td>
+            <td dir="ltr">Line config</td>
+            <td>تحديد مهلة الخمول لتسجيل الخروج التلقائي عند عدم استخدام الجلسة.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">banner motd &lt;delim&gt;</code></td>
+            <td dir="ltr">Global config</td>
+            <td>إعداد رسالة التحذير القانونية التي تظهر للمستخدم قبل تسجيل الدخول.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show login</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>عرض حالة أمان تسجيل الدخول والتأكد من تفعيل وضع الحظر من عدمه.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="../04-ip-services/qos-ftp.html" class="nav-btn">« السابق: جودة الخدمة (QoS) ونقل الملفات</a>
+      <a href="acls.html" class="nav-btn">التالي: قوائم التحكم في الوصول (ACLs) »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

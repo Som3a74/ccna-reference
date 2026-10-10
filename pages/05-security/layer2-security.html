@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Layer 2 Security - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>حماية الطبقة الثانية (Layer 2 Security)</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>تعتبر الطبقة الثانية (Data-Link Layer) من أخطر نقاط الضعف في الشبكة المحلية، لأن البروتوكولات القديمة مثل ARP و DHCP صُممت بدون أي آليات تحقق ومصادقة ذاتية. توفر سيسكو ثلاثة أسلحة دفاعية رئيسية في السويتشات (موضوع أساسي في امتحان CCNA 200-301):</p>
+      <ul>
+        <li><strong>1. Port Security:</strong> حماية منافذ السويتش من هجمات إغراق جدول العناوين (MAC Table Flooding) ومنع توصيل أجهزة غير مصرح بها عن طريق تحديد عدد الماك أدرس المسموح بها وخاصية الحفظ التلقائي (Sticky MAC).</li>
+        <li><strong>2. DHCP Snooping:</strong> الحماية من خوادم الـ DHCP المزيفة (Rogue DHCP Servers) وهجمات استنزاف العناوين (DHCP Starvation). يقسم المنافذ إلى موثوقة (Trusted) متصلة بالسيرفر الحقيقي، وغير موثوقة (Untrusted) تسقط أي رسائل Offer أو Ack قادمة من المستخدمين. ويبني جدول ربط ديناميكي (DHCP Snooping Binding Database).</li>
+        <li><strong>3. Dynamic ARP Inspection (DAI):</strong> الحماية من هجمات التسميم وانتحال عناوين الـ ARP (ARP Poisoning / Man-in-the-Middle). يعتمد على فحص حزم الـ ARP ومقارنة الـ IP والـ MAC الخاص بها مع جدول الـ DHCP Snooping، وإسقاط أي حزمة مزيفة فوراً.</li>
+        <li><strong>أوضاع العقاب في Port Security:</strong>
+          <ul>
+            <li><strong>Shutdown (الافتراضي):</strong> إسقاط الحزمة، إرسال تنبيه Syslog/SNMP، وقفل المنفذ تماماً في وضع <code dir="ltr">err-disabled</code>.</li>
+            <li><strong>Restrict:</strong> إسقاط الحزمة، إرسال تنبيه Syslog/SNMP، وزيادة عداد الانتهاكات (Violation Counter) مع بقاء المنفذ يعمل.</li>
+            <li><strong>Protect:</strong> إسقاط الحزمة بصمت تام وبدون إرسال أي تنبيه وبدون زيادة العداد مع بقاء المنفذ يعمل.</li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <section id="quick-config">
+      <h2>إعداد سريع (انسخ والصق)</h2>
+      <p>إعداد شامل لتفعيل Port Security مع Sticky MAC، وتفعيل DHCP Snooping و DAI على شبكة VLAN 10:</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>! 1. إعداد Port Security على منافذ المستخدمين
+interface range FastEthernet0/1 - 24
+ switchport mode access
+ switchport port-security
+ switchport port-security maximum 2
+ switchport port-security mac-address sticky
+ switchport port-security violation restrict
+
+! 2. تفعيل DHCP Snooping وحماية الشبكة
+ip dhcp snooping
+ip dhcp snooping vlan 10
+no ip dhcp snooping information option
+
+! تحديد المنفذ الصاعد للسيرفر كموثوق به (Trusted)
+interface GigabitEthernet0/1
+ ip dhcp snooping trust
+
+! 3. تفعيل Dynamic ARP Inspection (DAI)
+ip arp inspection vlan 10
+ip arp inspection validate src-mac dst-mac ip
+
+! تحديد المنفذ الصاعد كـ Trusted للـ ARP
+interface GigabitEthernet0/1
+ ip arp inspection trust</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>الإعداد خطوة بخطوة</h2>
+
+      <!-- ================= Port Security Commands ================= -->
+      <section class="cmd" id="port-security-enable" dir="rtl">
+        <h3><span dir="ltr">switchport port-security</span> <small dir="ltr">Enable Port Security</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Switch(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>switchport mode access
+switchport port-security</code></pre>
+        </div>
+        <p><strong>فخ امتحاني مهم جداً:</strong> لا يمكنك تفعيل <code dir="ltr">switchport port-security</code> على منفذ يعمل بوضع التفاوض التلقائي (Dynamic Desirable / Auto)! يجب تحويل المنفذ يدوياً أولاً إلى وضع Access صريح عبر <code dir="ltr">switchport mode access</code>.</p>
+      </section>
+
+      <section class="cmd" id="port-security-max-sticky" dir="rtl">
+        <h3><span dir="ltr">maximum & mac-address sticky</span> <small dir="ltr">MAC Learning</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Switch(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>switchport port-security maximum &lt;1-8192&gt;
+switchport port-security mac-address sticky</code></pre>
+        </div>
+        <p><strong>الشرح:</strong>
+          الأمر <code dir="ltr">maximum</code> يحدد أقصى عدد ماك أدرس مسموح بها على هذا المنفذ (الافتراضي 1). والأمر <code dir="ltr">mac-address sticky</code> يجعل السويتش يتعلم الماك أدرس لأول جهاز يتصل ويثبته تلقائياً في ملف الإعدادات الجاري (Running-Config)، مما يوفر عناء كتابة الماك أدرس يدوياً لكل مستخدم.
+        </p>
+      </section>
+
+      <section class="cmd" id="port-security-violation" dir="rtl">
+        <h3><span dir="ltr">switchport port-security violation</span> <small dir="ltr">Action on Violation</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Switch(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>switchport port-security violation {shutdown | restrict | protect}</code></pre>
+        </div>
+        <p><strong>مقارنة الأوضاع للامتحان:</strong></p>
+        <ul>
+          <li><code dir="ltr">shutdown</code> (الوضع الافتراضي): يقفل المنفذ فوراً (<code dir="ltr">err-disabled</code>)، يولد تنبيه Syslog و SNMP Trap، ويزيد عداد الانتهاكات.</li>
+          <li><code dir="ltr">restrict</code>: يسقط حزم المهاجم فقط، يبقي المنفذ يعمل لباقي الأجهزة المصرح لها، يولد تنبيه Syslog و SNMP Trap، ويزيد عداد الانتهاكات.</li>
+          <li><code dir="ltr">protect</code>: يسقط حزم المهاجم فقط، لا يولد أي تنبيه، ولا يزيد العداد (صامت تماماً).</li>
+        </ul>
+      </section>
+
+      <section class="cmd" id="errdisable-recovery" dir="rtl">
+        <h3><span dir="ltr">errdisable recovery</span> <small dir="ltr">Automatic Port Recovery</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Switch(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>! تفعيل الاستعادة التلقائية لانتهاكات الـ Port Security
+errdisable recovery cause psecure-violation
+errdisable recovery interval &lt;30-86400-seconds&gt;
+
+! يدوياً (إذا لم تفعل الاستعادة التلقائية):
+interface &lt;interface-id&gt;
+ shutdown
+ no shutdown</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> عندما يقفل المنفذ بوضع <code dir="ltr">err-disabled</code>، يحتاج المهندس للدخول وكتابة <code dir="ltr">shutdown</code> ثم <code dir="ltr">no shutdown</code> لإعادة تشغيله. تفعيل هذا الأمر يجعل السويتش يعيد فتح المنفذ تلقائياً بعد انقضاء الوقت المحدد بالثواني (مثلاً 300 ثانية).</p>
+      </section>
+
+      <!-- ================= DHCP Snooping Commands ================= -->
+      <section class="cmd" id="dhcp-snooping-config" dir="rtl">
+        <h3><span dir="ltr">ip dhcp snooping</span> <small dir="ltr">Rogue DHCP Defense</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Switch(config)# & (config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>! 1. تفعيل الخاصية على مستوى السويتش
+ip dhcp snooping
+
+! 2. تحديد الفيلانات المحمية
+ip dhcp snooping vlan &lt;vlan-list&gt;
+
+! 3. إلغاء Option 82 في بيئات Layer 2 البسيطة (مهم جداً!)
+no ip dhcp snooping information option
+
+! 4. تحديد المنافذ الموثوقة (المتصلة بالسيرفر الأصلي أو سويتش صاعد)
+interface &lt;uplink-interface&gt;
+ ip dhcp snooping trust
+
+! 5. تحديد حد أقصى لمعدل الحزم على منافذ المستخدمين لمنع DoS
+interface range &lt;access-interfaces&gt;
+ ip dhcp snooping limit rate &lt;1-2048-pps&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> السويتش يعتبر جميع المنافذ غير موثوقة (Untrusted) افتراضياً، ويسقط أي رسائل خادم (<code dir="ltr">DHCPOFFER</code> و <code dir="ltr">DHCPACK</code>) قادمة منها لحماية المستخدمين من استلام أيبيهات وبوابات مزورة.</p>
+      </section>
+
+      <!-- ================= Dynamic ARP Inspection (DAI) ================= -->
+      <section class="cmd" id="dynamic-arp-inspection" dir="rtl">
+        <h3><span dir="ltr">ip arp inspection (DAI)</span> <small dir="ltr">ARP Spoofing / MitM Defense</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Switch(config)# & (config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>! 1. تفعيل فحص الـ ARP على الفيلان (يتطلب تفعيل DHCP Snooping مسبقاً)
+ip arp inspection vlan &lt;vlan-list&gt;
+
+! 2. تحديد المنفذ الصاعد كموثوق (Trusted)
+interface &lt;uplink-interface&gt;
+ ip arp inspection trust
+
+! 3. تفعيل التحقق الإضافي من ترويسات MAC و IP
+ip arp inspection validate src-mac dst-mac ip</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> هجوم تسميم الـ ARP (ARP Poisoning) يخدع الضحية ليظن أن جهاز المهاجم هو الراوتر (Default Gateway). خاصية DAI تفحص كل حزمة ARP تمر عبر منافذ المستخدمين؛ فإذا لم يتطابق الـ MAC والـ IP مع جدول الـ DHCP Snooping Binding Table، يتم إسقاط الحزمة وتسجيل محاولة الاختراق فوراً.</p>
+      </section>
+
+      <!-- ================= VLAN Hopping Defense ================= -->
+      <section class="cmd" id="vlan-hopping-defense" dir="rtl">
+        <h3><span dir="ltr">switchport nonegotiate</span> <small dir="ltr">VLAN Hopping Mitigation</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Switch(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>! 1. إغلاق بروتوكول DTP على منافذ المستخدمين لمنع Switch Spoofing
+interface range &lt;access-ports&gt;
+ switchport mode access
+ switchport nonegotiate
+
+! 2. حماية منافذ الـ Trunk من هجوم Double Tagging
+interface &lt;trunk-port&gt;
+ switchport mode trunk
+ switchport trunk native vlan 999</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> هجمات القفز بين الفيلانات (VLAN Hopping) تتم بطريقتين: إما انتحال السويتش (Switch Spoofing) باستغلال تفاوض DTP، ويتم إحباطه بأمر <code dir="ltr">switchport nonegotiate</code>. أو استغلال الفيلان الأصلية (Double Tagging)، ويتم إحباطه بتغيير الـ Native VLAN إلى رقم فيلان وهمية غير مستخدمة لأي أجهزة (مثل VLAN 999).</p>
+      </section>
+
+    </section>
+
+    <section id="verification">
+      <h2>أوامر التحقق والمراقبة</h2>
+
+      <section class="cmd" id="show-port-security" dir="rtl">
+        <h3><span dir="ltr">show port-security [interface]</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Switch#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>show port-security
+show port-security interface &lt;interface-id&gt;
+show port-security address</code></pre>
+        </div>
+        <p><strong>مثال للمخرجات:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Switch# </span>show port-security interface FastEthernet0/1
+Port Security              : Enabled
+Port Status                : Secure-up
+Violation Mode             : Restrict
+Aging Time                 : 0 mins
+Aging Type                 : Absolute
+SecureStatic Address Aging : Disabled
+Maximum MAC Addresses      : 2
+Total MAC Addresses        : 1
+Configured MAC Addresses   : 0
+Sticky MAC Addresses       : 1
+Last Source Address:Vlan   : 0050.7966.6801:10
+Security Violation Count   : 0</code></pre>
+        </div>
+      </section>
+
+      <section class="cmd" id="show-dhcp-snooping" dir="rtl">
+        <h3><span dir="ltr">show ip dhcp snooping [binding]</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Switch#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> التأكد من حالة الـ DHCP Snooping وعرض جدول الربط بين الأيبيهات والماك أدرس للمستخدمين.</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Switch# </span>show ip dhcp snooping binding
+MacAddress          IpAddress        Lease(sec)  Type           VLAN  Interface
+------------------  ---------------  ----------  -------------  ----  --------------------
+00:09:7C:AA:BB:CC   192.168.10.15    86400       dhcp-snooping  10    FastEthernet0/1</code></pre>
+        </div>
+      </section>
+
+      <section class="cmd" id="show-arp-inspection" dir="rtl">
+        <h3><span dir="ltr">show ip arp inspection</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Switch#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> يعرض عدد حزم الـ ARP المفحوصة، والحزم المسموح بها، والحزم المرفوضة والمحذوفة (Drops) بسبب عدم مطابقتها.</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Switch# </span>show ip arp inspection vlan 10
+Source Mac Validation      : Enabled
+Destination Mac Validation : Enabled
+IP Address Validation      : Enabled
+
+ Vlan     Configuration    Operation   ACL Match          DHCP Match         Drops
+ ----     -------------    ---------   ---------          ----------         -----
+   10     Enabled          Active              0                 250             4</code></pre>
+        </div>
+      </section>
+
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فحص الأعطال (Troubleshooting)</h2>
+      <ul>
+        <li><strong>المنفذ تحول إلى وضع err-disabled وتوقفت لمبته عن العمل:</strong>
+          <ol>
+            <li>افحص حالة المنفذ بأمر <code dir="ltr">show interfaces status err-disabled</code>.</li>
+            <li>إذا كان السبب <code dir="ltr">psecure-violation</code>، افحص الماك أدرس المتصل حالياً بالمنفذ؛ تم توصيل جهاز إضافي أو تغيير الجهاز المصرح له.</li>
+            <li>لإعادة التشغيل: افصل الجهاز المعتدي، ثم ادخل للمنفذ واكتب <code dir="ltr">shutdown</code> ثم <code dir="ltr">no shutdown</code>.</li>
+          </ol>
+        </li>
+        <li><strong>الأجهزة عاجزة عن سحب IP من الـ DHCP بعد تفعيل Snooping:</strong>
+          <ol>
+            <li>أشهر خطأ على الإطلاق: هل نسيت تحديد المنفذ الصاعد لسيرفر الـ DHCP كـ Trusted؟ ادخل للمنفذ واكتب <code dir="ltr">ip dhcp snooping trust</code>.</li>
+            <li>إذا كان السويتش من الطبقة الثانية بدون IP Routing، فإن إضافة الـ Option 82 تجعل الراوتر أو السيرفر يسقط الطلب! اكتب في السويتش: <code dir="ltr">no ip dhcp snooping information option</code>.</li>
+          </ol>
+        </li>
+        <li><strong>الأجهزة ذات الـ IP الثابت (Static IP) مقطوعة تماماً بسبب DAI:</strong>
+          <ol>
+            <li>خاصية DAI تعتمد على جدول DHCP Snooping، والأجهزة ذات العناوين الثابتة (مثل الطابعات أو السيرفرات) ليس لها سجل في هذا الجدول!</li>
+            <li>الحل: إنشاء <strong>ARP ACL</strong> خاصة وتطبيقها عبر أمر <code dir="ltr">ip arp inspection filter &lt;acl-name&gt; vlan &lt;vlan-id&gt;</code> لتوثيق الأيبيهات الثابتة يدوياً.</li>
+          </ol>
+        </li>
+      </ul>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li><strong>جدول مقارنة أوضاع Violation في Port Security:</strong>
+          <table style="margin-top: 10px;">
+            <thead>
+              <tr>
+                <th>الوضع (Mode)</th>
+                <th>حالة المنفذ (Port State)</th>
+                <th>إسقاط الترافيك (Drop Traffic)</th>
+                <th>تسجيل في السجلات (Syslog/Trap)</th>
+                <th>زيادة العداد (Violation Counter)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong dir="ltr">Shutdown</strong> (الافتراضي)</td>
+                <td><span style="color:#d9534f; font-weight:bold;">err-disabled</span> (يقفل تماماً)</td>
+                <td>نعم</td>
+                <td>نعم</td>
+                <td>نعم</td>
+              </tr>
+              <tr>
+                <td><strong dir="ltr">Restrict</strong></td>
+                <td>يعمل (Up)</td>
+                <td>نعم (حزم المهاجم فقط)</td>
+                <td>نعم</td>
+                <td>نعم</td>
+              </tr>
+              <tr>
+                <td><strong dir="ltr">Protect</strong></td>
+                <td>يعمل (Up)</td>
+                <td>نعم (حزم المهاجم فقط)</td>
+                <td><span style="color:#d9534f;">لا (صامت)</span></td>
+                <td><span style="color:#d9534f;">لا (صامت)</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </li>
+        <li><strong>أنواع الماك أدرس في Port Security:</strong>
+          <ul>
+            <li><strong>Static:</strong> تتم برمجته يدوياً بأمر <code dir="ltr">switchport port-security mac-address &lt;mac&gt;</code> ويحفظ في الـ Running-Config.</li>
+            <li><strong>Dynamic:</strong> يتعلمه السويتش ديناميكياً عند وصول أول إطار، ويخزن في الرام فقط ويختفي عند إعادة تشغيل السويتش.</li>
+            <li><strong>Sticky:</strong> يتعلمه السويتش ديناميكياً ثم يحوله فوراً إلى سطر في الـ Running-Config، فإذا حفظت الإعدادات (<code dir="ltr">write</code>) يبقى ثابتاً حتى بعد إعادة التشغيل.</li>
+          </ul>
+        </li>
+        <li><strong>ترتيب تفعيل التقنيات:</strong>
+          <p>لا يمكنك تفعيل <strong>Dynamic ARP Inspection (DAI)</strong> بنجاح بدون تفعيل <strong>DHCP Snooping</strong> أولاً، لأن DAI يعتمد كلياً على قاعدة بيانات الـ Snooping للتحقق من العناوين!</p>
+        </li>
+        <li><strong>فخ الـ Native VLAN في Trunk Ports:</strong>
+          <p>في هجوم الـ Double Tagging، يستغل المهاجم أن السويتش يرسل إطارات الـ Native VLAN بدون ترويسة 802.1Q (Untagged). لحل هذه الثغرة، يجب تغيير الـ Native VLAN لرقم غير مستخدم، أو كتابة الأمر الشامل: <code dir="ltr">vlan dot1q tag native</code> لإجبار السويتش على وضع Tag للـ Native VLAN أيضاً.</p>
+        </li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Command</th>
+            <th dir="ltr">Mode</th>
+            <th>الوظيفة (Purpose)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">switchport port-security</code></td>
+            <td dir="ltr">Interface config</td>
+            <td>تفعيل خاصية أمان المنفذ على واجهة Access.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">switchport port-security maximum &lt;n&gt;</code></td>
+            <td dir="ltr">Interface config</td>
+            <td>تحديد أقصى عدد من عناوين MAC المسموح بها على المنفذ.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">switchport port-security mac-address sticky</code></td>
+            <td dir="ltr">Interface config</td>
+            <td>التعلم التلقائي للماك أدرس وتثبيته في ملف الإعدادات.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">switchport port-security violation {mode}</code></td>
+            <td dir="ltr">Interface config</td>
+            <td>تحديد وضع التعامل مع المخالفات (Shutdown أو Restrict أو Protect).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ip dhcp snooping</code></td>
+            <td dir="ltr">Global config</td>
+            <td>تفعيل خاصية الحماية من سيرفرات الـ DHCP المزيفة على السويتش.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ip dhcp snooping vlan &lt;id&gt;</code></td>
+            <td dir="ltr">Global config</td>
+            <td>تحديد الفيلانات المحمية بتقنية الـ DHCP Snooping.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ip dhcp snooping trust</code></td>
+            <td dir="ltr">Interface config</td>
+            <td>تعيين المنفذ كمنفذ موثوق به لاستقبال رسائل خوادم الـ DHCP.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ip arp inspection vlan &lt;id&gt;</code></td>
+            <td dir="ltr">Global config</td>
+            <td>تفعيل فحص الـ ARP الديناميكي (DAI) لمنع هجمات التسميم.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ip arp inspection trust</code></td>
+            <td dir="ltr">Interface config</td>
+            <td>تعيين المنفذ كموثوق به لتمرير حزم الـ ARP بدون فحص.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show port-security interface &lt;int&gt;</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>عرض حالة أمان المنفذ وعدد الانتهاكات وعناوين MAC المسجلة.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show ip dhcp snooping binding</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>عرض جدول ربط الـ IP والـ MAC والمنافذ التي وزعها الـ DHCP.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="acls.html" class="nav-btn">« السابق: قوائم التحكم في الوصول (ACLs)</a>
+      <a href="aaa-hardening.html" class="nav-btn">التالي: نظام AAA وتقوية الأجهزة »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

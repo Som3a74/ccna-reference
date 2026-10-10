@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الإعداد المبدئي (Initial Setup) - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>الإعداد المبدئي (Initial Setup)</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>أول ما بتفتح راوتر أو سويتش جديد، فيه شوية أوامر أساسية بنعملها عشان نظبط اسم الجهاز، نمنعه من إنه يعلق بسبب أخطاء الكتابة، وننظم شكل الرسايل والوقت عليه عشان يسهل علينا إدارته بعدين.</p>
+    </section>
+
+    <section id="quick-config">
+      <h2>إعداد سريع (انسخ والصق)</h2>
+      <p>دي الأوامر المعتادة لأي جهاز جديد عشان تخليه جاهز ومريح في الشغل:</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>enable
+configure terminal
+hostname R1
+no ip domain-lookup
+service timestamps log datetime msec
+line con 0
+ logging synchronous
+ exec-timeout 15 0
+ exit
+banner motd #
+UNAUTHORIZED ACCESS IS PROHIBITED
+#
+end
+clock set 14:00:00 25 Oct 2026</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>الإعداد خطوة بخطوة</h2>
+
+      <!-- Command 1: hostname -->
+      <section class="cmd" id="hostname" dir="rtl">
+        <h3><span dir="ltr">hostname</span> <small dir="ltr">Global config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>hostname &lt;name&gt;</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">&lt;name&gt;</code> = اسم الجهاز الجديد (بدون مسافات).</li>
+        </ul>
+        <p><strong>الشرح:</strong> بيغير اسم الراوتر أو السويتش، وده مهم جداً عشان متتلخبطش وإنت فاتح أكتر من شاشة.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router(config)# </span>hostname R1
+<span class="prompt">R1(config)# </span></code></pre>
+        </div>
+      </section>
+
+      <!-- Command 2: no ip domain-lookup -->
+      <section class="cmd" id="no-ip-domain-lookup" dir="rtl">
+        <h3><span dir="ltr">no ip domain-lookup</span> <small dir="ltr">Global config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>no ip domain-lookup</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيلغي خاصية البحث عن العناوين عبر الـ <span dir="ltr">DNS</span> لو كتبت أمر غلط. من غيره، أي كلمة بتكتبها غلط الراوتر بيفتكرها اسم جهاز وبيحاول يتصل بيه وياخد 30 ثانية يعلق فيهم.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1(config)# </span>no ip domain-lookup</code></pre>
+        </div>
+      </section>
+
+      <!-- Command 3: banner -->
+      <section class="cmd" id="banner" dir="rtl">
+        <h3><span dir="ltr">banner motd</span> <small dir="ltr">Global config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>banner { motd | login | exec } &lt;delimiter&gt;
+  &lt;text&gt;
+&lt;delimiter&gt;</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">motd | login | exec</code> = نوع الرسالة. (<code dir="ltr">motd</code> رسالة اليوم، <code dir="ltr">login</code> بتظهر قبل الباسوورد، <code dir="ltr">exec</code> بتظهر بعد الدخول).</li>
+          <li><code dir="ltr">&lt;delimiter&gt;</code> = رمز بتستخدمه عشان تحدد بداية ونهاية الرسالة (زي <code dir="ltr">#</code> أو <code dir="ltr">%</code>).</li>
+          <li><code dir="ltr">&lt;text&gt;</code> = محتوى الرسالة التحذيرية.</li>
+        </ul>
+        <p><strong>الشرح:</strong> بيطبع رسالة ترحيب أو تحذير لأي حد يحاول يدخل على الجهاز. ضرورية جداً قانونياً للشركات (مثال: الدخول مسموح للمصرح لهم فقط).</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1(config)# </span>banner motd #
+Enter TEXT message.  End with the character '#'.
+WARNING: Authorized Access Only!
+#</code></pre>
+        </div>
+      </section>
+
+      <!-- Command 4: clock set -->
+      <section class="cmd" id="clock-set" dir="rtl">
+        <h3><span dir="ltr">clock set</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>clock set &lt;hh:mm:ss&gt; &lt;day&gt; &lt;month&gt; &lt;year&gt;</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">&lt;hh:mm:ss&gt;</code> = الوقت الحالي بالساعات والدقايق والثواني (نظام 24 ساعة).</li>
+          <li><code dir="ltr">&lt;day&gt; &lt;month&gt; &lt;year&gt;</code> = اليوم (رقم)، الشهر (كلمة إنجليزي، مثلاً <code dir="ltr">Oct</code>)، السنة (مثلاً <code dir="ltr">2026</code>).</li>
+        </ul>
+        <p><strong>الشرح:</strong> بيضبط وقت وتاريخ الراوتر الداخلي. مهم جداً عشان سجلات الأحداث (Logs) والشهادات الأمنية.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1# </span>clock set 14:30:00 25 Oct 2026</code></pre>
+        </div>
+        <p class="note"><strong>انتبه:</strong> الأمر ده بيتكتب في الـ Privileged EXEC (<code dir="ltr">#</code>) مش في الـ Config، وده استثناء من الأوامر اللي بتغير إعدادات الجهاز!</p>
+      </section>
+      
+      <!-- Command 5: service timestamps -->
+      <section class="cmd" id="service-timestamps" dir="rtl">
+        <h3><span dir="ltr">service timestamps</span> <small dir="ltr">Global config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>service timestamps { log | debug } datetime msec</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيخلي الراوتر يحط التاريخ والوقت (بالأجزاء من الثانية) على كل رسالة خطأ أو حدث (Log). لو معملتوش، الرسايل هتطبع بأرقام بتعبر عن الوقت اللي مر من ساعة ما الراوتر اشتغل (Uptime) وده مبيكونش مفيد في فحص الأعطال.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1(config)# </span>service timestamps log datetime msec
+<span class="prompt">R1(config)# </span>service timestamps debug datetime msec</code></pre>
+        </div>
+      </section>
+
+      <!-- Command 6: logging synchronous -->
+      <section class="cmd" id="logging-synchronous" dir="rtl">
+        <h3><span dir="ltr">logging synchronous</span> <small dir="ltr">Line config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-line)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>logging synchronous</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> أهم أمر لراحتك كمهندس. بيمنع إن رسائل الـ Logs تقطع الكلام اللي إنت بتكتبه. لو مفيش الأمر ده، وإنت بتكتب أي سطر والراوتر طلّع رسالة عن منفذ وقع، الرسالة هتدخل وسط كلامك وتلخبط الشاشة.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1(config)# </span>line con 0
+<span class="prompt">R1(config-line)# </span>logging synchronous</code></pre>
+        </div>
+      </section>
+
+      <!-- Command 7: exec-timeout -->
+      <section class="cmd" id="exec-timeout" dir="rtl">
+        <h3><span dir="ltr">exec-timeout</span> <small dir="ltr">Line config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-line)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>exec-timeout &lt;minutes&gt; &lt;seconds&gt;</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">&lt;minutes&gt;</code> = الدقايق.</li>
+          <li><code dir="ltr">&lt;seconds&gt;</code> = الثواني.</li>
+        </ul>
+        <p><strong>الشرح:</strong> بيحدد امتى الراوتر يطردك من الجلسة (Session) لو مكتبتش أي حاجة (Idle timeout). الافتراضي بيكون 10 دقايق. لو كتبته <code dir="ltr">0 0</code> معناه مستحيل يطردك (تُستخدم في اللاب بس، وخطر جداً في الحقيقة).</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1(config)# </span>line con 0
+<span class="prompt">R1(config-line)# </span>exec-timeout 15 0</code></pre>
+        </div>
+        <p>شرح المثال بالعربي: خلينا المهلة 15 دقيقة وصفر ثانية.</p>
+      </section>
+
+      <!-- Command 8: description -->
+      <section class="cmd" id="description" dir="rtl">
+        <h3><span dir="ltr">description</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>description &lt;text&gt;</code></pre>
+        </div>
+        <p><strong>إيه اللي بنحطه مكان القيم:</strong></p>
+        <ul>
+          <li><code dir="ltr">&lt;text&gt;</code> = وصف للمنفذ بيشرح هو واصل بإيه.</li>
+        </ul>
+        <p><strong>الشرح:</strong> بيكتب ملاحظة على الـ Interface بتفضل موجودة في الإعدادات، مفيدة جداً وقت فحص الأعطال عشان تعرف الكابل ده رايح فين بدل ما تمشي وراه.</p>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1(config)# </span>interface g0/0
+<span class="prompt">R1(config-if)# </span>description Link to SW1-Core</code></pre>
+        </div>
+        <p><strong>للتأكد:</strong> <code dir="ltr">show interfaces description</code></p>
+      </section>
+    </section>
+
+    <section id="verification">
+      <h2>أوامر التحقق</h2>
+
+      <h3>1. <span dir="ltr">show clock</span></h3>
+      <p>بيوريك الوقت الحالي المتسجل على الجهاز.</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code><span class="prompt">R1# </span>show clock
+*14:35:12.125 UTC Sun Oct 25 2026</code></pre>
+      </div>
+      
+      <h3>2. <span dir="ltr">show interfaces description</span></h3>
+      <p>بيعرض كل المنافذ والوصف المكتوب عليها وحالتها.</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code><span class="prompt">R1# </span>show interfaces description
+Interface                      Status         Protocol Description
+Gi0/0                          up             up       Link to SW1-Core
+Gi0/1                          admin down     down     </code></pre>
+      </div>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>مواقف متكررة وفحص الأعطال</h2>
+      <ul>
+        <li><strong>ليه الراوتر بيعلق لما أغلط في كتابة أمر؟</strong><br>لأن أمر <code dir="ltr">no ip domain-lookup</code> مش مكتوب. الراوتر بيفترض إنك كتبت اسم دومين وبيحاول يكلم الـ DNS. عشان تلغي التعليقة دي فوراً، اضغط <code dir="ltr">Ctrl + Shift + 6</code>.</li>
+        <li><strong>ليه وإنت بتكتب أمر تلاقي رسالة نطت بوظت السطر؟</strong><br>لأنك مكتبتش <code dir="ltr">logging synchronous</code> جوة إعدادات الكونسول أو الـ VTY.</li>
+        <li><strong>الـ Banner مش راضي يقفل ويحفظ الكلام؟</strong><br>لأنك مأنهيتش الرسالة بنفس الرمز (<span dir="ltr">delimiter</span>) اللي بدأتها بيه (مثال: لازم تكتب <code dir="ltr">#</code> في آخر سطر لو بدأت بـ <code dir="ltr">#</code>).</li>
+      </ul>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li>أمر <code dir="ltr">clock set</code> هو أمر <span dir="ltr">Privileged EXEC</span> مش أمر <span dir="ltr">Global Config</span>. متكتبوش جوة <code dir="ltr">(config)#</code> وإلا هتاخد <code dir="ltr">Invalid input</code>.</li>
+        <li>أمر <code dir="ltr">exec-timeout 0 0</code> بيتلغي بيه وقت الطرد، ده غلط كبير تعمله في شبكة حقيقية لأن لو قمت من على الكرسي أي حد يقدر يفتح الشاشة بعدك، ده بس عشان راحتك وإنت بتذاكر في اللاب.</li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Command</th>
+            <th>الوظيفة (Purpose)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">hostname &lt;name&gt;</code></td>
+            <td>تغيير اسم الجهاز.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">no ip domain-lookup</code></td>
+            <td>منع البحث في الـ DNS عند كتابة أمر خاطئ.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">banner motd #</code></td>
+            <td>وضع رسالة تحذيرية قبل الدخول.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">clock set hh:mm:ss dd MMM YYYY</code></td>
+            <td>ضبط ساعة الجهاز يدوياً.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">service timestamps log datetime msec</code></td>
+            <td>وضع وقت دقيق جداً على كل حدث أو Log.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">logging synchronous</code></td>
+            <td>منع تداخل رسائل الجهاز مع كتابتك.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">exec-timeout &lt;min&gt; &lt;sec&gt;</code></td>
+            <td>التحكم في وقت فصل الجلسة عند الخمول.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">description &lt;text&gt;</code></td>
+            <td>كتابة وصف لأي منفذ (Interface).</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="cli-modes.html" class="nav-btn">« السابق: أوضاع CLI</a>
+      <a href="file-management.html" class="nav-btn">التالي: إدارة الملفات »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

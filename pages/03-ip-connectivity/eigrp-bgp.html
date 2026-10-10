@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EIGRP & BGP - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>بروتوكولات التوجيه (EIGRP & BGP)</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>
+        <span class="badge" style="background-color: #e74c3c; padding: 3px 8px; border-radius: 4px; font-weight: bold; margin-bottom: 10px; display: inline-block;">ملاحظة هامة (Out of Blueprint Scope)</span><br>
+        في المنهج الرسمي الحالي لـ CCNA 200-301، <strong>تم إلغاء أسئلة إعداد (Configuration)</strong> الخاصة بـ EIGRP و BGP تماماً. المطلوب منك فقط هو معرفة المفاهيم العامة والـ Administrative Distance الخاصة بهم. هذه الصفحة تعتبر مرجع إضافي (Bonus) للعملي ولمن يريد التوسع.
+      </p>
+      <p>بروتوكول <span dir="ltr">EIGRP</span> هو بروتوكول توجيه متقدم خاص بسيسكو بيعتمد على سرعة الكابل والتأخير. و <span dir="ltr">BGP</span> هو بروتوكول الإنترنت الخارجي اللي بيربط الشركات بمزودي الخدمة (ISPs).</p>
+    </section>
+
+    <section id="quick-config">
+      <h2>إعداد سريع (انسخ والصق)</h2>
+      <p>إعداد EIGRP وإعداد eBGP لربط فرعين:</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>! إعداد EIGRP رقم 100
+router eigrp 100
+ network 10.1.1.0 0.0.0.3
+ network 192.168.1.0 0.0.0.255
+ no auto-summary
+
+! إعداد BGP رقم 65000 للربط مع مزود الخدمة 65001
+router bgp 65000
+ neighbor 200.1.1.2 remote-as 65001
+ network 192.168.1.0 mask 255.255.255.0</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>الإعداد خطوة بخطوة</h2>
+
+      <!-- EIGRP -->
+      <section class="cmd" id="router-eigrp" dir="rtl">
+        <h3><span dir="ltr">router eigrp</span> <small dir="ltr">Global config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>router eigrp &lt;AS-number&gt;
+ network &lt;network-ip&gt; &lt;wildcard-mask&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> رقم الـ <code dir="ltr">AS</code> في EIGRP <strong>لازم</strong> يكون متطابق على كل الروترات اللي عايزها تكلم بعض (عكس الـ OSPF Process ID). أمر الـ <code dir="ltr">network</code> بيشتغل بالـ Wildcard Mask وبيشغل البروتوكول على الفتحات اللي تقع داخل هذا الـ IP.</p>
+      </section>
+
+      <!-- BGP -->
+      <section class="cmd" id="router-bgp" dir="rtl">
+        <h3><span dir="ltr">router bgp</span> <small dir="ltr">Global config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>router bgp &lt;local-AS-number&gt;
+ neighbor &lt;neighbor-ip&gt; remote-as &lt;remote-AS-number&gt;
+ network &lt;network-ip&gt; mask &lt;subnet-mask&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> الـ BGP بروتوكول مختلف تماماً. رقم الـ AS بيمثل شركتك ككل على الإنترنت. 
+        لازم تحدد الجار بتاعك صراحة بأمر <code dir="ltr">neighbor</code> وتقول هو في أي AS.
+        وأمر <code dir="ltr">network</code> هنا مش بيشغل البروتوكول على فتحات! ده مجرد إعلان، بياخد شبكة <strong>موجودة فعلياً</strong> في جدول التوجيه بتاعك وينشرها للجار. <strong>ولازم</strong> يستخدم Subnet Mask (مش Wildcard) وبكلمة <code dir="ltr">mask</code> صريحة.</p>
+      </section>
+
+    </section>
+
+    <section id="verification">
+      <h2>أوامر التحقق</h2>
+
+      <section class="cmd" id="show-ip-bgp-summary" dir="rtl">
+        <h3><span dir="ltr">show ip bgp summary</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> أهم أمر في الـ BGP لمعرفة إذا كان الراوتر نجح يتصل بجاره ولا لأ.</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1# </span>show ip bgp summary
+BGP router identifier 10.1.1.1, local AS number 65000
+BGP table version is 2, main routing table version 2
+
+Neighbor        V           AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
+200.1.1.2       4        65001      15      15        2    0    0 00:10:35 1</code></pre>
+        </div>
+        <p><strong>إزاي تقرا الجدول:</strong> أهم عمود هو الأخير <code dir="ltr">State/PfxRcd</code>. لو لقيت مكتوب فيه <strong>رقم</strong> (زي 1 أو 0 أو 5)، ده معناه إن الاتصال تم بنجاح والرقم ده هو عدد الشبكات اللي استلمتها من الجار. لو لقيت كلمة زي <code dir="ltr">Idle</code> أو <code dir="ltr">Active</code> يبقى الاتصال واقع وفيه مشكلة!</p>
+      </section>
+
+      <section class="cmd" id="show-ip-eigrp-neighbors" dir="rtl">
+        <h3><span dir="ltr">show ip eigrp neighbors</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> بيعرض جيران الـ EIGRP المتصلين بيك حالياً.</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">R1# </span>show ip eigrp neighbors
+EIGRP-IPv4 Neighbors for AS(100)
+H   Address                 Interface       Hold Uptime   SRTT   RTO  Q  Seq
+                                            (sec)         (ms)       Cnt Num
+0   10.1.1.2                Gi0/0             12 00:45:10   40   240  0  5</code></pre>
+        </div>
+      </section>
+
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فحص الأعطال (Troubleshooting)</h2>
+      <ul>
+        <li><strong>BGP State is Active:</strong> الكلمة دي خادعة! <code dir="ltr">Active</code> في الـ BGP معناها إنه "بيحاول بنشاط" يفتح اتصال بس بيفشل (عكس الـ HSRP). المشكلة غالباً إن الـ IP بتاع الجار مكتوب غلط، أو إن البورت رقم 179 (TCP) مقفول بـ ACL.</li>
+        <li><strong>EIGRP AS Mismatch:</strong> لو راوتر اتعمل بـ <code dir="ltr">eigrp 100</code> والتاني <code dir="ltr">eigrp 200</code> مستحيل يشوفوا بعض.</li>
+        <li><strong>BGP Network Mismatch:</strong> لو أمر <code dir="ltr">network</code> في الـ BGP مكتوب فيه ماسك مختلف عن الموجود في جدول التوجيه بحرف واحد، الشبكة مش هتتنشر. لازم تطابق تام! (Exact Match).</li>
+      </ul>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li><strong>Wildcard vs Subnet Mask:</strong> الـ OSPF والـ EIGRP بيستخدموا Wildcard mask. الـ BGP بيستخدم Subnet mask ولازم تكتب كلمة <code dir="ltr">mask</code> قبلها.</li>
+        <li><strong>AD Values:</strong> تذكر أن الـ AD للـ EIGRP الداخلي هو 90، وللـ eBGP هو 20.</li>
+        <li><strong>وظيفة أمر Network:</strong> في EIGRP و OSPF، الأمر ده بيبحث عن الفتحات اللي الـ IP بتاعها يطابق، ويبدأ يبعت عليها رسائل Hello. في الـ BGP الأمر ملوش دعوة بالفتحات إطلاقاً، هو فقط بياخد الشبكة من الـ Routing Table ويحطها في الـ BGP Table.</li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Command</th>
+            <th>الوظيفة (Purpose)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">router eigrp &lt;as&gt;</code></td>
+            <td>تفعيل EIGRP. (رقم الـ AS يجب أن يتطابق).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">router bgp &lt;as&gt;</code></td>
+            <td>تفعيل BGP.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">neighbor &lt;ip&gt; remote-as &lt;as&gt;</code></td>
+            <td>تحديد جار الـ BGP ورقم الـ AS الخاص به.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">network &lt;net&gt; mask &lt;mask&gt;</code></td>
+            <td>نشر شبكة في الـ BGP (يتطلب تطابق تام مع جدول التوجيه).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show ip bgp summary</code></td>
+            <td>عرض حالة اتصال الـ BGP (تأكد من وجود رقم في العمود الأخير).</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="fhrp.html" class="nav-btn">« السابق: بروتوكولات FHRP</a>
+      <a href="../04-ip-services/dhcp-dns.html" class="nav-btn">التالي: خدمات DHCP & DNS »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

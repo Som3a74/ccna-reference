@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QoS & File Transfer Services - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>جودة الخدمة (QoS) ونقل الملفات (FTP/TFTP)</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>في شبكات المؤسسات، تتشارك البيانات وحركة الصوت (Voice) والفيديو (Video) نفس المسارات. لمنع تقطع المكالمات أو تأخر البيانات الحساسة، نعتمد على هندسة <strong>QoS (Quality of Service)</strong>:</p>
+      <ul>
+        <li><strong>أهداف الـ QoS:</strong> التحكم في أربعة تحديات رئيسية: سعة القناة (Bandwidth)، التأخير (Delay / Latency)، تفاوت التأخير (Jitter)، ونسبة الفقد (Packet Loss). حركة الصوت (Voice) تتطلب تأخير أقل من 150ms، وتفاوت (Jitter) أقل من 30ms، وفقد أقل من 1%.</li>
+        <li><strong>نماذج الـ QoS:</strong> نموذج <strong>Best-Effort</strong> (الافتراضي بدون أي تمييز)، ونموذج <strong>IntServ</strong> (حجز مسبق عبر RSVP وغير عملي في الشبكات الكبيرة)، ونموذج <strong>DiffServ</strong> (النموذج المعتمد عملياً، يعتمد على تصنيف الحزم وتمييزها عند حدود الثقة Trust Boundary ثم تطبيق سلوك المعاملة في كل قفزة Per-Hop Behavior).</li>
+        <li><strong>مستويات التمييز (Marking):</strong> في الطبقة الثانية CoS (3 بت في ترويسة 802.1Q). وفي الطبقة الثالثة DSCP (6 بت في حقل ToS في IPv4 تعطي 64 قيمة). أشهر قيم DSCP للامتحان: <strong>EF (Expedited Forwarding - DSCP 46)</strong> لحركة الصوت ذات الأولوية القصوى، و <strong>AF (Assured Forwarding)</strong> بأنواعه، و <strong>CS (Class Selector)</strong> المتوافق مع IP Precedence القديم.</li>
+        <li><strong>آليات المعالجة:</strong> الطوابير (Queuing) مثل LLQ و CBWFQ، وتفادي الازدحام (WRED)، والتحكم في المعدل (Policing يقطع الزيادة، بينما Shaping يخزن الزيادة لتنعيم التدفق).</li>
+        <li><strong>بروتوكولات نقل الملفات (File Transfer):</strong> لإدارة نسخ الـ IOS والـ Config: بروتوكول <strong>TFTP (UDP 69)</strong> البسيط بدون مصادقة، وبروتوكول <strong>FTP (TCP 20/21)</strong> بمصادقة اسم مستخدم، وبروتوكول <strong>SFTP (TCP 22)</strong> المشفر عبر SSH.</li>
+      </ul>
+    </section>
+
+    <section id="quick-config">
+      <h2>إعداد سريع (انسخ والصق)</h2>
+      <p>تطبيق نموذج MQC (Modular QoS CLI) لإعطاء أولوية مطلقة لحركة الصوت (Voice EF)، وتحديد سرعة التحميل، مع إعداد نقل الملفات عبر TFTP و FTP:</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>! 1. الخطوة الأولى: تصنيف الحزم (Class-Map)
+class-map match-any VOICE-TRAFFIC
+ match ip dscp ef
+ match protocol rtp audio
+
+class-map match-any MISSION-CRITICAL
+ match ip dscp af31 af32
+
+! 2. الخطوة الثانية: تطبيق السياسات وسلوك الطوابير (Policy-Map)
+policy-map WAN-EDGE-QOS
+ class VOICE-TRAFFIC
+  priority percent 30
+ class MISSION-CRITICAL
+  bandwidth percent 40
+ class class-default
+  fair-queue
+
+! 3. الخطوة الثالثة: تطبيق السياسة على المنفذ (Service-Policy)
+interface GigabitEthernet0/1
+ service-policy output WAN-EDGE-QOS
+
+! 4. إعدادات حساب FTP لنقل ملفات النظام
+ip ftp username backup_user
+ip ftp password CiscoPass123!
+ip tftp source-interface GigabitEthernet0/0</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>الإعداد خطوة بخطوة</h2>
+
+      <!-- ================= MQC Step 1: Class-Map ================= -->
+      <section class="cmd" id="class-map" dir="rtl">
+        <h3><span dir="ltr">class-map</span> <small dir="ltr">MQC Step 1: Traffic Classification</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>class-map [match-all | match-any] &lt;class-map-name&gt;
+ match ip dscp &lt;dscp-value&gt;
+ match access-group &lt;acl-number-or-name&gt;
+ match protocol &lt;protocol-name&gt;</code></pre>
+        </div>
+        <p><strong>الفرق بين match-all و match-any:</strong></p>
+        <ul>
+          <li><code dir="ltr">match-any</code>: الحزمة تعتبر مطابقة لو حققت <strong>أي شرط واحد</strong> من الشروط المكتوبة (مثل بوابة OR).</li>
+          <li><code dir="ltr">match-all</code>: الحزمة لازم تحقق <strong>كل الشروط المكتوبة معاً</strong> (الوضع الافتراضي، مثل بوابة AND).</li>
+        </ul>
+        <p><strong>الشرح:</strong> الخطوة الأولى في هيكلية MQC هي تعريف أنواع الترافيك اللي عايز تطبق عليها قواعد معينة، سواء بمطابقة قيمة DSCP، أو بواسطة Access-List، أو بنوع البروتوكول عبر NBAR.</p>
+      </section>
+
+      <!-- ================= MQC Step 2: Policy-Map ================= -->
+      <section class="cmd" id="policy-map" dir="rtl">
+        <h3><span dir="ltr">policy-map</span> <small dir="ltr">MQC Step 2: Action & Queuing</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>policy-map &lt;policy-map-name&gt;
+ class &lt;class-map-name&gt;
+  priority {bandwidth-kbps | percent &lt;percentage&gt;}
+  bandwidth {bandwidth-kbps | percent &lt;percentage&gt;}
+  police &lt;cir-bps&gt; [conform-action transmit] [exceed-action drop]
+  shape average &lt;cir-bps&gt;
+  set ip dscp &lt;dscp-value&gt;</code></pre>
+        </div>
+        <p><strong>الأوامر المهمة داخل الـ Policy-Map:</strong></p>
+        <ul>
+          <li><code dir="ltr">priority</code>: تفعيل طابور الأولوية المطلقة (Strict Priority Queue / LLQ) المخصص للصوت.</li>
+          <li><code dir="ltr">bandwidth</code>: ضمان حد أدنى من سرعة الخط لفئة معينة (CBWFQ) في أوقات الازدحام.</li>
+          <li><code dir="ltr">set ip dscp</code>: تمييز الحزم وتغيير قيمة الـ DSCP (Marking).</li>
+          <li><code dir="ltr">police</code>: تحديد السرعة بالقص الفوري للزيادة (Policing).</li>
+          <li><code dir="ltr">shape average</code>: تحديد السرعة بتأخير وتخزين الزيادة لتنعيم التدفق (Shaping).</li>
+        </ul>
+      </section>
+
+      <!-- ================= MQC Step 3: Service-Policy ================= -->
+      <section class="cmd" id="service-policy" dir="rtl">
+        <h3><span dir="ltr">service-policy</span> <small dir="ltr">MQC Step 3: Interface Application</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>interface &lt;interface-id&gt;
+ service-policy {input | output} &lt;policy-map-name&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> الخطوة الأخيرة لتفعيل خطة الـ QoS بربطها بمنفذ الراوتر أو السويتش. اختر <code dir="ltr">output</code> للترافيك الخارج من الراوتر للـ WAN (وهو الأكثر استخداماً للطوابير والـ Shaping)، أو <code dir="ltr">input</code> للترافيك القادم من الشبكة الداخلية عند تطبيق الـ Classification والـ Policing.</p>
+      </section>
+
+      <!-- ================= QoS Trust Boundary ================= -->
+      <section class="cmd" id="mls-qos-trust" dir="rtl">
+        <h3><span dir="ltr">mls qos trust</span> <small dir="ltr">Switch Trust Boundary</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Switch(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>interface &lt;interface-id&gt;
+ mls qos trust {cos | dscp | device cisco-phone}</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> حدود الثقة (Trust Boundary). افتراضياً السويتش لا يثق في العلامات القادمة من أجهزة الكمبيوتر ويعيد ضبط الـ CoS/DSCP إلى 0. عند توصيل تليفون آي بي (IP Phone)، نستخدم <code dir="ltr">mls qos trust device cisco-phone</code> ليثق السويتش في ترافيك التليفون بينما يعيد تصفير ترافيك الكمبيوتر المتصل خلف التليفون.</p>
+      </section>
+
+      <!-- ================= File Transfer Commands ================= -->
+      <section class="cmd" id="copy-tftp" dir="rtl">
+        <h3><span dir="ltr">copy ... tftp: / flash:</span> <small dir="ltr">TFTP Backup & Restore</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>! أخذ نسخة احتياطية من ملف الإعدادات إلى سيرفر TFTP
+copy running-config tftp:
+
+! تحميل نسخة نظام تشغيل IOS من سيرفر TFTP إلى ذاكرة الفلاش
+copy tftp: flash:</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بروتوكول TFTP يعمل على منفذ UDP 69 بدون كلمة مرور ولا تشفير. يتم استخدامه بكثرة في معامل الـ CCNA وسيسكو لسهولته وسرعته في نقل نسخ الـ IOS والـ Config.</p>
+      </section>
+
+      <section class="cmd" id="copy-ftp" dir="rtl">
+        <h3><span dir="ltr">copy ... ftp: / flash:</span> <small dir="ltr">FTP Operations</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>! إعداد اسم المستخدم وكلمة المرور الافتراضية للـ FTP في وضع الكونفيج
+ip ftp username &lt;username&gt;
+ip ftp password &lt;password&gt;
+
+! النقل من أو إلى سيرفر الـ FTP
+copy running-config ftp:
+copy ftp: flash:</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بروتوكول FTP يعمل عبر TCP (المنفذ 21 لقناة الأوامر والتحكم Control، والمنفذ 20 لقناة نقل البيانات Data). يتطلب تسجيل دخول باسم مستخدم وكلمة مرور، لكنه غير مشفر.</p>
+      </section>
+
+      <section class="cmd" id="ip-tftp-ftp-source" dir="rtl">
+        <h3><span dir="ltr">ip tftp / ftp source-interface</span> <small dir="ltr">Source Interface Selection</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ip tftp source-interface &lt;interface&gt;
+ip ftp source-interface &lt;interface&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> تحديد المنفذ الفيزيائي أو المنطقي (مثل Loopback0) الذي سيتم استخدامه كـ Source IP عند الاتصال بسيرفر الـ TFTP أو الـ FTP لتفادي مشاكل الحماية وتوجيه المسارات.</p>
+      </section>
+
+    </section>
+
+    <section id="verification">
+      <h2>أوامر التحقق والمراقبة</h2>
+
+      <section class="cmd" id="show-policy-map-interface" dir="rtl">
+        <h3><span dir="ltr">show policy-map interface</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> أهم أمر لمراقبة الـ QoS على الإطلاق. يعرض إحصائيات كل Class، وعدد الباكتات المطابقة، والباكتات التي أُسقطت (Drops)، ونشاط طابور الـ Priority.</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>show policy-map interface GigabitEthernet0/1
+ GigabitEthernet0/1 
+
+  Service-policy output: WAN-EDGE-QOS
+
+    Class-map: VOICE-TRAFFIC (match-any)
+      14502 packets, 928128 bytes
+      5 minute offered rate 48000 bps, drop rate 0000 bps
+      Match: ip dscp ef (46)
+      Priority: Strict Priority, bandwidth 30%
+        output queue: Conversation 264
+        transmitted 14502 packets, 928128 bytes, 0 drops
+
+    Class-map: MISSION-CRITICAL (match-any)
+      8520 packets, 5452800 bytes
+      5 minute offered rate 120000 bps, drop rate 0000 bps
+      Match: ip dscp af31 (26) af32 (28)
+      Queueing
+        Output Queue: Conversation 265
+        Bandwidth 40% (400 kbps)
+        (pkts matched/bytes matched) 8520/5452800
+        (depth/total drops/no-buffer drops) 0/0/0
+
+    Class-map: class-default (match-any)
+      25100 packets, 18240000 bytes
+      Match: any
+      queue-limit 64 packets
+      (total drops) 12</code></pre>
+        </div>
+      </section>
+
+      <section class="cmd" id="show-class-policy-map" dir="rtl">
+        <h3><span dir="ltr">show class-map & show policy-map</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>show class-map
+show policy-map</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> استعراض تعريفات الـ Classes وشروط التطابق المحددة، وهيكل السياسات المبرمجة بالكامل في الذاكرة.</p>
+      </section>
+
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فحص الأعطال (Troubleshooting)</h2>
+      <ul>
+        <li><strong>تقطع في مكالمات الـ VoIP وسقوط حزم الصوت:</strong>
+          <ol>
+            <li>تأكد من تطبيق <strong>Strict Priority (LLQ)</strong> لحركة الصوت (<code dir="ltr">priority</code>) وليس مجرد <code dir="ltr">bandwidth</code> عادي.</li>
+            <li>تأكد من عدم تجاوز حركة الصوت للـ Bandwidth المحدد لها في الـ Priority Queue؛ لأن الترافيك الزائد عن حد الـ Priority يتم إسقاطه لتفادي حرمان باقي الترافيك (Starvation).</li>
+            <li>تأكد من مطابقة قيمة DSCP الصحيحة (EF = 46) ومن عدم وجود سويتش غير موثوق به في المسار يقوم بتصفير الـ DSCP إلى 0.</li>
+          </ol>
+        </li>
+        <li><strong>الـ Policy-Map لا تطابق أي حزم (0 packets matched):</strong>
+          <ol>
+            <li>افحص المنفذ المطبق عليه: هل السياسة مطبقة <code dir="ltr">input</code> والترافيك خارج <code dir="ltr">output</code>؟</li>
+            <li>افحص شروط الـ Class-Map: إذا كانت <code dir="ltr">match-all</code> فقد تكون الحزم تحقق شرطاً دون الآخر. حولها إلى <code dir="ltr">match-any</code> إن أردت مطابقة أي شرط.</li>
+            <li>إذا كنت تطابق باستخدام Access List، تأكد من وجود <code dir="ltr">permit</code> للترافيك المستهدف داخل الـ ACL.</li>
+          </ol>
+        </li>
+        <li><strong>فشل نقل الملفات عبر TFTP أو FTP:</strong>
+          <ol>
+            <li>تأكد من وصول البينج (Ping) لسيرفر الملفات ومن عدم حظر المنافذ: <strong>UDP 69</strong> للـ TFTP و <strong>TCP 20/21</strong> للـ FTP.</li>
+            <li>إذا كان الراوتر يرسل من منفذ غير متوقع، حدد المنفذ باستخدام <code dir="ltr">ip tftp source-interface</code>.</li>
+            <li>في بروتوكول FTP، تأكد من صحة اسم المستخدم وكلمة المرور المحددين عبر <code dir="ltr">ip ftp username</code>.</li>
+          </ol>
+        </li>
+      </ul>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li><strong>الفرق الجوهري بين الـ Policing والـ Shaping للامتحان:</strong>
+          <table style="margin-top: 10px;">
+            <thead>
+              <tr>
+                <th>الخاصية</th>
+                <th dir="ltr">Traffic Policing</th>
+                <th dir="ltr">Traffic Shaping</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>معالجة الترافيك الزائد</strong></td>
+                <td>إسقاط فوري (Drop) أو إعادة تمييز (Remark).</td>
+                <td>تخزين مؤقت في طابور (Buffer / Delay).</td>
+              </tr>
+              <tr>
+                <td><strong>شكل موجة التدفق</strong></td>
+                <td>مسننة غير منتظمة (Sawtooth profile).</td>
+                <td>ناعمة ومستمرة (Smooth profile).</td>
+              </tr>
+              <tr>
+                <td><strong>الاتجاهات المدعومة</strong></td>
+                <td>متاح في الدخول والخروج (Inbound & Outbound).</td>
+                <td>متاح في الخروج فقط (Outbound ONLY).</td>
+              </tr>
+            </tbody>
+          </table>
+        </li>
+        <li><strong>فئات وقيم DSCP الأساسية للامتحان:</strong>
+          <ul>
+            <li><strong>Default:</strong> DSCP 0 (Best Effort).</li>
+            <li><strong>EF (Expedited Forwarding):</strong> DSCP 46 (بالنظام الثنائي: 101110) - مخصص لحزم الصوت Voice Payload.</li>
+            <li><strong>AF (Assured Forwarding):</strong> مقسم إلى 4 فئات (Classes 1-4) و 3 مستويات لاحتمالية الإسقاط (Drop Precedence 1-3). مثلاً:
+              <ul>
+                <li><code dir="ltr">AF31</code>: الفئة 3، احتمالية إسقاط منخفضة (Lowest Drop).</li>
+                <li><code dir="ltr">AF33</code>: الفئة 3، احتمالية إسقاط مرتفعة جداً (Highest Drop).</li>
+              </ul>
+            </li>
+            <li><strong>CS (Class Selector):</strong> القيم من CS0 إلى CS7، حيث CS = IP Precedence * 8.</li>
+          </ul>
+        </li>
+        <li><strong>معادلة وجدول قيم AF (Assured Forwarding) للامتحان:</strong>
+          <p>لحساب القيمة العشرية لأي رمز <code dir="ltr">AFxy</code> (حيث <code dir="ltr">x</code> رقم الفئة من 1 إلى 4، و <code dir="ltr">y</code> احتمالية الإسقاط من 1 إلى 3)، استخدم المعادلة البسيطة:</p>
+          <div class="code" dir="ltr">
+            <pre><code>DSCP Decimal = (8 * x) + (2 * y)</code></pre>
+          </div>
+          <p><strong>مثال:</strong> قيمة <code dir="ltr">AF32</code> = (8 * 3) + (2 * 2) = 24 + 4 = <strong>28</strong>.</p>
+        </li>
+        <li><strong>ظاهرة TCP Global Synchronization مقابل WRED:</strong>
+          <ul>
+            <li><strong>Tail Drop (الوضع العادي بدون QoS):</strong> عند امتلاء الطابور تسقط جميع الحزم لجميع الاتصالات، مما يدفع كل جلسات TCP لتخفيض نافذة الإرسال (Window Size) في نفس اللحظة بالتزامن، فيفرغ الخط فجأة ثم يمتلئ فجأة بموجات متكررة.</li>
+            <li><strong>WRED (Weighted Random Early Detection):</strong> يسقط حزم عشوائية من جلسات منفردة قبل امتلاء الطابور بناءً على علامة الـ DSCP، مما يجبر بعض الاتصالات فقط على التهدئة ويمنع حدوث التزامن الكارثي للـ TCP.</li>
+          </ul>
+        </li>
+        <li><strong>بروتوكولات نقل الملفات ومنافذها:</strong>
+          <ul>
+            <li>TFTP: <strong>UDP Port 69</strong> (بسيط، بدون مصادقة، غير مشفر).</li>
+            <li>FTP Control: <strong>TCP Port 21</strong> (مصادقة مستخدم وأوامر التحكم).</li>
+            <li>FTP Data: <strong>TCP Port 20</strong> (نقل البيانات في الوضع النشط Active FTP).</li>
+            <li>SFTP: <strong>TCP Port 22</strong> (مشفر بالكامل ومحمي عبر نفق SSH).</li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Command</th>
+            <th dir="ltr">Mode</th>
+            <th>الوظيفة (Purpose)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">class-map [match-any | match-all] &lt;name&gt;</code></td>
+            <td dir="ltr">Global config</td>
+            <td>تعريف فئة تصنيف للترافيك في نموذج MQC.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">match ip dscp &lt;value&gt;</code></td>
+            <td dir="ltr">Class-map config</td>
+            <td>مطابقة الحزم بناءً على علامة الـ DSCP (مثل ef أو af31).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">policy-map &lt;name&gt;</code></td>
+            <td dir="ltr">Global config</td>
+            <td>إنشاء خطة سياسات لتحديد الإجراءات وسلوك الطوابير لكل فئة.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">priority {bandwidth | percent}</code></td>
+            <td dir="ltr">Policy-map class config</td>
+            <td>منح الفئة طابور أولوية مطلقة ذو كمون منخفض (LLQ) لحركة الصوت.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">bandwidth {bandwidth | percent}</code></td>
+            <td dir="ltr">Policy-map class config</td>
+            <td>ضمان حد أدنى من سرعة الخط للفئة في أوقات الازدحام (CBWFQ).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">service-policy {input | output} &lt;name&gt;</code></td>
+            <td dir="ltr">Interface config</td>
+            <td>تطبيق سياسة الـ QoS على منفذ الراوتر أو السويتش.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show policy-map interface &lt;int&gt;</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>عرض إحصائيات مطابقة الحزم ومعدل الإسقاط ونشاط الطوابير.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">copy running-config tftp:</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>أخذ نسخة احتياطية من الإعدادات إلى سيرفر TFTP (UDP 69).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">copy tftp: flash:</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>تحميل ملف نظام تشغيل من سيرفر TFTP لذاكرة الفلاش.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ip ftp username &lt;user&gt;</code></td>
+            <td dir="ltr">Global config</td>
+            <td>تحديد اسم المستخدم الافتراضي لعمليات الـ FTP (TCP 20/21).</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="ntp-syslog-snmp.html" class="nav-btn">« السابق: بروتوكولات NTP, Syslog, SNMP</a>
+      <a href="../05-security/security-concepts.html" class="nav-btn">التالي: مفاهيم الحماية (Security Concepts) »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Access Control Lists (ACLs) - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>قوائم التحكم في الوصول (ACLs)</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>قوائم <strong>ACLs (Access Control Lists)</strong> هي خط الدفاع الأول في راوترات وسويتشات سيسكو لفلترة حزم البيانات ومنع المرور غير المصرح به. تتكون القائمة من أسطر مرتبة (Access Control Entries - ACEs) يتم فحصها من الأعلى إلى الأسفل حتى يتحقق أول شرط:</p>
+      <ul>
+        <li><strong>أنواع الـ ACLs الأساسية:</strong>
+          <ul>
+            <li><strong>Standard ACLs:</strong> تفلتر بناءً على <strong>عنوان IP المصدر (Source IP) فقط</strong>. أرقامها من 1 إلى 99 و 1300 إلى 1999 (أو بأسماء Named).</li>
+            <li><strong>Extended ACLs:</strong> تفلتر بناءً على: المصدر (Source IP)، الوجهة (Destination IP)، نوع البروتوكول (TCP/UDP/ICMP/IP)، وأرقام المنافذ (Ports مثل HTTP 80 أو SSH 22). أرقامها من 100 إلى 199 و 2000 إلى 2699 (أو بأسماء Named).</li>
+          </ul>
+        </li>
+        <li><strong>القواعد الذهبية للـ ACL:</strong>
+          <ul>
+            <li><strong>قاعدة المعالجة التتابعية (Top-to-Bottom):</strong> الراوتر يقرأ القائمة سطراً بسطر؛ وأول سطر يطابق الحزمة (First Match) ينفذ فوراً ويتوقف الفحص لباقي القائمة.</li>
+            <li><strong>الرفض الضمني (Implicit Deny Any):</strong> يوجد دائماً في نهاية كل قائمة سطر مخفي يرفض كل الحزم غير المطابقة (<code dir="ltr">deny ip any any</code>). لذلك، أي قائمة لا تحتوي على سطر <code dir="ltr">permit</code> واحد على الأقل ستحظر كل الترافيك بلا استثناء!</li>
+            <li><strong>أماكن التطبيق (Placement Rules):</strong>
+              <ul>
+                <li><strong>Standard ACL:</strong> توضع <strong>أقرب ما يمكن للوجهة (Closest to Destination)</strong>، لأنها تطابق المصدر فقط، ووضعها قريباً من المصدر سيحرمه من الوصول لأي شبكة أخرى بالخطأ!</li>
+                <li><strong>Extended ACL:</strong> توضع <strong>أقرب ما يمكن للمصدر (Closest to Source)</strong>، لإسقاط الحزم غير المرغوبة فوراً قبل أن تستهلك سعة خطوط الـ WAN وموارد المعالجة.</li>
+              </ul>
+            </li>
+            <li><strong>ترافيك الراوتر نفسه (Self-Generated Traffic):</strong> الحزم الصادرة من الراوتر نفسه (مثل Ping أو NTP صادر منه) <strong>لا تخضع</strong> للـ Outbound ACL المطبقة على منافذه!</li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <section id="quick-config">
+      <h2>إعداد سريع (انسخ والصق)</h2>
+      <p>أمثلة شاملة لإنشاء Standard ACL لحماية خطوط الـ VTY، وإنشاء Extended Named ACL تسمح فقط بتصفح الويب والـ DNS:</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>! 1. تأمين الدخول عن بعد (VTY) عبر Standard ACL
+access-list 10 remark "Allow only IT Admin PC to SSH/Telnet"
+access-list 10 permit host 192.168.1.50
+line vty 0 4
+ access-class 10 in
+
+! 2. إنشاء Extended Named ACL متقدمة
+ip access-list extended FILTER-LAN
+ remark "Allow DNS queries to external server"
+ permit udp 192.168.1.0 0.0.0.255 host 8.8.8.8 eq 53
+ remark "Allow Web browsing (HTTP/HTTPS)"
+ permit tcp 192.168.1.0 0.0.0.255 any eq 80
+ permit tcp 192.168.1.0 0.0.0.255 any eq 443
+ remark "Allow return established TCP traffic"
+ permit tcp any 192.168.1.0 0.0.0.255 established
+ remark "Block everything else and log"
+ deny ip any any log
+
+! 3. تطبيق القائمة على المنفذ في اتجاه الدخول
+interface GigabitEthernet0/0
+ ip access-group FILTER-LAN in</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>الإعداد خطوة بخطوة</h2>
+
+      <!-- ================= Standard Numbered ACL ================= -->
+      <section class="cmd" id="standard-numbered-acl" dir="rtl">
+        <h3><span dir="ltr">access-list (Standard Numbered)</span> <small dir="ltr">1-99 & 1300-1999</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>access-list &lt;1-99 | 1300-1999&gt; {permit | deny} {&lt;source-ip&gt; &lt;wildcard-mask&gt; | host &lt;source-ip&gt; | any} [log]</code></pre>
+        </div>
+        <p><strong>أمثلة شائعة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>! السماح لجهاز واحد محدد (Host)
+access-list 1 permit host 192.168.1.10
+! أو بصيغة Wildcard mask:
+access-list 1 permit 192.168.1.10 0.0.0.0
+
+! السماح لشبكة فرعية كاملة (/24)
+access-list 1 permit 192.168.1.0 0.0.0.255
+
+! رفض شبكة معينة والسماح للباقي
+access-list 1 deny 192.168.2.0 0.0.0.255
+access-list 1 permit any</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> الـ Standard ACL تطابق عنوان الـ Source فقط. كلمة <code dir="ltr">host</code> تعني مطابقة هذا الـ IP بالتمام والكمال (Wildcard Mask: 0.0.0.0). وكلمة <code dir="ltr">any</code> تعني أي عنوان (0.0.0.0 255.255.255.255).</p>
+      </section>
+
+      <!-- ================= Extended Numbered ACL ================= -->
+      <section class="cmd" id="extended-numbered-acl" dir="rtl">
+        <h3><span dir="ltr">access-list (Extended Numbered)</span> <small dir="ltr">100-199 & 2000-2699</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>access-list &lt;100-199 | 2000-2699&gt; {permit | deny} &lt;protocol&gt; &lt;source&gt; &lt;src-wildcard&gt; [src-port] &lt;destination&gt; &lt;dst-wildcard&gt; [dst-operator dst-port] [established] [log]</code></pre>
+        </div>
+        <p><strong>البروتوكولات والمشغلات الشائعة:</strong></p>
+        <ul>
+          <li><code dir="ltr">&lt;protocol&gt;</code>: إما <code dir="ltr">ip</code> (كل الحزم)، أو <code dir="ltr">tcp</code>، أو <code dir="ltr">udp</code>، أو <code dir="ltr">icmp</code>.</li>
+          <li><code dir="ltr">eq</code>: يساوي (Equals) المنفذ المحدد.</li>
+          <li><code dir="ltr">neq</code>: لا يساوي (Not Equals).</li>
+          <li><code dir="ltr">gt / lt</code>: أكبر من / أقل من (Greater than / Less than).</li>
+          <li><code dir="ltr">range &lt;start&gt; &lt;end&gt;</code>: نطاق من المنافذ (مثلاً: <code dir="ltr">range 1024 65535</code>).</li>
+        </ul>
+        <p><strong>أمثلة هامة للامتحان:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>! منع جهاز معين من تصفح الويب على سيرفر محدد
+access-list 101 deny tcp host 192.168.1.15 host 10.0.0.5 eq 80
+
+! السماح بالبينج (ICMP Echo) من شبكة LAN للإنترنت
+access-list 101 permit icmp 192.168.1.0 0.0.0.255 any echo
+
+! السماح بالـ Ping Reply فقط الوارد من الخارج
+access-list 101 permit icmp any 192.168.1.0 0.0.0.255 echo-reply
+
+! السماح لجميع حزم الـ IP الأخرى
+access-list 101 permit ip any any</code></pre>
+        </div>
+      </section>
+
+      <!-- ================= Named ACLs ================= -->
+      <section class="cmd" id="named-acl" dir="rtl">
+        <h3><span dir="ltr">ip access-list (Named ACLs)</span> <small dir="ltr">Modern Sub-mode Editing</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)# & (config-ext-nacl)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>! الدخول لوضع تعديل القائمة المسماة
+ip access-list {standard | extended} &lt;acl-name&gt;
+
+! داخل الوضع الفرعي (الأسطر ترقم تلقائياً 10, 20, 30...):
+ [sequence-number] {permit | deny} ...
+ remark &lt;comment-text&gt;</code></pre>
+        </div>
+        <p><strong>ميزة التعديل بأرقام الـ Sequence Numbers:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ip access-list extended SECURE-TRAFFIC
+ 10 permit tcp 192.168.1.0 0.0.0.255 any eq 443
+ 20 permit udp 192.168.1.0 0.0.0.255 any eq 53
+ ! لحذف السطر 10 فقط بدون مسح القائمة كاملة:
+ no 10
+ ! لحشر سطر جديد بين 10 و 20:
+ 15 permit tcp 192.168.1.0 0.0.0.255 any eq 22</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> القوائم المسماة (Named ACLs) هي الطريقة القياسية والحديثة الموصى بها، لأنها تتيح لك تسمية القائمة باسم وصفي واضح، وحذف أو إضافة أسطر معينة في منتصف القائمة باستخدام أرقام التسلسل (<code dir="ltr">sequence-number</code>) دون الحاجة لحذف القائمة وإعادة كتابتها من الصفر!</p>
+      </section>
+
+      <!-- ================= Applying ACLs to Interfaces ================= -->
+      <section class="cmd" id="ip-access-group" dir="rtl">
+        <h3><span dir="ltr">ip access-group</span> <small dir="ltr">Apply to Interface (in / out)</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>interface &lt;interface-id&gt;
+ ip access-group &lt;acl-name-or-number&gt; {in | out}</code></pre>
+        </div>
+        <p><strong>الفرق الحاسم بين in و out:</strong></p>
+        <ul>
+          <li><code dir="ltr">in (Inbound):</code> الحزمة يتم فحصها <strong>بمجرد دخولها للمنفذ وقبل أن ينظر الراوتر في جدول التوجيه (Routing Table)</strong>. إذا تم رفضها، يتم إسقاطها فوراً ويوفر الراوتر مجهود معالجة التوجيه.</li>
+          <li><code dir="ltr">out (Outbound):</code> الحزمة تدخل الراوتر أولاً، ويحدد الراوتر منفذ الخروج عبر جدول التوجيه، <strong>وقبل أن تخرج الحزمة من منفذ الخروج</strong> يتم فحصها بالـ ACL. إذا طابقت منعاً، تسقط.</li>
+        </ul>
+      </section>
+
+      <!-- ================= Applying ACLs to VTY Lines ================= -->
+      <section class="cmd" id="access-class" dir="rtl">
+        <h3><span dir="ltr">access-class</span> <small dir="ltr">Apply to VTY Lines (Telnet / SSH)</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-line)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>line vty 0 4
+ access-class &lt;acl-name-or-number&gt; in</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> أحد أهم أسئلة امتحان الـ CCNA! لتحديد من يحق له الاتصال بالراوتر عن بعد عبر SSH أو Telnet، نطبق الـ ACL تحت خطوط الـ VTY باستخدام أمر <code dir="ltr">access-class in</code> <strong>وليس</strong> <code dir="ltr">ip access-group</code>. غالباً ما نستخدم هنا Standard ACL تحدد أجهزة مهندسي الشبكة فقط.</p>
+      </section>
+
+      <!-- ================= Resequencing ACLs ================= -->
+      <section class="cmd" id="ip-access-list-resequence" dir="rtl">
+        <h3><span dir="ltr">ip access-list resequence</span> <small dir="ltr">Reorder Sequence Numbers</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ip access-list resequence &lt;acl-name&gt; &lt;starting-sequence&gt; &lt;step-interval&gt;</code></pre>
+        </div>
+        <p><strong>مثال:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ip access-list resequence FILTER-LAN 10 10</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> لو أضفت أسطر كثيرة بأرقام متقاربة (مثلاً 11, 12, 13) ولم يعد هناك مساحة لحشر أسطر جديدة، يقوم هذا الأمر بإعادة ترقيم القائمة كاملة لتبدأ من 10 وبفارق 10 بين كل سطر (10, 20, 30, 40...).</p>
+      </section>
+
+      <!-- ================= Established Keyword ================= -->
+      <section class="cmd" id="established-keyword" dir="rtl">
+        <h3><span dir="ltr">permit tcp ... established</span> <small dir="ltr">TCP Return Traffic Filtering</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-ext-nacl)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>permit tcp any &lt;internal-network&gt; &lt;wildcard&gt; established</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> كلمة <code dir="ltr">established</code> تطابق حزم الـ TCP التي تحتوي على أعلام <strong>ACK أو RST</strong> في الترويسة. هذا يعني أن الحزمة هي جزء من اتصال قائم فتحه الجهاز الداخلي بالفعل، فيسمح الراوتر بدخول الرد من الإنترنت بينما يمنع أي حزمة خارجية تحاول بدء اتصال جديد (حزم SYN) من اختراق الشبكة.</p>
+      </section>
+
+    </section>
+
+    <section id="verification">
+      <h2>أوامر التحقق والمراقبة</h2>
+
+      <section class="cmd" id="show-access-lists" dir="rtl">
+        <h3><span dir="ltr">show access-lists</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> يعرض جميع القوائم المبرمجة على الجهاز، وأرقام التسلسل، وعدد الحزم التي طابقت كل سطر (Hit Counts).</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>show access-lists
+Standard IP access list 10
+    10 permit 192.168.1.50 (4 matches)
+Extended IP access list FILTER-LAN
+    10 permit udp 192.168.1.0 0.0.0.255 host 8.8.8.8 eq domain (125 matches)
+    20 permit tcp 192.168.1.0 0.0.0.255 any eq www (450 matches)
+    30 permit tcp 192.168.1.0 0.0.0.255 any eq 443 (890 matches)
+    40 permit tcp any 192.168.1.0 0.0.0.255 established (1320 matches)
+    50 deny ip any any log (14 matches)</code></pre>
+        </div>
+        <p><em>ملاحظة امتحانية:</em> عداد الـ <code dir="ltr">(matches)</code> مفيد جداً في فحص الأعطال؛ فإذا كان السطر لا يزيد فيه عدد الـ matches، فهذا يعني أن الترافيك لم يصل إليه أو تم إسقاطه بسطر يسبقه!</p>
+      </section>
+
+      <section class="cmd" id="show-ip-interface-acl" dir="rtl">
+        <h3><span dir="ltr">show ip interface</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> للتأكد من ربط الـ ACL بالمنفذ واتجاه التطبيق (Inbound أو Outbound).</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>show ip interface GigabitEthernet0/0
+GigabitEthernet0/0 is up, line protocol is up
+  Internet address is 192.168.1.1/24
+  Inbound  access list is FILTER-LAN
+  Outbound access list is not set</code></pre>
+        </div>
+      </section>
+
+      <section class="cmd" id="clear-access-list-counters" dir="rtl">
+        <h3><span dir="ltr">clear access-list counters</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> تصفير عدادات الـ Matches للبدء في اختبار ترافيك جديد من الصفر.</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>clear access-list counters [acl-name-or-number]</code></pre>
+        </div>
+      </section>
+
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فحص الأعطال (Troubleshooting)</h2>
+      <ul>
+        <li><strong>كل الاتصالات انقطعت تماماً بمجرد تطبيق الـ ACL:</strong>
+          <ol>
+            <li>تذكر دائماً <strong>الرفض الضمني (Implicit Deny Any)</strong> في نهاية القائمة. إذا كانت القائمة تحتوي فقط على أسطر <code dir="ltr">deny</code>، فسيتم حظر كل شيء! أضف سطراً يسمح بباقي الترافيك (<code dir="ltr">permit ip any any</code>).</li>
+            <li>تأكد من أن اتجاه التطبيق (<code dir="ltr">in</code> أو <code dir="ltr">out</code>) صحيح بالنسبة لمسار الحزم في الراوتر.</li>
+          </ol>
+        </li>
+        <li><strong>أحد الأسطر لا يعمل رغم صحته (0 matches):</strong>
+          <ol>
+            <li>افحص ترتيب الأسطر؛ إذا كان هناك سطر عام يسبقه (مثلاً سطر <code dir="ltr">permit any</code> أو سطر يطابق شبكة أوسع)، فإن الراوتر يطبق السطر الأول فوراً ولا يصل للسطر الثاني إطلاقاً.</li>
+            <li>القاعدة: <strong>ضع القواعد الأكثر تخصيصاً (Most Specific) في الأعلى، والقواعد العامة (General) في الأسفل</strong>.</li>
+          </ol>
+        </li>
+        <li><strong>الـ Wildcard Mask مكتوب بالخطأ كـ Subnet Mask:</strong>
+          <ol>
+            <li>إذا كتبت <code dir="ltr">255.255.255.0</code> بدلاً من <code dir="ltr">0.0.0.255</code>، فإن الراوتر قد يعترض أو يطابق نطاقات غير مقصودة تماماً! تأكد من طرح الـ Subnet Mask من <code dir="ltr">255.255.255.255</code>.</li>
+          </ol>
+        </li>
+        <li><strong>الأجهزة لا تستطيع تصفح الويب رغم السماح بـ Port 80:</strong>
+          <ol>
+            <li>لكي يعمل التصفح، يحتاج الجهاز أولاً إلى ترجمة اسم الموقع عبر الـ <strong>DNS (UDP 53)</strong>! إذا لم تكن قد سمحت بالـ DNS في القائمة، فلن يستطيع المتصفح فتح أي موقع باسمه.</li>
+          </ol>
+        </li>
+      </ul>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li><strong>نطاقات أرقام الـ ACLs (حفظ إجباري للامتحان):</strong>
+          <table style="margin-top: 10px;">
+            <thead>
+              <tr>
+                <th>النوع (Type)</th>
+                <th>النطاق القياسي (Standard Range)</th>
+                <th>النطاق الموسع (Expanded Range)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Standard IPv4</strong></td>
+                <td><code dir="ltr">1 - 99</code></td>
+                <td><code dir="ltr">1300 - 1999</code></td>
+              </tr>
+              <tr>
+                <td><strong>Extended IPv4</strong></td>
+                <td><code dir="ltr">100 - 199</code></td>
+                <td><code dir="ltr">2000 - 2699</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </li>
+        <li><strong>موضع كتابة المنفذ في Extended ACL:</strong>
+          <p>في Extended ACL، يتم وضع المنفذ (Port) <strong>بعد عنوان الوجهة Destination</strong> إذا كنت تريد فحص منفذ الخدمة التي يقصدها الجهاز (مثل السيرفر)، وليس بعد عنوان المصدر:</p>
+          <div class="code" dir="ltr">
+            <pre><code>! صحيح (يطابق سيرفر الويب الوجهة):
+permit tcp 192.168.1.0 0.0.0.255 any eq 80
+
+! خطأ شائع (يطابق جهاز المصدر إذا كان المنفذ العشوائي لجهازه هو 80!):
+permit tcp 192.168.1.0 0.0.0.255 eq 80 any</code></pre>
+          </div>
+        </li>
+        <li><strong>فخ الـ VTY: استخدام ip access-group بدلاً من access-class:</strong>
+          <p>على خطوط الـ VTY (<code dir="ltr">line vty 0 4</code>)، الأمر الصحيح هو <code dir="ltr">access-class &lt;acl&gt; in</code>. كتابة <code dir="ltr">ip access-group</code> غير مقبولة في الـ CLI تحت الـ Lines وتعتبر خطأً فادحاً في الامتحان.</p>
+        </li>
+        <li><strong>ترافيك الراوتر الداخلي (Self-Originated Packets):</strong>
+          <p>لو وضعت Outbound ACL على منفذ الراوتر تمنع الـ Ping (<code dir="ltr">deny icmp any any</code>)، وقمت بعمل <code dir="ltr">ping</code> من الراوتر نفسه، <strong>سيعمل البينج بنجاح</strong> لأن ترافيك الراوتر نفسه لا يخضع للـ Outbound ACL على واجهاته!</p>
+        </li>
+        <li><strong>أشهر أسماء المنافذ في الـ CLI:</strong>
+          <ul>
+            <li><code dir="ltr">www</code> = 80 (HTTP)</li>
+            <li><code dir="ltr">443</code> = HTTPS (سيسكو لا تستخدم كلمة https في أجهزة قديمة بل تكتب 443)</li>
+            <li><code dir="ltr">domain</code> = 53 (DNS)</li>
+            <li><code dir="ltr">ssh</code> = 22</li>
+            <li><code dir="ltr">telnet</code> = 23</li>
+            <li><code dir="ltr">ftp</code> = 21 (Control) و <code dir="ltr">ftp-data</code> = 20</li>
+            <li><code dir="ltr">echo</code> = ICMP Ping Request و <code dir="ltr">echo-reply</code> = ICMP Ping Response</li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Command</th>
+            <th dir="ltr">Mode</th>
+            <th>الوظيفة (Purpose)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">access-list &lt;1-99&gt; {permit|deny} &lt;src&gt; &lt;wcard&gt;</code></td>
+            <td dir="ltr">Global config</td>
+            <td>إنشاء Standard ACL رقمية تفلتر بناءً على عنوان المصدر فقط.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">access-list &lt;100-199&gt; {permit|deny} &lt;proto&gt; &lt;src&gt; &lt;dst&gt; [port]</code></td>
+            <td dir="ltr">Global config</td>
+            <td>إنشاء Extended ACL رقمية تفلتر بالمصدر والوجهة والبروتوكول والمنافذ.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ip access-list {standard|extended} &lt;name&gt;</code></td>
+            <td dir="ltr">Global config</td>
+            <td>الدخول للوضع الفرعي لإنشاء وتعديل قائمة مسماة (Named ACL).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ip access-group &lt;acl&gt; {in | out}</code></td>
+            <td dir="ltr">Interface config</td>
+            <td>تطبيق القائمة على واجهة الراوتر أو السويتش في اتجاه الدخول أو الخروج.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">access-class &lt;acl&gt; in</code></td>
+            <td dir="ltr">Line config (vty)</td>
+            <td>تأمين جلسات الدخول عن بعد (SSH/Telnet) بحصرها على أجهزة محددة.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ip access-list resequence &lt;name&gt; &lt;start&gt; &lt;step&gt;</code></td>
+            <td dir="ltr">Global config</td>
+            <td>إعادة ترتيب أرقام تسلسل القائمة المسماة لتوفير مساحات لإضافة قواعد جديدة.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show access-lists [name]</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>عرض محتويات القوائم وعدد الحزم المطابقة (Hit Counts).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show ip interface &lt;int&gt;</code></td>
+            <td dir="ltr">Privileged EXEC</td>
+            <td>التحقق من ربط الـ ACL بالمنفذ واتجاه تطبيقها (Inbound / Outbound).</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="security-concepts.html" class="nav-btn">« السابق: مفاهيم الحماية وتقوية الأجهزة</a>
+      <a href="layer2-security.html" class="nav-btn">التالي: حماية الطبقة الثانية (L2 Security) »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

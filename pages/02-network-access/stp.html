@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>بروتوكول الشجرة الممتدة (STP) - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>بروتوكول الشجرة الممتدة (Spanning Tree Protocol)</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>بروتوكول <span dir="ltr">STP</span> وظيفته الأساسية هي منع حدوث اللوب (Loops) في الشبكة عن طريق قفل مسارات احتياطية وتشغيلها بس لو المسار الأساسي وقع. في منهج CCNA، التركيز الأكبر بيكون على نسخة <span dir="ltr">Rapid PVST+</span> السريعة اللي بتعمل شجرة لكل VLAN لوحدها.</p>
+    </section>
+
+    <section id="quick-config">
+      <h2>إعداد سريع (انسخ والصق)</h2>
+      <p>لتحويل السويتش لنسخة الـ Rapid، وجعله هو القائد (Root) للـ VLAN 10، مع تفعيل الحماية على منفذ الكمبيوتر:</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>spanning-tree mode rapid-pvst
+spanning-tree vlan 10 root primary
+
+interface g0/1
+ spanning-tree portfast
+ spanning-tree bpduguard enable</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>الإعداد خطوة بخطوة</h2>
+
+      <!-- Mode -->
+      <section class="cmd" id="stp-mode" dir="rtl">
+        <h3><span dir="ltr">spanning-tree mode</span> <small dir="ltr">Global config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Switch(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>spanning-tree mode { pvst | rapid-pvst }</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيغير نسخة الـ STP اللي شغالة. <code dir="ltr">pvst</code> هي النسخة القديمة البطيئة (بتاخد 50 ثانية عشان تفتح البورت)، بينما <code dir="ltr">rapid-pvst</code> هي النسخة السريعة (بتفتح في أقل من ثانيتين).</p>
+      </section>
+
+      <!-- Root Primary/Secondary -->
+      <section class="cmd" id="stp-root" dir="rtl">
+        <h3><span dir="ltr">root primary / secondary</span> <small dir="ltr">Global config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Switch(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>spanning-tree vlan &lt;vlan-id&gt; root { primary | secondary }</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> السويتش اللي بيبقى <span dir="ltr">Root Bridge</span> هو المركز اللي كل الداتا بتمشي من خلاله. أمر <code dir="ltr">primary</code> بيقلل الـ Priority بتاعة السويتش عشان تضمن إنه يكسب الانتخابات ويبقى هو القائد. أمر <code dir="ltr">secondary</code> بيخليه القائد الاحتياطي لو الأولاني وقع.</p>
+      </section>
+
+      <!-- Priority -->
+      <section class="cmd" id="stp-priority" dir="rtl">
+        <h3><span dir="ltr">spanning-tree priority</span> <small dir="ltr">Global config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Switch(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>spanning-tree vlan &lt;vlan-id&gt; priority &lt;value&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> طريقة تانية يدوية عشان تتحكم في السويتش اللي هيكسب الانتخابات. السويتش صاحب <strong>أقل</strong> رقم بيكسب (الافتراضي 32768). لازم الرقم اللي تكتبه هنا يكون من مضاعفات الـ 4096 (مثلاً: 0، 4096، 8192، إلخ).</p>
+      </section>
+
+      <!-- PortFast -->
+      <section class="cmd" id="stp-portfast" dir="rtl">
+        <h3><span dir="ltr">portfast</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Switch(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>spanning-tree portfast</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيخلي البورت يفتح فوراً بمجرد ما الكابل يركب (بيلغي الـ 50 ثانية تأخير). <strong>تحذير خطير:</strong> الأمر ده ميتعملش غير على البورتات اللي واصلة بأجهزة نهائية (كمبيوتر، طابعة، سيرفر). لو عملته على بورت واصل بسويتش تاني هيعمل Loop فوري يوقع الشبكة.</p>
+      </section>
+
+      <!-- BPDU Guard -->
+      <section class="cmd" id="stp-bpduguard" dir="rtl">
+        <h3><span dir="ltr">bpduguard</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Switch(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>spanning-tree bpduguard enable</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> إضافة أمنية قوية. البورت اللي متفعل عليه الأمر ده، لو بالغلط حد وصل فيه سويتش بدل كمبيوتر (والسويتش بيبعت رسائل BPDU بتاعت الـ STP)، البورت هيقفل نفسه فوراً ويدخل في حالة Error-Disable عشان يحمي الشبكة.</p>
+      </section>
+
+    </section>
+
+    <section id="verification">
+      <h2>أوامر التحقق</h2>
+
+      <h3>1. <span dir="ltr">show spanning-tree</span></h3>
+      <p>الأمر الأهم على الإطلاق لمراقبة الشجرة ومعرفة مين القائد ومين البورت المقفول.</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code><span class="prompt">SW1# </span>show spanning-tree vlan 10
+
+VLAN0010
+  Spanning tree enabled protocol rstp
+  Root ID    Priority    24586
+             Address     0011.2233.4455
+             This bridge is the root
+             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    24586  (priority 24576 sys-id-ext 10)
+             Address     0011.2233.4455
+             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+Interface           Role Sts Cost      Prio.Nbr Type
+------------------- ---- --- --------- -------- --------------------------------
+Fa0/1               Desg FWD 19        128.1    P2p
+Fa0/2               Desg FWD 19        128.2    P2p</code></pre>
+      </div>
+      <p><strong>إزاي تقرا الجدول:</strong></p>
+      <ul>
+        <li><code dir="ltr">Root ID</code>: دي بيانات السويتش القائد في الشبكة.</li>
+        <li><code dir="ltr">Bridge ID</code>: دي بيانات السويتش بتاعك إنت اللي واقف عليه.</li>
+        <li>جملة <strong>This bridge is the root</strong>: معناها إن السويتش اللي إنت فاتحه دلوقتي هو نفسه السويتش القائد. دي بتيجي سؤال مؤكد في الامتحان.</li>
+        <li><code dir="ltr">Role / Sts</code>: البورتات الـ <code dir="ltr">FWD</code> معناها مفتوحة وبتنقل داتا. لو لقيت بورت مكتوب قصاده <code dir="ltr">BLK</code> أو <code dir="ltr">Altn</code> ده معناه إنه البورت المقفول (Blocked) عشان يمنع اللوب.</li>
+      </ul>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فحص الأعطال (Troubleshooting)</h2>
+      
+      <h3>بورت الكمبيوتر مقفول (ErrDisable)</h3>
+      <p>لو بورت كان شغال وفجأة قفل ولقيت رسالة: <code dir="ltr">%SPANTREE-2-BLOCK_BPDUGUARD: Received BPDU on port Fa0/1 with BPDU Guard enabled. Disabling port.</code>، ده معناه إن فيه مستخدم جاب سويتش صغير من البيت ووصله في بورت المكتب. الـ BPDUGuard اصطاد رسالة السويتش وقفل البورت لحماية الشبكة. عشان ترجعه، لازم تشيل السويتش الغريب وتعمل للبورت <code dir="ltr">shutdown</code> وبعدين <code dir="ltr">no shutdown</code>.</p>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li><strong>أقل MAC بيكسب:</strong> لو كل السويتشات ليها نفس الـ Priority (وهو ده الافتراضي)، السويتش اللي الـ MAC Address بتاعه <strong>أقل</strong> هو اللي بيبقى القائد. الامتحان بيجيبلك 3 سويتشات ويقولك مين فيهم القائد.</li>
+        <li><strong>مضاعفات الـ 4096:</strong> متقدرش تكتب <code dir="ltr">priority 1000</code> مثلاً. لازم الرقم يكون من مضاعفات الـ 4096.</li>
+        <li><strong>PortFast مع الـ Trunk:</strong> أوعى تفعل PortFast على Trunk. هينتج عنه لوب لحظي لحد ما البورتات التانية تكتشفه.</li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Command</th>
+            <th>الوظيفة (Purpose)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">spanning-tree mode rapid-pvst</code></td>
+            <td>تغيير نسخة الـ STP للنسخة السريعة.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">spanning-tree vlan &lt;id&gt; root primary</code></td>
+            <td>جعل هذا السويتش هو القائد للشبكة.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">spanning-tree vlan &lt;id&gt; priority &lt;num&gt;</code></td>
+            <td>تغيير الأولوية يدوياً (مضاعفات 4096).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">spanning-tree portfast</code></td>
+            <td>جعل المنفذ يفتح فوراً (لأجهزة المستخدمين فقط).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">spanning-tree bpduguard enable</code></td>
+            <td>إغلاق المنفذ فوراً إذا تم توصيل سويتش غريب به.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show spanning-tree</code></td>
+            <td>عرض حالة الشجرة، القائد، وحالة المنافذ.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="cdp-lldp.html" class="nav-btn">« السابق: بروتوكولات CDP & LLDP</a>
+      <a href="etherchannel.html" class="nav-btn">التالي: الـ EtherChannel »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>

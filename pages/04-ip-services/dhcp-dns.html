@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DHCP & DNS Services - CCNA Reference</title>
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+
+  <aside id="sidebar">
+    <h2>CCNA Reference</h2>
+    <input type="text" id="search-box" placeholder="ابحث عن أمر... (اضغط /)">
+    <nav id="sidebar-nav"></nav>
+  </aside>
+
+  <main id="content">
+    <h1>خدمات DHCP و DNS</h1>
+
+    <section id="quick-intro">
+      <h2>نبذة سريعة</h2>
+      <p>خدمة <strong>DHCP</strong> بتوزع أيبيهات أوتوماتيك على الأجهزة في الشبكة. في الامتحان، سيسكو بتركز جداً على إعداد الراوتر كـ <strong>DHCP Client</strong> (عشان ياخد IP من مزود الخدمة) وكـ <strong>DHCP Relay</strong> (عشان يوصل رسايل البرودكاست بتاعة الأجهزة لسيرفر DHCP موجود في شبكة تانية). كمان إعداد الـ <strong>DNS</strong> مهم عشان الراوتر يقدر يفهم الأسماء زي <code dir="ltr">cisco.com</code> بدل الأرقام.</p>
+    </section>
+
+    <section id="quick-config">
+      <h2>إعداد سريع (انسخ والصق)</h2>
+      <p>تفعيل راوتر ليكون DHCP Server، وتفعيل منفذ ليعمل كـ DHCP Client:</p>
+      <div class="code" dir="ltr">
+        <button class="copy">Copy</button>
+        <pre><code>! إعداد سيرفر DHCP واستثناء بعض الأيبيهات
+ip dhcp excluded-address 192.168.1.1 192.168.1.10
+ip dhcp pool LAN-POOL
+ network 192.168.1.0 255.255.255.0
+ default-router 192.168.1.1
+ dns-server 8.8.8.8
+
+! إعداد منفذ ليأخذ IP أوتوماتيك
+interface g0/1
+ ip address dhcp</code></pre>
+      </div>
+    </section>
+
+    <section id="step-by-step">
+      <h2>الإعداد خطوة بخطوة</h2>
+
+      <!-- DHCP Excluded -->
+      <section class="cmd" id="dhcp-excluded" dir="rtl">
+        <h3><span dir="ltr">ip dhcp excluded-address</span> <small dir="ltr">Global config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ip dhcp excluded-address &lt;low-ip&gt; [high-ip]</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> قبل ما تعمل البول (Pool) وتوزع أيبيهات، <strong>لازم</strong> تستثني الأيبيهات الثابتة في شبكتك (زي عنوان الراوتر نفسه، أو السيرفرات، أو الطابعات) عشان الراوتر ميوزعهاش لجهاز تاني ويحصل IP Conflict.</p>
+      </section>
+
+      <!-- DHCP Pool -->
+      <section class="cmd" id="dhcp-pool" dir="rtl">
+        <h3><span dir="ltr">ip dhcp pool</span> <small dir="ltr">Global config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ip dhcp pool &lt;pool-name&gt;
+ network &lt;network-ip&gt; &lt;subnet-mask&gt;
+ default-router &lt;gateway-ip&gt;
+ dns-server &lt;dns-ip&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيكريت وعاء (Pool) يوزع منه. <code dir="ltr">network</code> بيحدد الرينج والماسك. <code dir="ltr">default-router</code> هو عنوان البوابة اللي الأجهزة هتخرج منها (غالباً الـ IP بتاع الراوتر نفسه). <code dir="ltr">dns-server</code> بيحدد سيرفرات الـ DNS.</p>
+      </section>
+
+      <!-- DHCP Relay -->
+      <section class="cmd" id="ip-helper-address" dir="rtl">
+        <h3><span dir="ltr">ip helper-address</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ip helper-address &lt;dhcp-server-ip&gt;</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> أهم أمر في الامتحان! لو الأجهزة في شبكة (مثلاً VLAN 10) وسيرفر الـ DHCP في شبكة تانية، الراوتر مستحيل يعدي رسالة الـ Broadcast اللي الجهاز بيبعتها (<code dir="ltr">DHCP Discover</code>). الأمر ده بيتحط على منفذ الراوتر (أو الـ SVI) اللي <strong>مواجه للأجهزة</strong>، وبيقول للراوتر: "أي رسالة برودكاست للـ DHCP تجيلك هنا، حولها لـ Unicast وابعتها للـ IP ده".</p>
+      </section>
+
+      <!-- DHCP Client -->
+      <section class="cmd" id="ip-address-dhcp" dir="rtl">
+        <h3><span dir="ltr">ip address dhcp</span> <small dir="ltr">Interface config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config-if)#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ip address dhcp</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيخلي الفتحة دي تشتغل كـ Client وتاخد الـ IP بتاعها أوتوماتيك من راوتر أو سيرفر تاني (غالباً بنستخدمه على الفتحة اللي واصلة بالإنترنت ISP).</p>
+      </section>
+
+      <!-- DNS Name Server -->
+      <section class="cmd" id="ip-name-server" dir="rtl">
+        <h3><span dir="ltr">ip name-server</span> <small dir="ltr">Global config</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router(config)#</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الصيغة:</strong></p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code>ip name-server &lt;dns-ip&gt;
+ip domain-lookup</code></pre>
+        </div>
+        <p><strong>الشرح:</strong> بيعرف الراوتر نفسه مين هو سيرفر الـ DNS اللي يروح يسأله لو كتبنا اسم بدل IP (مثلاً لو كتبنا <code dir="ltr">ping cisco.com</code>).</p>
+      </section>
+
+    </section>
+
+    <section id="verification">
+      <h2>أوامر التحقق</h2>
+
+      <section class="cmd" id="show-ip-dhcp-binding" dir="rtl">
+        <h3><span dir="ltr">show ip dhcp binding</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge exam">Exam</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> بيعرض كل الأيبيهات اللي الراوتر وزعها للأجهزة، والـ MAC Address بتاع كل جهاز أخد IP، والوقت اللي هينتهي فيه الإيجار (Lease expiration).</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>show ip dhcp binding
+Bindings from all pools not associated with VRF:
+IP address          Client-ID/              Lease expiration        Type
+                    Hardware address/
+                    User name
+192.168.1.11        0100.1122.3344.55       Mar 01 2026 10:15 AM    Automatic</code></pre>
+        </div>
+      </section>
+
+      <section class="cmd" id="show-ip-dhcp-pool" dir="rtl">
+        <h3><span dir="ltr">show ip dhcp pool</span> <small dir="ltr">Privileged EXEC</small></h3>
+        <p class="meta" dir="ltr">
+          <span class="badge mode">Router#</span>
+          <span class="badge pt">PT ✔</span>
+        </p>
+        <p><strong>الشرح:</strong> بيعرض إحصائيات عن البول (Pool)، زي وزع كام IP وفاضل معاه كام IP ومين الأيبيهات المستثناة.</p>
+        <div class="code" dir="ltr">
+          <button class="copy">Copy</button>
+          <pre><code><span class="prompt">Router# </span>show ip dhcp pool LAN-POOL
+Pool LAN-POOL :
+ Utilization mark (high/low)    : 100 / 0
+ Subnet size (first/next)       : 0 / 0 
+ Total addresses                : 254
+ Leased addresses               : 1
+ Pending event                  : none</code></pre>
+        </div>
+      </section>
+
+    </section>
+
+    <section id="troubleshooting">
+      <h2>فحص الأعطال (Troubleshooting)</h2>
+      <ul>
+        <li><strong>الأجهزة لا تحصل على IP:</strong> تأكد من أمر <code dir="ltr">ip helper-address</code>. يجب أن يُكتب على الـ Interface التي تعمل كـ Default Gateway للأجهزة (مثل الـ Subinterface أو ה-SVI)، <strong>وليس</strong> على الـ Interface المواجهة للسيرفر!</li>
+        <li><strong>تضارب في الأيبيهات (IP Conflicts):</strong> بيحصل لو الراوتر وزع IP لجهاز، والـ IP ده كان متثبت يدوياً على جهاز تاني. هيظهرلك رسالة في الـ Log بتقول <code dir="ltr">%DHCPD-4-DECLINE_CONFLICT</code>. الحل إنك تستخدم أمر <code dir="ltr">ip dhcp excluded-address</code>.</li>
+      </ul>
+    </section>
+
+    <section id="common-mistakes">
+      <h2>أخطاء شائعة وفخاخ الامتحان</h2>
+      <ul>
+        <li><strong>ترتيب أمر الاستثناء:</strong> أمر الـ Exclude بيتكتب في وضع الـ Global Config (<code dir="ltr">Router(config)#</code>) <strong>وليس</strong> بداخل وضع إعدادات البول! دي بتوقع ناس كتير في العملي.</li>
+        <li><strong>خطأ الطباعة في DNS:</strong> لو كتبت أمر غلط في الـ CLI، الراوتر بيحاول يعمل له Broadcast كأنه اسم موقع (Translating "..."...domain server). عشان تلغي الخاصية المزعجة دي بنكتب <code dir="ltr">no ip domain-lookup</code>.</li>
+      </ul>
+    </section>
+
+    <section id="summary">
+      <h2>جدول مختصر</h2>
+      <table>
+        <thead>
+          <tr>
+            <th dir="ltr">Command</th>
+            <th>الوظيفة (Purpose)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code dir="ltr">ip dhcp excluded-address &lt;ip&gt;</code></td>
+            <td>استثناء أيبيهات من التوزيع العشوائي.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ip dhcp pool &lt;name&gt;</code></td>
+            <td>إنشاء صندوق أيبيهات لتوزيعه.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ip helper-address &lt;ip&gt;</code></td>
+            <td>تحويل رسائل DHCP من شبكة لأخرى (DHCP Relay).</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">ip address dhcp</code></td>
+            <td>جعل المنفذ يسحب IP أوتوماتيك من سيرفر.</td>
+          </tr>
+          <tr>
+            <td><code dir="ltr">show ip dhcp binding</code></td>
+            <td>عرض الأجهزة التي استلمت أيبيهات والـ MAC الخاص بها.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <a href="../03-ip-connectivity/eigrp-bgp.html" class="nav-btn">« السابق: EIGRP & BGP</a>
+      <a href="nat-pat.html" class="nav-btn">التالي: NAT & PAT »</a>
+    </footer>
+
+  </main>
+
+  <script src="../../js/nav.js"></script>
+  <script src="../../js/search-index.js"></script>
+  <script src="../../js/app.js"></script>
+</body>
+</html>
