@@ -117,7 +117,22 @@ switchport voice vlan &lt;vlan-id&gt;</code></pre>
 switchport mode trunk
 switchport nonegotiate</code></pre>
         </div>
-        <p><strong>الشرح:</strong> بيجبر المنفذ إنه يشتغل كـ Trunk ويشيل كل الشبكات. في السويتشات القديمة (زي 3560) لازم تكتب أمر الـ <code dir="ltr">encapsulation dot1q</code> الأول لأنها بتدعم بروتوكول ISL القديم، لكن السويتشات الحديثة مبتدعمش غير <code dir="ltr">dot1q</code> فمش بتحتاج الأمر ده. أمر <code dir="ltr">nonegotiate</code> بيقفل رسائل الـ DTP عشان الحماية.</p>
+        <p><strong>الشرح:</strong> بيجبر المنفذ إنه يشتغل كـ Trunk ويشيل كل الشبكات عبر كابل واحد يربط بين السويتشات.</p>
+        <p><strong>ملاحظتان مهمتان (Dot1Q مقابل ISL، ورسائل الـ DTP):</strong></p>
+        <ul>
+          <li>
+            <strong>1. ما هو بروتوكول <span dir="ltr">802.1Q (Dot1Q)</span> وما هو المصطلح الآخر <span dir="ltr">ISL</span>؟</strong>
+            <ul>
+              <li><strong><span dir="ltr">IEEE 802.1Q (dot1q):</span></strong> معيار قياسي عالمي مفتوح (Industry Standard) تدعمه كل الشركات. يقوم بحقن علامة التمييز (<span dir="ltr">VLAN Tag</span>) بحجم <strong>4 بايت</strong> فقط داخل الإطار الأصلي (بين العنوان الفيزيائي وحقل النوع). والأهم أنه يدعم مفهوم <strong>الـ Native VLAN</strong> (يمرر حركة بياناتها بدون أي Tag لتقليل الحمل والتوافق مع الأجهزة القديمة).</li>
+              <li><strong><span dir="ltr">ISL (Inter-Switch Link):</span></strong> بروتوكول قديم خاص بسيسكو فقط (<span dir="ltr">Cisco Proprietary</span>). بدلاً من تعديل الإطار، يقوم بتغليفه بالكامل بإضافة Header خارجي بحجم 26 بايت في البداية وTrailer جديد بحجم 4 بايت في النهاية (بإجمالي زيادة <strong>30 بايت Overhead</strong> ضخمة)، ولا يدعم الـ Native VLAN (بيعمل Tag لكل شيء).</li>
+              <li><strong>الفرق العملي اللي يهمك:</strong> بروتوكول <code dir="ltr">dot1q</code> أخف بكثير وأكثر كفاءة ومتوافق مع جميع الأجهزة، بينما <code dir="ltr">ISL</code> انقرض تماماً وأسقطت سيسكو دعمه في السويتشات الحديثة؛ لذلك السويتشات الحديثة لا تطلب كتابة أمر <code dir="ltr">encapsulation dot1q</code> لأنها لا تفهم سواه، بينما السويتشات القديمة (مثل Catalyst 3560) كانت تتطلب تحديد نوع البروتوكول أولاً قبل تشغيل الـ Trunk.</li>
+            </ul>
+          </li>
+          <li>
+            <strong>2. رسائل الـ DTP ولماذا نكتب أمر <code dir="ltr">switchport nonegotiate</code>؟</strong>
+            <p>بروتوكول <strong>DTP (<span dir="ltr">Dynamic Trunking Protocol</span>)</strong> يرسل رسائل تفاوض دورية من البورت لمحاولة التعرف التلقائي على الطرف الآخر. من الناحية الأمنية، لو ترك البورت يتفاوض، يمكن لمخترق توصيل جهازه وإرسال رسائل DTP مزيفة توهم السويتش بأنه سويتش سيسكو آخر (هجوم يُسمى <span dir="ltr">Switch Spoofing Attack</span>) ليجبر المنفذ على التحول إلى Trunk وسحب بيانات كل الـ VLANs في الشبكة. لذلك فإن <strong>أفضل ممارسة أمنية (Best Practice)</strong> هي تثبيت المنفذ كـ Trunk يدوياً بأمر <code dir="ltr">switchport mode trunk</code> ثم قفل رسائل التفاوض تماماً بأمر <code dir="ltr">switchport nonegotiate</code>.</p>
+          </li>
+        </ul>
       </section>
 
       <!-- Trunk Allowed / Native -->
@@ -233,8 +248,25 @@ Trunking Native Mode VLAN: 99 (Management)</code></pre>
     <section id="troubleshooting">
       <h2>فحص الأعطال (Troubleshooting)</h2>
       
-      <h3>مشكلة Native VLAN Mismatch</h3>
-      <p>لو غيرت الـ Native VLAN لـ 99 على سويتش ونسيت تغيرها على السويتش اللي قدامه، بروتوكول الـ CDP هيطلّع رسالة خطأ مزعجة بتظهر كل دقيقة على الشاشة: <code dir="ltr">%CDP-4-NATIVE_VLAN_MISMATCH: Native VLAN mismatch discovered on GigabitEthernet0/1 (99), with SW2 GigabitEthernet0/1 (1)</code>. الحل إنك توحدهم.</p>
+      <h3>مشكلة Native VLAN Mismatch ودور بروتوكول الـ CDP</h3>
+      <p>لو غيرت الـ Native VLAN لـ 99 على سويتش ونسيت تغيرها على السويتش المقابل (وفضلت 1 مثلاً)، هيحصل خطأ خطير في الشبكة:</p>
+      <ul>
+        <li>
+          <strong>كيف يكتشف بروتوكول الـ CDP المشكلة؟</strong>
+          بروتوكول <strong>CDP (<span dir="ltr">Cisco Discovery Protocol</span>)</strong> يعمل في الطبقة الثانية (Layer 2) ويبث رسائل استكشاف دورية كل 60 ثانية بين أجهزة سيسكو المجاورة. هذه الرسائل تحتوي على حقول معلوماتية (<span dir="ltr">TLVs</span>) من ضمنها رقم الـ Native VLAN المضبوط على البورت. عندما يستلم السويتش رسالة CDP من جاره ويكتشف أن رقم الـ Native VLAN مختلف بين الطرفين، يطلق فوراً رسالة تحذيرية شهيرة على شاشة الكونسول:
+          <div class="code" dir="ltr">
+            <pre><code>%CDP-4-NATIVE_VLAN_MISMATCH: Native VLAN mismatch discovered on GigabitEthernet0/1 (99), with SW2 GigabitEthernet0/1 (1)</code></pre>
+          </div>
+        </li>
+        <li>
+          <strong>ما هي الخطورة التقنية والأمنية للـ Mismatch؟ (ليه مش مجرد رسالة تحذير عادية؟)</strong>
+          <ul>
+            <li><strong>تسريب البيانات بين الشبكات (<span dir="ltr">VLAN Leaking</span>):</strong> بما أن حركة بيانات الـ Native VLAN تُرسل عبر مسار الـ Trunk بدون وسم (<span dir="ltr">Untagged</span>)، فالبيانات الخارجة من VLAN 99 في السويتش الأول ستصل إلى السويتش الثاني بدون Tag. السويتش الثاني سيعاملها تلقائياً على أنها تابعة للـ Native VLAN المضبوطة عنده (VLAN 1)، وبالتالي تنتقل البيانات بين شبكتين مختلفتين تماماً وبدون راوتر أو جدار حماية!</li>
+            <li><strong>تعطيل وحظر المنفذ بواسطة Spanning Tree (<span dir="ltr">STP Inconsistency</span>):</strong> سويتشات سيسكو تشغل بروتوكول PVST+ (شجرة STP مستقلة لكل VLAN). اختلاف الـ Native VLAN يؤدي لحدوث خطأ <span dir="ltr">PVID Mismatch</span>، فيقوم بروتوكول الـ STP بوضع المنفذ في حالة حظر أو إيقاف (<span dir="ltr">Inconsistent State / Blocking</span>) لمنع حدوث حلقات Loops، مما يؤدي لانقطاع الاتصال.</li>
+          </ul>
+        </li>
+        <li><strong>الحل:</strong> التأكد من تطابق الـ Native VLAN على طرفي وصلة الـ Trunk دائماً باستخدام الأمر: <code dir="ltr">switchport trunk native vlan &lt;id&gt;</code> على كلا السويتشين.</li>
+      </ul>
 
       <h3>الـ Router on a Stick مش شغال</h3>
       <p>أتأكد إنك عملت <code dir="ltr">no shutdown</code> للمنفذ المادي (Physical Interface) بتاع الراوتر زي <code dir="ltr">g0/0</code> مش بس الـ Sub-interface، لأن الـ Sub-interface بيفضل مقفول طول ما المنفذ المادي مقفول.</p>

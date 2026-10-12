@@ -467,7 +467,7 @@ const searchIndex = [
     title: "ipconfig",
     page: "01-network-fundamentals/network-fundamentals.html",
     anchor: "ipconfig",
-    keywords: ["ipconfig", "/all", "/release", "/renew", "ip", "كمبيوتر"],
+    keywords: ["ipconfig", "/all", "/release", "/renew", "/flushdns", "flushdns", "ip", "dns", "كمبيوتر"],
     mode: "C:\\>",
     tags: ["Exam", "PT ✔"]
   },
@@ -523,7 +523,7 @@ const searchIndex = [
     title: "ipv6 unicast-routing",
     page: "01-network-fundamentals/ipv6-addressing.html",
     anchor: "ipv6-unicast-routing",
-    keywords: ["ipv6 unicast-routing", "توجيه", "تفعيل", "راوتر", "routing"],
+    keywords: ["ipv6 unicast-routing", "توجيه", "تفعيل", "راوتر", "routing", "slaac", "ra"],
     mode: "Router(config)#",
     tags: ["Exam", "PT ✔"]
   },
@@ -595,7 +595,7 @@ const searchIndex = [
     title: "switchport mode trunk",
     page: "02-network-access/vlans-trunking.html",
     anchor: "switchport-trunk",
-    keywords: ["switchport mode trunk", "encapsulation dot1q", "nonegotiate", "ربط", "ترانك", "dtp"],
+    keywords: ["switchport mode trunk", "encapsulation dot1q", "802.1q", "isl", "nonegotiate", "ربط", "ترانك", "dtp"],
     mode: "Switch(config-if)#",
     tags: ["Exam", "PT ✔"]
   },

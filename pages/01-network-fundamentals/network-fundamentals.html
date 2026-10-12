@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,6 +15,7 @@
   <meta property="og:image" content="../../og-image.png">
   <link rel="stylesheet" href="../../css/style.css">
 </head>
+
 <body>
 
   <aside id="sidebar">
@@ -27,12 +29,16 @@
 
     <section id="quick-intro">
       <h2>نبذة سريعة</h2>
-      <p>معظم المفاهيم الأساسية في الـ CCNA (زي OSI Model، TCP/UDP، وتكوين الـ IP) هي مفاهيم نظرية ملهاش أوامر إعداد (Config). لكن فيه أوامر مهمة جداً بنستخدمها عشان نتأكد إن الأجهزة شايفة بعض في الطبقة التانية (<span dir="ltr">Layer 2 - MAC</span>) والطبقة التالتة (<span dir="ltr">Layer 3 - ARP</span>)، بالإضافة لأوامر فحص الشبكة من على أجهزة الكمبيوتر (Windows).</p>
+      <p>معظم المفاهيم الأساسية في الـ CCNA (زي OSI Model، TCP/UDP، وتكوين الـ IP) هي مفاهيم نظرية ملهاش أوامر إعداد
+        (Config). لكن فيه أوامر مهمة جداً بنستخدمها عشان نتأكد إن الأجهزة شايفة بعض في الطبقة التانية (<span
+          dir="ltr">Layer 2 - MAC</span>) والطبقة التالتة (<span dir="ltr">Layer 3 - ARP</span>)، بالإضافة لأوامر فحص
+        الشبكة من على أجهزة الكمبيوتر (Windows).</p>
     </section>
 
     <section id="quick-config">
       <h2>إعداد سريع (انسخ والصق)</h2>
-      <p>الأوامر دي أوامر فحص (<span dir="ltr">show</span>) مش إعدادات. عشان كده مفيش إعداد سريع هنا، بس أهم أمر لمهندس الشبكات هو فحص جدول الـ MAC في السويتش:</p>
+      <p>الأوامر دي أوامر فحص (<span dir="ltr">show</span>) مش إعدادات. عشان كده مفيش إعداد سريع هنا، بس أهم أمر لمهندس
+        الشبكات هو فحص جدول الـ MAC في السويتش:</p>
       <div class="code" dir="ltr">
         <button class="copy">Copy</button>
         <pre><code>show mac address-table</code></pre>
@@ -44,7 +50,7 @@
 
       <!-- L2: MAC Address Table -->
       <h3>1. جداول الطبقة الثانية (Layer 2 - Switch)</h3>
-      
+
       <section class="cmd" id="mac-address-table" dir="rtl">
         <h3><span dir="ltr">show mac address-table</span> <small dir="ltr">Privileged EXEC</small></h3>
         <p class="meta" dir="ltr">
@@ -58,7 +64,9 @@
           <pre><code>show mac address-table [dynamic | interfaces &lt;int&gt; | vlan &lt;id&gt;]
 clear mac address-table dynamic</code></pre>
         </div>
-        <p><strong>الشرح:</strong> بيعرض جدول العناوين الفيزيائية (MAC) اللي السويتش اتعلمها. السويتش بيبني الجدول ده عن طريق قراءة الـ Source MAC بتاع أي رسالة بتدخله. لو عايز تفضي الجدول عشان تخليه يتعلم من أول وجديد (لو نقلت كابلات مثلاً)، بتستخدم أمر <code dir="ltr">clear</code>.</p>
+        <p><strong>الشرح:</strong> بيعرض جدول العناوين الفيزيائية (MAC) اللي السويتش اتعلمها. السويتش بيبني الجدول ده عن
+          طريق قراءة الـ Source MAC بتاع أي رسالة بتدخله. لو عايز تفضي الجدول عشان تخليه يتعلم من أول وجديد (لو نقلت
+          كابلات مثلاً)، بتستخدم أمر <code dir="ltr">clear</code>.</p>
         <p><strong>مثال:</strong></p>
         <div class="code" dir="ltr">
           <button class="copy">Copy</button>
@@ -76,7 +84,7 @@ Total Mac Addresses for this criterion: 2</code></pre>
 
       <!-- L3: ARP Table (Cisco) -->
       <h3>2. جداول الطبقة الثالثة والربط (Layer 3 - ARP)</h3>
-      
+
       <section class="cmd" id="show-arp" dir="rtl">
         <h3><span dir="ltr">show arp</span> <small dir="ltr">Privileged EXEC</small></h3>
         <p class="meta" dir="ltr">
@@ -90,7 +98,9 @@ Total Mac Addresses for this criterion: 2</code></pre>
           <pre><code>show arp
 clear arp-cache</code></pre>
         </div>
-        <p><strong>الشرح:</strong> بروتوكول ARP وظيفته يربط بين الـ IP والـ MAC. الراوتر أو جهاز الكمبيوتر بيستخدمه عشان يعرف الـ MAC بتاع الجهاز اللي عايز يكلمه في نفس الشبكة. أمر <code dir="ltr">show arp</code> بيعرض الجدول ده على الراوتر.</p>
+        <p><strong>الشرح:</strong> بروتوكول ARP وظيفته يربط بين الـ IP والـ MAC. الراوتر أو جهاز الكمبيوتر بيستخدمه عشان
+          يعرف الـ MAC بتاع الجهاز اللي عايز يكلمه في نفس الشبكة. أمر <code dir="ltr">show arp</code> بيعرض الجدول ده
+          على الراوتر.</p>
         <p><strong>مثال:</strong></p>
         <div class="code" dir="ltr">
           <button class="copy">Copy</button>
@@ -103,7 +113,7 @@ Internet  192.168.1.100          12   00aa.bbcc.dd11  ARPA   GigabitEthernet0/0<
 
       <!-- PC Commands: arp -a -->
       <h3>3. أوامر الفحص من أجهزة الكمبيوتر (Windows CMD)</h3>
-      
+
       <section class="cmd" id="arp-a" dir="rtl">
         <h3><span dir="ltr">arp -a</span> <small dir="ltr">Windows CMD</small></h3>
         <p class="meta" dir="ltr">
@@ -117,7 +127,9 @@ Internet  192.168.1.100          12   00aa.bbcc.dd11  ARPA   GigabitEthernet0/0<
           <pre><code>arp -a
 arp -d *</code></pre>
         </div>
-        <p><strong>الشرح:</strong> أمر <code dir="ltr">arp -a</code> بيعرض جدول الـ ARP الخاص بجهاز الويندوز نفسه. وأمر <code dir="ltr">arp -d *</code> بيمسح الجدول ده بالكامل، وده مفيد لو كان الجهاز مخزن MAC غلط بعد ما إنت غيرت كارت الشبكة بتاع الراوتر مثلاً والكمبيوتر لسة بيحاول يكلم الـ MAC القديم.</p>
+        <p><strong>الشرح:</strong> أمر <code dir="ltr">arp -a</code> بيعرض جدول الـ ARP الخاص بجهاز الويندوز نفسه. وأمر
+          <code dir="ltr">arp -d *</code> بيمسح الجدول ده بالكامل، وده مفيد لو كان الجهاز مخزن MAC غلط بعد ما إنت غيرت
+          كارت الشبكة بتاع الراوتر مثلاً والكمبيوتر لسة بيحاول يكلم الـ MAC القديم.</p>
       </section>
 
       <!-- PC Commands: ipconfig -->
@@ -134,13 +146,25 @@ arp -d *</code></pre>
           <pre><code>ipconfig
 ipconfig /all
 ipconfig /release
-ipconfig /renew</code></pre>
+ipconfig /renew
+ipconfig /flushdns</code></pre>
         </div>
         <p><strong>الشرح:</strong></p>
         <ul>
-          <li><code dir="ltr">ipconfig</code>: بيعرض الـ IP، الـ Subnet Mask، والـ Default Gateway.</li>
-          <li><code dir="ltr">ipconfig /all</code>: بيجيب تفاصيل أكتر زي الـ MAC address بتاع الكمبيوتر (اسمه <span dir="ltr">Physical Address</span>) والـ DNS.</li>
-          <li><code dir="ltr">ipconfig /release</code> ثم <code dir="ltr">ipconfig /renew</code>: بيمسح الـ IP اللي الكمبيوتر واخده من الـ DHCP ويطلب واحد جديد. مهم جداً وقت فحص مشاكل الـ IP.</li>
+          <li><code dir="ltr">ipconfig</code>: بيعرض معلومات الشبكة الأساسية لكل كارت: عنوان الـ IP، الـ Subnet Mask،
+            والـ Default Gateway.</li>
+          <li><code dir="ltr">ipconfig /all</code>: بيجيب تفاصيل كاملة ودقيقة لكروت الشبكة زي الـ MAC address بتاع
+            الكمبيوتر (اسمه <span dir="ltr">Physical Address</span>)، والـ DNS، وسيرفر الـ DHCP، وتفاصيل استئجار الـ IP
+            (<span dir="ltr">Lease</span>).</li>
+          <li><code dir="ltr">ipconfig /release</code>: بيبعت رسالة <span dir="ltr">DHCPRELEASE</span> لسيرفر الـ DHCP
+            للتنازل عن عنوان الـ IP الحالي وحذف إعدادات الشبكة المأخوذة منه، وبكده كارت الشبكة يفضي الـ IP ويصبح بدون
+            عنوان IP (مهم جداً كخطوة أولى لفحص مشاكل الـ IP أو إعادة تعيين الاتصال).</li>
+          <li><code dir="ltr">ipconfig /renew</code>: بيبعت طلب جديد لسيرفر الـ DHCP (<span
+              dir="ltr">DHCPREQUEST</span>) لتجديد تأجير الـ IP أو استلام عنوان IP وإعدادات شبكة جديدة من السيرفر
+            (بيُستخدم مباشرة بعد <code dir="ltr">/release</code> لحل مشاكل الاتصال وتعليق الـ IP).</li>
+          <li><code dir="ltr">ipconfig /flushdns</code>: بيمسح ويفرغ كاش الـ DNS المحلي (<span dir="ltr">DNS Resolver
+              Cache</span>) بالكامل. بيُستخدم لما موقع يغير الـ IP بتاعه ويكون جهازك لسه مسجل العنوان القديم ومش راضي
+            يفتح، أو بعد تعديل إعدادات الـ DNS لإجبار الجهاز على طلب العنوان الجديد فوراً.</li>
         </ul>
       </section>
 
@@ -157,7 +181,8 @@ ipconfig /renew</code></pre>
           <button class="copy">Copy</button>
           <pre><code>nslookup &lt;domain-name&gt;</code></pre>
         </div>
-        <p><strong>الشرح:</strong> بيسأل الـ DNS سيرفر عشان يحول اسم موقع (زي google.com) لـ IP address. لو الأمر رجع خطأ، يبقى الكمبيوتر مش قادر يوصل للـ DNS أو إعداداته غلط.</p>
+        <p><strong>الشرح:</strong> بيسأل الـ DNS سيرفر عشان يحول اسم موقع (زي google.com) لـ IP address. لو الأمر رجع
+          خطأ، يبقى الكمبيوتر مش قادر يوصل للـ DNS أو إعداداته غلط.</p>
         <p><strong>مثال:</strong></p>
         <div class="code" dir="ltr">
           <button class="copy">Copy</button>
@@ -176,19 +201,27 @@ Addresses:  2001:420:1101:1::a
 
     <section id="troubleshooting">
       <h2>فحص الأعطال (Troubleshooting)</h2>
-      
+
       <h3>مشكلة MAC Flapping</h3>
-      <p>لو لاحظت رسالة في السويتش بتقول <code dir="ltr">%SW_MATM-4-MACFLAP_NOTIF: Host 0011.2233.4455 in vlan 1 is flapping between port Fa0/1 and port Fa0/2</code>، ده معناه إن السويتش بيشوف نفس الـ MAC مرة جاي من بورت 1 ومرة جاي من بورت 2. <strong>السبب الرئيسي:</strong> وجود Loop في الشبكة (مفيش Spanning Tree شغال)، أو فيه جهازين واخدين نفس الـ MAC بالغلط.</p>
-      
+      <p>لو لاحظت رسالة في السويتش بتقول <code
+          dir="ltr">%SW_MATM-4-MACFLAP_NOTIF: Host 0011.2233.4455 in vlan 1 is flapping between port Fa0/1 and port Fa0/2</code>،
+        ده معناه إن السويتش بيشوف نفس الـ MAC مرة جاي من بورت 1 ومرة جاي من بورت 2. <strong>السبب الرئيسي:</strong> وجود
+        Loop في الشبكة (مفيش Spanning Tree شغال)، أو فيه جهازين واخدين نفس الـ MAC بالغلط.</p>
+
       <h3>مشكلة ARP Spoofing / IP Conflict</h3>
-      <p>لو جهازين في الشبكة أخدوا نفس الـ IP، جدول الـ ARP هيبدأ يتلخبط بين اتنين MAC Addresses لنفس الـ IP، وده بيوقع الاتصال. بتقدر تكتشف ده لو عملت <code dir="ltr">arp -a</code> كذا مرة ولقيت الـ MAC بتاع الراوتر بيتغير كل شوية، ده معناه إن فيه جهاز تاني (أو هاكر) بينتحل شخصية الراوتر.</p>
+      <p>لو جهازين في الشبكة أخدوا نفس الـ IP، جدول الـ ARP هيبدأ يتلخبط بين اتنين MAC Addresses لنفس الـ IP، وده بيوقع
+        الاتصال. بتقدر تكتشف ده لو عملت <code dir="ltr">arp -a</code> كذا مرة ولقيت الـ MAC بتاع الراوتر بيتغير كل شوية،
+        ده معناه إن فيه جهاز تاني (أو هاكر) بينتحل شخصية الراوتر.</p>
     </section>
 
     <section id="common-mistakes">
       <h2>أخطاء شائعة وفخاخ الامتحان</h2>
       <ul>
-        <li><strong>أمر ARP:</strong> في الراوتر بنكتب <code dir="ltr">show arp</code>، لكن في شاشة الويندوز بنكتب <code dir="ltr">arp -a</code>. الامتحان بيلعب على اللخبطة دي كتير.</li>
-        <li><strong>مكان الجدول:</strong> جدول الـ MAC موجود <strong>فقط</strong> في السويتشات (L2)، وجدول الـ ARP موجود في أي جهاز بيفهم IPs زي الراوتر والكمبيوتر والـ Layer 3 Switch. السويتش العادي (Layer 2) ملوش دعوة بجدول الـ ARP بتاع الترافيك العادي.</li>
+        <li><strong>أمر ARP:</strong> في الراوتر بنكتب <code dir="ltr">show arp</code>، لكن في شاشة الويندوز بنكتب <code
+            dir="ltr">arp -a</code>. الامتحان بيلعب على اللخبطة دي كتير.</li>
+        <li><strong>مكان الجدول:</strong> جدول الـ MAC موجود <strong>فقط</strong> في السويتشات (L2)، وجدول الـ ARP موجود
+          في أي جهاز بيفهم IPs زي الراوتر والكمبيوتر والـ Layer 3 Switch. السويتش العادي (Layer 2) ملوش دعوة بجدول الـ
+          ARP بتاع الترافيك العادي.</li>
       </ul>
     </section>
 
@@ -243,4 +276,5 @@ Addresses:  2001:420:1101:1::a
   <script src="../../js/search-index.js"></script>
   <script src="../../js/app.js"></script>
 </body>
+
 </html>

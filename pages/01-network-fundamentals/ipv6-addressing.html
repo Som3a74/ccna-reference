@@ -59,6 +59,11 @@ interface g0/0
           <pre><code>ipv6 unicast-routing</code></pre>
         </div>
         <p><strong>الشرح:</strong> أهم أمر في IPv6. رواتر سيسكو مقفول عليها توجيه الـ IPv6 افتراضياً. لو معملتش الأمر ده، الراوتر هيتعامل مع المنافذ بتاعته كأنها جهاز كمبيوتر عادي (Host)، ومش هيبعت بيانات لشبكات تانية، ومش هيبعت رسائل RA للأجهزة عشان يوزع IPs بنظام الـ (SLAAC).</p>
+        <p><strong>ما هي رسائل الـ RA ونظام الـ SLAAC؟</strong></p>
+        <ul>
+          <li><strong>رسائل الـ RA (<span dir="ltr">Router Advertisement</span>):</strong> رسائل دورية بيبعتها الراوتر للأجهزة في الشبكة عبر بروتوكول <span dir="ltr">ICMPv6</span> (إلى عنوان الـ Multicast العام <code dir="ltr">FF02::1</code>)، بيعلن فيها عن الـ IPv6 Prefix (عنوان الشبكة وطولها زي <code dir="ltr">/64</code>) وعنوان الـ Default Gateway.</li>
+          <li><strong>نظام الـ SLAAC (<span dir="ltr">Stateless Address Autoconfiguration</span>):</strong> آلية بتسمح للجهاز (الكمبيوتر) بتوليد عنوان IPv6 كامل وصالح للاستخدام تلقائياً وبدون الحاجة لسيرفر DHCPv6؛ حيث يستلم الـ Prefix من رسالة الـ RA، ويولّد النصف الثاني (<span dir="ltr">Interface ID</span>) بنفسه إما بنظام <span dir="ltr">EUI-64</span> أو بشكل عشوائي.</li>
+        </ul>
       </section>
 
       <!-- Command 2: ipv6 address (static) -->
